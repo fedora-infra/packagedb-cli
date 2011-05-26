@@ -41,7 +41,7 @@ elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
 cmdlist = ['acl', 'list']
-actionlist = ['watchbugzilla', 'watchcommit', 'commit', 'approveacls']
+actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
 class ActionError(Exception):
@@ -222,19 +222,42 @@ def toggle_acl(packagename, action, branch='devel', username=None,
     :arg action is action which is requested for this package, actions
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
     """
-    if action not in actionlist:
-        raise ActionError("Action: %s is not in the list: %s" % (
+    if action not in actionlist and action !='all':
+        raise ActionError("Action '%s' is not in the list: %s" % (
             action, ",".join(actionlist)))
     pkgdbclient_auth = _get_client_authentified(pkgdbclient,
                             username=username, password=password)
     packageid = _get_package_id(packagename, branch)
-    params = {'container_id': '%s:%s' % (packageid, action)}
-    pkgdbinfo = pkgdbclient_auth.send_request(
-                    '/acls/dispatcher/toggle_acl_request',
-                    auth=True, req_params=params)
-    log.info("%s%s%s for %s on package %s branch %s" % (bold,
-        pkgdbinfo['aclStatus'], reset, pkgdbclient_auth.username,
-        packagename, branch))
+
+    # if action == 'all' then we toggle all the ACLs
+    if action == 'all':
+        for action in actionlist:
+            params = {'container_id': '%s:%s' % (packageid, action)}
+            pkgdbinfo = pkgdbclient_auth.send_request(
+                        '/acls/dispatcher/toggle_acl_request',
+                        auth=True, req_params=params)
+            log.debug(pkgdbinfo)
+            if 'aclStatus' in pkgdbinfo.keys():
+                msg = pkgdbinfo['aclStatus']
+            else:
+                msg = pkgdbinfo['message']
+            log.info("%s%s%s for %s on package %s branch %s" % (bold,
+                msg, reset, pkgdbclient_auth.username,
+                packagename, branch))
+    # else we toggle only the given one
+    else:
+        params = {'container_id': '%s:%s' % (packageid, action)}
+        pkgdbinfo = pkgdbclient_auth.send_request(
+                        '/acls/dispatcher/toggle_acl_request',
+                        auth=True, req_params=params)
+        log.debug(pkgdbinfo)
+        if 'aclStatus' in pkgdbinfo.keys():
+            msg = pkgdbinfo['aclStatus']
+        else:
+            msg = pkgdbinfo['message']
+        log.info("%s%s%s for %s on package %s branch %s" % (bold,
+            msg, reset, pkgdbclient_auth.username,
+            packagename, branch))
 
 
 def get_package_info(packagename, branch=None, pending=False,
@@ -485,3 +508,6 @@ if __name__ == '__main__':
     except AppError, e:
         print '%s: %s' % (e.name, e.message)
         sys.exit(4)
+    except Exception, e:
+        print 'Error: %s' % (e)
+        sys.exit(5)
