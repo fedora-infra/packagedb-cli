@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 # pkgdb - a commandline frontend for the Fedora package database
 #
 # Copyright (C) 2011 Pierre-Yves Chibon
@@ -11,7 +13,7 @@
 # See http://www.gnu.org/copyleft/gpl.html  for the full text of the
 # license.
 
-from fedora.client import BaseClient, AppError, ServerError
+from fedora.client import PackageDB, AppError, ServerError
 from bugzilla.rhbugzilla import RHBugzilla3
 import argparse
 import logging
@@ -22,7 +24,9 @@ import sys
 version = '0.0.1'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
-pkgdbclient = BaseClient('https://admin.fedoraproject.org/pkgdb')
+pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
+#pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
+                        #insecure=True)
 bzclient = RHBugzilla3(url='https://bugzilla.redhat.com/xmlrpc.cgi')
 bold = "\033[1m"
 red = "\033[0;31m"
@@ -37,9 +41,27 @@ elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
 cmdlist = ['acl', 'list']
+actionlist = ['watchbugzilla', 'watchcommit', 'commit', 'approveacls']
 
 
-def getGroupInfo(group, statusmap, tmpstring="", prevstring="",
+class ActionError(Exception):
+    """ This class is raised when an ACL action is requested but not in
+    the list of allowed action. """
+    pass
+
+
+def _get_client_authentified(pkgdbclient, username=None, password=None):
+    ''' Returned a BaseClient with authentification '''
+    if username is None:
+        username = raw_input('FAS username: ')
+    if password is None:
+        password = getpass.getpass()
+    pkgdbclient.username = username
+    pkgdbclient.password = password
+    return pkgdbclient
+
+
+def _get_group_info(group, statusmap, tmpstring="", prevstring="",
                     pending=False):
     """
     For a given group (or user) check the ACL to print the ACL of the
@@ -74,7 +96,30 @@ def getGroupInfo(group, statusmap, tmpstring="", prevstring="",
         return tmpstring.rstrip()
 
 
-def getPackages(motif=None):
+def _get_package_id(packagename, branch):
+    """
+    Retrieve the package information and return the id of the package.
+
+    This method is used for ACL toggling (methods toggle_acl_request
+    from dispatcher on packagedb).
+
+    :arg name, name of the package to query
+    :return package_id
+    """
+    log.debug("Retrieve package_id from pkgdb for %s" % (packagename))
+    pkgdbinfo = pkgdbclient.send_request('/acls/name/%s' %
+                    packagename, auth=False)
+    if 'packageListings' in pkgdbinfo.keys():
+        for branches in pkgdbinfo['packageListings']:
+            if branches['collection']['branchname'] == branch:
+                log.debug("Package %s has package id: %s" % (
+                packagename, pkgdbinfo['packageListings'][0]['id']))
+                return branches['id']
+    else:
+        return None
+
+
+def get_packages(motif=None):
     """
     Retrieve the list of all packages in packagedb.
     This list can be reduced using a motif (pattern) which is optional.
@@ -103,7 +148,7 @@ def getPackages(motif=None):
     log.info(pkgdbinfo.keys())
 
 
-def getOrphanedPackages(motif=None, eol=False):
+def get_orphaned_packages(motif=None, eol=False):
     """
     Retrieve the list of orphans packages.
 
@@ -139,7 +184,7 @@ def getOrphanedPackages(motif=None, eol=False):
     log.info(pkgdbinfo.keys())
 
 
-def getPackagerInfo(packager):
+def get_packager_info(packager):
     """
     Retrieve the list of all the package for which the given packager
     has
@@ -154,7 +199,6 @@ def getPackagerInfo(packager):
     pkgdbinfo = pkgdbclient.send_request('/users/packages/%s' %
                     packager, auth=False,
                     req_params={'tg_paginate_limit': 0})
-    print pkgdbinfo['title']
 
     if pkgdbinfo['eol']:
         print "User EOL'd"
@@ -168,7 +212,32 @@ def getPackagerInfo(packager):
     log.info(pkgdbinfo.keys())
 
 
-def getPackageInfo(packagename, branch=None, pending=False,
+def toggle_acl(packagename, action, branch='devel', username=None,
+    password=None):
+    """
+    Request for a user and a branch the action for a given package.
+
+    :arg packagename is the name of the package for which you would like
+    to request an ACL.
+    :arg action is action which is requested for this package, actions
+    allowed are: [watchbugzilla, watchcommit, commit, approveacls]
+    """
+    if action not in actionlist:
+        raise ActionError("Action: %s is not in the list: %s" % (
+            action, ",".join(actionlist)))
+    pkgdbclient_auth = _get_client_authentified(pkgdbclient,
+                            username=username, password=password)
+    packageid = _get_package_id(packagename, branch)
+    params = {'container_id': '%s:%s' % (packageid, action)}
+    pkgdbinfo = pkgdbclient_auth.send_request(
+                    '/acls/dispatcher/toggle_acl_request',
+                    auth=True, req_params=params)
+    log.info("%s%s%s for %s on package %s branch %s" % (bold,
+        pkgdbinfo['aclStatus'], reset, pkgdbclient_auth.username,
+        packagename, branch))
+
+
+def get_package_info(packagename, branch=None, pending=False,
                     extra=True):
     """
     Return information about the package.
@@ -222,7 +291,7 @@ def getPackageInfo(packagename, branch=None, pending=False,
                 for group in collection['groups']:
                     tmp = " " * 8 + group['groupname']
                     prevstring = group['groupname']
-                    info = getGroupInfo(group, pkgdbinfo['statusMap'],
+                    info = _get_group_info(group, pkgdbinfo['statusMap'],
                                         tmp, prevstring,
                                         pending=pending)
                     if info is not None and info != "":
@@ -233,7 +302,7 @@ def getPackageInfo(packagename, branch=None, pending=False,
                 for people in collection['people']:
                     tmp = " " * 10 + people['username']
                     prevstring = tmp
-                    info = getGroupInfo(people, pkgdbinfo['statusMap'],
+                    info = _get_group_info(people, pkgdbinfo['statusMap'],
                                         tmp, prevstring,
                                         pending=pending)
                     if info is not None and info != "":
@@ -241,10 +310,10 @@ def getPackageInfo(packagename, branch=None, pending=False,
 
                 if extra:
                     tag = collection['collection']['koji_name']
-                    getLastBuild(packagename, tag)
+                    get_last_build(packagename, tag)
 
 
-def getLastBuild(packagename, tag):
+def get_last_build(packagename, tag):
     """
     Retrieve from koji the latest build for a given package and a given
     tag.
@@ -307,6 +376,9 @@ def setup_action_parser(action):
         p.add_argument('package', help="Name of the package to query")
         p.add_argument('branch', default=None, nargs="?",
                     help="Branch of the package to query")
+        p.add_argument('--toggle', dest="action",
+                help="Request a specific ACL for this package (actions"\
+                " are %s)" % ", ".join(actionlist))
         p.add_argument('--pending', action="store_true", default=False,
                 help="Display only ACL awaiting review")
         p.add_argument('--noextra', action="store_false", default=True,
@@ -335,9 +407,9 @@ def setup_parser():
     """
     Set the main arguments.
     """
-    u = "\nCommands: %s" % ', '.join(cmdlist)
+    usage = "\nCommands: %s" % ', '.join(cmdlist)
     p = argparse.ArgumentParser(
-    usage="%(prog)s [global options] COMMAND [options]" + u,
+    usage="%(prog)s [global options] COMMAND [options]" + usage,
     prog="pkgdb")
     # General connection options
     p.add_argument('command')
@@ -370,20 +442,30 @@ def main():
     log.info("*** " + ", ".join(args.argument))
     args = action_parser.parse_args(args.argument)
     if action == "acl":
+        log.info("package : %s" % args.package)
+        log.info("branch  : %s" % args.branch)
+        log.info("toggle  : %s" % args.action)
+        #log.info("orphan : %s" % args.orphan)
+        #log.info("approve : %s" % args.approve)
+        if (args.action is not None):
+            toggle_acl(args.package, args.action, args.branch)
         log.info("package: %s" % args.package)
         log.info("branch: %s" % args.branch)
-        getPackageInfo(args.package, args.branch, args.pending,
+        get_package_info(args.package, args.branch, args.pending,
                         args.noextra)
     elif action == "list":
-        log.info("all: %s" % args.all)
-        log.info("user: %s" % args.user)
+        log.info("pattern : %s" % args.pattern)
+        log.info("all     : %s" % args.all)
+        log.info("user    : %s" % args.user)
         if(args.all is not None and args.all):
             log.info(args)
-            getPackages(args.pattern)
+            get_packages("*")
         elif (args.orphaned is not None and args.orphaned):
-            getOrphanedPackages(args.pattern, args.eol)
+            get_orphaned_packages(args.pattern, args.eol)
         elif (args.user is not None and args.user):
-            getPackagerInfo(args.user)
+            get_packager_info(args.user)
+        elif (args.pattern is not None):
+            get_packages(args.pattern)
         else:
             raise argparse.ArgumentTypeError(
             "Not enough argument given")
