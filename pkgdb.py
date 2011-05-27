@@ -51,7 +51,13 @@ class ActionError(Exception):
 
 
 def _get_client_authentified(pkgdbclient, username=None, password=None):
-    ''' Returned a BaseClient with authentification '''
+    """ Returned a BaseClient with authentification 
+
+    :arg pkgdbclient a PackageDB object to which username and password
+    are added
+    :karg username FAS username, if None it is asked to the user
+    :karg password FAS password, if None it is asked to the user
+    """
     if username is None:
         username = raw_input('FAS username: ')
     if password is None:
@@ -75,6 +81,12 @@ def _get_group_info(group, statusmap, tmpstring="", prevstring="",
     the output.
     The prevstring is the previous string outputed on the row.
     The tmpstring is the row itself which is returned at the end.
+
+    :arg group
+    :arg statusmap
+    :karg tmpstring
+    :karg prevstring
+    :karg pending
     """
     for acl in ['watchbugzilla', 'watchcommits', 'commit',
                 'approveacls']:
@@ -104,6 +116,7 @@ def _get_package_id(packagename, branch):
     from dispatcher on packagedb).
 
     :arg name, name of the package to query
+    :arg branch
     :return package_id
     """
     log.debug("Retrieve package_id from pkgdb for %s" % (packagename))
@@ -128,6 +141,8 @@ def get_packages(motif=None):
     Querying "pkgdb list --all back*" will return you all the packages
     from pkgdb starting with back* (case insensitive), this includes
     orphand and eol'd packages as well as active packges.
+    
+    :karg motif
     """
     if motif is not None:
         log.info("Query packages starting with: %s" % (motif))
@@ -156,6 +171,9 @@ def get_orphaned_packages(motif=None, eol=False):
     argument to True.
     The motif is present for later used once the online version of
     packagedb will be adjusted to allow it.
+    
+    :karg motif
+    :karg eol
     """
     url = '/acls/orphans/'
     if eol is not None and eol:
@@ -194,6 +212,8 @@ def get_packager_info(packager):
     - watchcommits
     - watchbugzilla
     (default options)
+
+    :arg packager name of the packager for who to retrieve info
     """
     log.info("Query pkgdb for packager: %s" % (packager))
     pkgdbinfo = pkgdbclient.send_request('/users/packages/%s' %
@@ -221,6 +241,9 @@ def toggle_acl(packagename, action, branch='devel', username=None,
     to request an ACL.
     :arg action is action which is requested for this package, actions
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
+    :karg branch
+    :karg username
+    :karg password
     """
     if action not in actionlist and action !='all':
         raise ActionError("Action '%s' is not in the list: %s" % (
@@ -272,6 +295,11 @@ def get_package_info(packagename, branch=None, pending=False,
 
     These information can be reduced to only one branch by specifying
     the desired branch as argument.
+
+    :arg packagename
+    :karg branch
+    :karg pending
+    :karg extra
     """
     log.debug("Query pkgdb for %s in branch %s" % (packagename, branch))
     pkgdbinfo = pkgdbclient.send_request('/acls/name/%s' %
@@ -345,6 +373,9 @@ def get_last_build(packagename, tag):
     This function will look at dist-f14-updates and
     dist-f14-updates-testing. It will display both updates and
     updates-testing build when they exists.
+
+    :arg packagename
+    :arg tag
     """
     log.debug("Retrieve the last for %s in %s" % (packagename, tag))
     # Add build information from koji
@@ -391,6 +422,8 @@ def get_last_build(packagename, tag):
 def setup_action_parser(action):
     """
     Parse the remaining argument for action specific arguments.
+
+    :arg action
     """
     log.info('Action called: %s' % action)
     p = argparse.ArgumentParser(usage="%(prog)s " + \
