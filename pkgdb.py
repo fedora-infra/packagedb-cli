@@ -83,10 +83,15 @@ def _get_group_info(group, statusmap, tmpstring="", prevstring="",
     The tmpstring is the row itself which is returned at the end.
 
     :arg group
-    :arg statusmap
-    :karg tmpstring
-    :karg prevstring
-    :karg pending
+    :arg statusmap a dict/hash mapping statuscode to human readable
+    description
+    :karg tmpstring temporary string used to keep information and set
+    the layout. At the end it contains the whole row which is the object
+    returned
+    :karg prevstring previous string.
+    :karg pending by default all statuscode are returned, if pending is
+    true then only statuscode corresponding to "awaiting review" are
+    returned
     """
     for acl in ['watchbugzilla', 'watchcommits', 'commit',
                 'approveacls']:
@@ -116,8 +121,9 @@ def _get_package_id(packagename, branch):
     from dispatcher on packagedb).
 
     :arg name, name of the package to query
-    :arg branch
-    :return package_id
+    :arg branch branch for which the package id is returned Branch 
+    can be "devel", "f-14"...
+    :return package_id a string of the package_id in the packageListings
     """
     log.debug("Retrieve package_id from pkgdb for %s" % (packagename))
     pkgdbinfo = pkgdbclient.send_request('/acls/name/%s' %
@@ -142,7 +148,8 @@ def get_packages(motif=None):
     from pkgdb starting with back* (case insensitive), this includes
     orphand and eol'd packages as well as active packges.
     
-    :karg motif
+    :karg motif the motif used to search for the packages. If the motif
+    does not end with a "*", one is added.
     """
     if motif is not None:
         log.info("Query packages starting with: %s" % (motif))
@@ -172,8 +179,9 @@ def get_orphaned_packages(motif=None, eol=False):
     The motif is present for later used once the online version of
     packagedb will be adjusted to allow it.
     
-    :karg motif
-    :karg eol
+    :karg motif the motif used to search for the packages. If the motif
+    does not end with a "*", one is added.
+    :karg eol if true only the EOL packages are returned.
     """
     url = '/acls/orphans/'
     if eol is not None and eol:
@@ -241,9 +249,10 @@ def toggle_acl(packagename, action, branch='devel', username=None,
     to request an ACL.
     :arg action is action which is requested for this package, actions
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
-    :karg branch
-    :karg username
-    :karg password
+    :karg branch name of the branch for which to toggle the ACL. By
+    default this branch is 'devel' but can also be 'f-14'...
+    :karg username the FAS username for the user requesting the ACL.
+    :karg password the FAS password for the user requesting the ACL.
     """
     if action not in actionlist and action !='all':
         raise ActionError("Action '%s' is not in the list: %s" % (
@@ -296,10 +305,17 @@ def get_package_info(packagename, branch=None, pending=False,
     These information can be reduced to only one branch by specifying
     the desired branch as argument.
 
-    :arg packagename
-    :karg branch
-    :karg pending
-    :karg extra
+    :arg packagename the *exact* name of the package for which
+    information are retrieved.
+    :karg branch the name of the branch for which the information are
+    retrieved. If this is None then all the branches are returned
+    (default).
+    :karg pending if true only the ACL information having a statuscode
+    "awaiting review" are returned.
+    :karg extra if True (default) extra information are returned for the
+    given package. Extra information includes: the number of opened
+    bugs retrieved from bugzilla, the last build information retrieved
+    from koji
     """
     log.debug("Query pkgdb for %s in branch %s" % (packagename, branch))
     pkgdbinfo = pkgdbclient.send_request('/acls/name/%s' %
@@ -374,8 +390,10 @@ def get_last_build(packagename, tag):
     dist-f14-updates-testing. It will display both updates and
     updates-testing build when they exists.
 
-    :arg packagename
-    :arg tag
+    :arg packagename the *exact* name of the package for which to
+    retrieve the last build information.
+    :arg tag the name of the branch for which to retrieve the
+    information. This name can be 'rawhide' or f-14...
     """
     log.debug("Retrieve the last for %s in %s" % (packagename, tag))
     # Add build information from koji
@@ -423,7 +441,8 @@ def setup_action_parser(action):
     """
     Parse the remaining argument for action specific arguments.
 
-    :arg action
+    :arg action the action for which the rest of the arguments will be
+    parsed. Actions can be "acl" or "list".
     """
     log.info('Action called: %s' % action)
     p = argparse.ArgumentParser(usage="%(prog)s " + \
