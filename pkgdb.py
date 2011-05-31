@@ -127,14 +127,14 @@ def _get_package_id(packagename, branch):
     can be "devel", "f-14"...
     :return package_id a string of the package_id in the packageListings
     """
-    log.debug("Retrieve package_id from pkgdb for %s" % (packagename))
-    pkgdbinfo = pkgdbclient.send_request('/acls/name/%s' %
-                    packagename, auth=False)
+    log.debug("Retrieve package_id from pkgdb for {0}".format(packagename))
+    pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(
+            packagename, auth=False))
     if 'packageListings' in pkgdbinfo.keys():
         for branches in pkgdbinfo['packageListings']:
             if branches['collection']['branchname'] == branch:
-                log.debug("Package %s has package id: %s" % (
-                packagename, pkgdbinfo['packageListings'][0]['id']))
+                log.debug("Package {0} has package id: {1}".format(
+                        packagename, pkgdbinfo['packageListings'][0]['id']))
                 return branches['id']
     else:
         return None
@@ -162,20 +162,20 @@ def _orphan_one_package(packagename, branch='devel', username=None,
         branch = 'devel'
     _get_client_authentified(username=username, password=password)
 
-    log.info("Orphaning package %s on branch %s" % (packagename,
-            branch))
+    log.info("Orphaning package {0} on branch {1}".format(packagename, branch))
     pkgdbinfo = pkgdbclient.send_request(
             '/acls/dispatcher/set_owner',
             auth=True, req_params={'owner': 'orphan',
                                     'pkg_name': packagename,
                                     'collectn_list': branch})
-    log.debug("output: %s" % pkgdbinfo)
+    log.debug("output: {0}".format(pkgdbinfo))
 
     if "message" in pkgdbinfo.keys():
-        print bold + pkgdbinfo["message"] + reset + "\n"
+        print "{0}{1}{2}\n".format(bold, pkgdbinfo["message"], reset)
     else:
-        print bold + "Changed owner of %s to orphan" % packagename \
-                + reset + "\n"
+        print "{0}Changed owner of {1} to orphan{2}\n".format(bold,
+                                                              packagename,
+                                                              reset)
 
 
 def _retire_one_package(packagename, branch='devel', username=None,
@@ -189,18 +189,19 @@ def _retire_one_package(packagename, branch='devel', username=None,
     _get_client_authentified(username=username, password=password)
     packageid = _get_package_id(packagename, branch)
 
-    log.info("Retiring package %s (%s) on branch %s" % (packagename,
-                packageid, branch))
+    log.info("Retiring package {0} ({1}) on branch {2}".format(packagename,
+                                                            packageid,
+                                                            branch))
 
     pkgdbinfo = pkgdbclient.send_request(
             '/acls/dispatcher/toggle_retirement',
             auth=True, req_params={'pkg_listing_id': packageid})
 
-    log.debug("output: %s" % pkgdbinfo)
+    log.debug("output: {0}".format(pkgdbinfo))
 
     if "retirement" in pkgdbinfo.keys():
-        print bold + packagename, pkgdbinfo["retirement"] \
-                + reset + "\n"
+        print "{0}{1}{2}{3}\n".format(bold, packagename,
+                                      pkgdbinfo["retirement"], reset)
 
 
 def get_packages(motif=None):
@@ -217,12 +218,13 @@ def get_packages(motif=None):
     does not end with a "*", one is added.
     """
     if motif is not None:
-        log.info("Query packages starting with: %s" % (motif))
+        log.info("Query packages starting with: {0}".format(motif))
         if not motif.endswith("*"):
             motif = motif.strip() + "*"
-        pkgdbinfo = pkgdbclient.send_request('/acls/list/%s' %
-                    motif, auth=False,
-                    req_params={'tg_paginate_limit': 0})
+        pkgdbinfo = pkgdbclient.send_request('/acls/list/{0}'.format(motif),
+                                             auth=False,
+                                             req_params={
+                'tg_paginate_limit': 0})
     else:
         log.info("Query all packages")
         pkgdbinfo = pkgdbclient.send_request('/acls/list/', auth=False,
@@ -231,7 +233,7 @@ def get_packages(motif=None):
     for pkg in pkgdbinfo['packages']:
         print "  ", pkg['name'], " " * (30 - len(pkg['name'])), \
                 pkg['summary']
-    print "Total: %s packages" % len(pkgdbinfo['packages'])
+    print "Total: {0} packages".format(len(pkgdbinfo['packages']))
     log.info(pkgdbinfo.keys())
 
 
@@ -257,7 +259,7 @@ def get_orphaned_packages(motif=None, eol=False):
         # see: https://admin.fedoraproject.org/pkgdb/acls/orphans
         # vs https://admin.fedoraproject.org/pkgdb/acls/orphans/b*
         # the second returns the list of orphan + eol'd
-        log.info("Query orphaned packages starting with: %s" % (motif))
+        log.info("Query orphaned packages starting with: {0}".format(motif))
         if not motif.endswith("*"):
             motif = motif.strip() + "*"
         pkgdbinfo = pkgdbclient.send_request(url + motif, auth=False,
@@ -271,7 +273,7 @@ def get_orphaned_packages(motif=None, eol=False):
     for pkg in pkgdbinfo['pkgs']:
         print "  ", pkg['name'], " " * (30 - len(pkg['name'])), \
                 pkg['summary']
-    print "Total: %s packages" % len(pkgdbinfo['pkgs'])
+    print "Total: {0} packages".format(len(pkgdbinfo['pkgs']))
     log.info(pkgdbinfo.keys())
 
 
@@ -288,10 +290,10 @@ def get_packager_info(packager):
 
     :arg packager name of the packager for who to retrieve info
     """
-    log.info("Query pkgdb for packager: %s" % (packager))
-    pkgdbinfo = pkgdbclient.send_request('/users/packages/%s' %
-                    packager, auth=False,
-                    req_params={'tg_paginate_limit': 0})
+    log.info("Query pkgdb for packager: {0}".format(packager))
+    pkgdbinfo = pkgdbclient.send_request('/users/packages/{0}'.format(
+                packager), auth=False,
+                req_params={'tg_paginate_limit': 0})
 
     pkgs = []
     if pkgdbinfo['eol']:
@@ -303,7 +305,7 @@ def get_packager_info(packager):
             print "  ", pkg['name'], " " * (30 - len(pkg['name'])), \
                 pkg['summary']
                 #pkgdbinfo['statusMap'][pkg['statuscode']]
-        print "Total: %s packages" % len(pkgdbinfo['pkgs'])
+        print "Total: {0} packages".format(len(pkgdbinfo['pkgs']))
     return pkgs
 
 
@@ -332,9 +334,9 @@ def get_package_info(packagename, branch=None, pending=False,
     bugs retrieved from bugzilla, the last build information retrieved
     from koji
     """
-    log.debug("Query pkgdb for %s in branch %s" % (packagename, branch))
-    pkgdbinfo = pkgdbclient.send_request('/acls/name/%s' %
-                    packagename, auth=False)
+    log.debug("Query pkgdb for {0} in branch {1}".format(packagename, branch))
+    pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(packagename),
+                                         auth=False)
 
     log.debug("Query bugzilla")
     bugbz = bzclient.query(
@@ -344,32 +346,31 @@ def get_package_info(packagename, branch=None, pending=False,
     if 'packageListings' in pkgdbinfo:
         print pkgdbinfo['packageListings'][0]['package']['summary']
         if extra:
-            print "%s bugs open (new, assigned, needinfo)" % len(bugbz)
+            print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
         for collection in pkgdbinfo['packageListings']:
             if branch is None or branch == \
                     collection['collection']['branchname']:
 
                 # Retrieve ACL information
-                print "%s%s%s%sOwner:%s%s".rstrip() % (
-                        red + bold,
-                        collection['collection']['branchname'],
-                        reset,
-                        " " * (8 -
-                            len(collection['collection'][
-                                                'branchname'])),
-                        " " * 10,
-                        collection['owner'],
-                        )
+                print "{0}{1}{2}{3}Owner:{4}{5}".rstrip().format(
+                    red + bold,
+                    collection['collection']['branchname'],
+                    reset,
+                    " " * (8 -
+                           len(collection['collection'][
+                                'branchname'])),
+                    " " * 10,
+                    collection['owner'])
 
                 # print header of the table
                 tmp = " " * 24
                 for acl in ["watchbugzilla", "watchcommits",
-                        "commit", "approveacls"]:
+                            "commit", "approveacls"]:
                     tmp = tmp + acl + " " * (16 - len(acl))
                 print tmp.rstrip()
 
                 # print group information
-                print "%sGroup:" % (" " * 8)
+                print "{0}Group:".format(" " * 8)
                 for group in collection['groups']:
                     tmp = " " * 8 + group['groupname']
                     prevstring = group['groupname']
@@ -380,7 +381,7 @@ def get_package_info(packagename, branch=None, pending=False,
                         print info
 
                 # print comaintainer information
-                print "%sComaintainer(s):" % (" " * 8)
+                print "{0}Comaintainer(s):".format(" " * 8)
                 for people in collection['people']:
                     tmp = " " * 10 + people['username']
                     prevstring = tmp
@@ -410,46 +411,45 @@ def get_last_build(packagename, tag):
     :arg tag the name of the branch for which to retrieve the
     information. This name can be 'rawhide' or f-14...
     """
-    log.debug("Retrieve the last for %s in %s" % (packagename, tag))
+    log.debug("Retrieve the last for {0} in {1}".format(packagename, tag))
     # Add build information from koji
     # for updates and updates-testing
     if "f" in tag:
         tag = tag + "-updates"
-    log.debug("Search last build for %s in %s" % (packagename, tag))
+    log.debug("Search last build for {0} in {1}".format(packagename, tag))
     data = kojiclient.getLatestBuilds(tag,
         package=packagename)
     versions = []
     for build in data:
-        nvr = "%s-%s-%s" % (
-            build['package_name'], build['version'],
+        nvr = "{0}-{1}-{2}".format(
+            build['package_name'],
+            build['version'],
             build['release'])
         versions.append(nvr)
-        print "%sLast build:%s%s by %s for %s in Updates".rstrip() % (
+        print "{0}Last build:{1}{2} by {3} for {4} in Updates".rstrip().format(
             " " * 8,
             " " * 5,
             build['completion_time'].split(" ")[0],
             build['owner_name'],
-            version
-            )
+            version)
     if "f" in tag:
         tag = tag + "-testing"
-    log.debug("Search last build for %s in %s" % (packagename, tag))
+    log.debug("Search last build for {0} in {1}".format(packagename, tag))
     data = kojiclient.getLatestBuilds(tag,
         package=packagename)
     for build in data:
-        nvr = "%s-%s-%s" % (
+        nvr = "{0}-{1}-{2}".format(
             build['package_name'], build['version'],
             build['release'])
         if nvr not in versions:
             versions.append(nvr)
-            print "%sLast build:%s%s by %s for %s in " \
-                    "Updates-testing" % (
-                " " * 6,
-                " " * 5,
-                build['completion_time'].split(" ")[0],
-                build['owner_name'],
-                nvr
-            )
+            print \
+              "{0}Last build:{1}{2} by {3} for {4} in Updates-testing".format(
+                  " " * 6,
+                  " " * 5,
+                  build['completion_time'].split(" ")[0],
+                  build['owner_name'],
+                  nvr)
 
 
 def toggle_acl(packagename, action, branch='devel', username=None,
@@ -470,19 +470,19 @@ def toggle_acl(packagename, action, branch='devel', username=None,
         branch = 'devel'
 
     if action not in actionlist and action != 'all':
-        raise ActionError("Action '%s' is not in the list: %s,all" % (
-            action, ",".join(actionlist)))
+        raise ActionError("Action '{0}' is not in the list: {1},all".format(
+                action, ",".join(actionlist)))
     _get_client_authentified(username=username, password=password)
     packageid = _get_package_id(packagename, branch)
 
     # if action == 'all' then we toggle all the ACLs
     if action == 'all':
-        log.debug("Toggle all acl for user: %s" % pkgdbclient.username)
+        log.debug("Toggle all acl for user: {0}".format(pkgdbclient.username))
         for action in actionlist:
-            log.debug("Toggle acl %s for user %s and package %s "\
-             "on branch %s" %
-             (action, pkgdbclient.username, packagename, branch))
-            params = {'container_id': '%s:%s' % (packageid, action)}
+            log.debug(
+            "Toggle acl {0} for user {1} and package {2} on branch {3}".format(
+                action, pkgdbclient.username, packagename, branch))
+            params = {'container_id': '{0}:{1}'.format(packageid, action)}
             pkgdbinfo = pkgdbclient.send_request(
                         '/acls/dispatcher/toggle_acl_request',
                         auth=True, req_params=params)
@@ -491,14 +491,19 @@ def toggle_acl(packagename, action, branch='devel', username=None,
                 msg = pkgdbinfo['aclStatus']
             else:
                 msg = pkgdbinfo['message']
-            log.info("%s%s%s for %s on package %s branch %s" % (bold,
-                msg, reset, pkgdbclient.username,
-                packagename, branch))
+            log.info(
+            "{0}{1}{3} for {4} on package {5} branch {6}".format(bold,
+                                                                 msg,
+                                                                 reset,
+                                                                 pkgdbclient.username,
+                                                                 packagename,
+                                                                 branch))
     # else we toggle only the given one
     else:
-        log.debug("Toggle acl %s for user %s and package %s on branch %s" %
-             (action, pkgdbclient.username, packagename, branch))
-        params = {'container_id': '%s:%s' % (packageid, action)}
+        log.debug(
+            "Toggle acl {0} for user {1} and package {2} on branch {3}".format(
+                action, pkgdbclient.username, packagename, branch))
+        params = {'container_id': '{0}:{1}'.format(packageid, action)}
         pkgdbinfo = pkgdbclient.send_request(
                         '/acls/dispatcher/toggle_acl_request',
                         auth=True, req_params=params)
@@ -507,9 +512,13 @@ def toggle_acl(packagename, action, branch='devel', username=None,
             msg = pkgdbinfo['aclStatus']
         else:
             msg = pkgdbinfo['message']
-        log.info("%s%s%s for %s on package %s branch %s" % (bold,
-            msg, reset, pkgdbclient.username,
-            packagename, branch))
+        log.info(
+            "{0}{1}{2}{3} for {4} on package {5} branch {6}".format(bold,
+                                                                    msg,
+                                                                    reset,
+                                                                    pkgdbclient.username,
+                                                                    packagename,
+                                                                    branch))
 
 
 def orphan_package(packagename, branch='devel', allpkgs=False,
@@ -589,9 +598,8 @@ def setup_action_parser(action):
     :arg action the action for which the rest of the arguments will be
     parsed. Actions can be "acl" or "list".
     """
-    log.info('Action called: %s' % action)
-    p = argparse.ArgumentParser(usage="%(prog)s " + \
-            "%s [options]" % action)
+    log.info('Action called: {0}'.format(action))
+    p = argparse.ArgumentParser(usage="%(prog)s {0} [options]".format(action))
 
     if action == 'acl':
         p.add_argument('package', help="Name of the package to query")
@@ -631,7 +639,7 @@ def setup_action_parser(action):
         p.add_argument('package', help="Name of the package")
         p.add_argument("action",
                 help="Request a specific ACL for this package (actions"\
-                " are %s)" % ", ".join(actionlist))
+                " are {0})".format(", ".join(actionlist)))
         p.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
                     "requested (default: devel)")
@@ -642,7 +650,7 @@ def setup_parser():
     """
     Set the main arguments.
     """
-    usage = "\nCommands: %s" % ', '.join(cmdlist)
+    usage = "\nCommands: {0}".format(', '.join(cmdlist))
     p = argparse.ArgumentParser(
     usage="%(prog)s [global options] COMMAND [options]" + usage,
     prog="pkgdb")
@@ -672,22 +680,22 @@ def main():
         action = arg.command
     else:
         raise argparse.ArgumentTypeError(
-            "command must be one of: %s" % ','.join(cmdlist))
+            "command must be one of: {0}".format(','.join(cmdlist)))
     # Parse action-specific args
     action_parser = setup_action_parser(action)
-    log.info("*** " + ", ".join(arg.argument))
+    log.info("*** {0}".format(", ".join(arg.argument)))
     args = action_parser.parse_args(arg.argument)
     if action == "acl":
-        log.info("package : %s" % args.package)
-        log.info("branch  : %s" % args.branch)
-        #log.info("approve : %s" % args.approve)
+        log.info("package : {0}".format(args.package))
+        log.info("branch  : {0}".format(args.branch))
+        #log.info("approve : {0}".format(args.approve))
         get_package_info(args.package, args.branch, args.pending,
                         args.noextra)
 
     elif action == "list":
-        log.info("pattern : %s" % args.pattern)
-        log.info("all     : %s" % args.all)
-        log.info("user    : %s" % args.username)
+        log.info("pattern : {0}".format(args.pattern))
+        log.info("all     : {0}".format(args.all))
+        log.info("user    : {0}".format(args.username))
         if(args.all is not None and args.all):
             log.info(args)
             get_packages("*")
@@ -702,12 +710,12 @@ def main():
             "Not enough argument given")
 
     elif action == "orphan":
-        log.info("user    : %s" % arg.username)
-        log.info("package : %s" % args.package)
-        log.info("branch  : %s" % args.branch)
-        #log.info("pattern : %s" % args.pattern)
-        log.info("all     : %s" % args.all)
-        log.info("retire  : %s" % args.retire)
+        log.info("user    : {0}".format(arg.username))
+        log.info("package : {0}".format(args.package))
+        log.info("branch  : {0}".format(args.branch))
+        #log.info("pattern : {0}".format(args.pattern))
+        log.info("all     : {0}".format(args.all))
+        log.info("retire  : {0}".format(args.retire))
         orphan_package(args.package, args.branch, args.all,
                 arg.username, arg.password)
         if args.retire is True:
@@ -715,10 +723,10 @@ def main():
                 arg.username, arg.password)
 
     elif action == "request":
-        log.info("user    : %s" % arg.username)
-        log.info("package : %s" % args.package)
-        log.info("branch  : %s" % args.branch)
-        log.info("acl     : %s" % args.action)
+        log.info("user    : {0}".format(arg.username))
+        log.info("package : {0}".format(args.package))
+        log.info("branch  : {0}".format(args.branch))
+        log.info("acl     : {0}".format(args.action))
         toggle_acl(args.package, args.action, args.branch,
                 arg.username, arg.password)
 
@@ -730,14 +738,14 @@ if __name__ == '__main__':
         print "\nInterrupted by user."
         sys.exit(1)
     except argparse.ArgumentTypeError, e:
-        print "\nError: %s" % str(e)
+        print "\nError: {0}".format(e)
         sys.exit(2)
     except ServerError, e:
-        print '%s' % e
+        print '{0}'.format(e)
         sys.exit(3)
     except AppError, e:
-        print '%s: %s' % (e.name, e.message)
+        print '{0}: {1}'.format(e.name, e.message)
         sys.exit(4)
     except Exception, e:
-        print 'Error: %s' % (e)
+        print 'Error: {0}'.format(e)
         sys.exit(5)
