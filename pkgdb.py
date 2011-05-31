@@ -140,6 +140,19 @@ def _get_package_id(packagename, branch):
         return None
 
 
+def _get_active_branches():
+    """
+    Query pkgdb to retrieve all none-EOL branches.
+
+    Returns a list containing the names of these branches
+    """
+    data = pkgdbclient.send_request('/collections/', auth=False,
+            req_params={'eol': None})
+    branches = dict((b[0]['branchname'], b[0])
+            for b in data.collections)
+    return branches.keys()
+
+
 def _orphan_one_package(packagename, branch='devel', username=None,
             password=None):
     """
