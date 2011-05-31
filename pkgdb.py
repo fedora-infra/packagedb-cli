@@ -492,12 +492,13 @@ def toggle_acl(packagename, action, branch='devel', username=None,
             else:
                 msg = pkgdbinfo['message']
             log.info(
-            "{0}{1}{3} for {4} on package {5} branch {6}".format(bold,
-                                                                 msg,
-                                                                 reset,
-                                                                 pkgdbclient.username,
-                                                                 packagename,
-                                                                 branch))
+            "{0}{1}{3} for {4} on package {5} branch {6}".format(
+                                                    bold,
+                                                    msg,
+                                                    reset,
+                                                    pkgdbclient.username,
+                                                    packagename,
+                                                    branch))
     # else we toggle only the given one
     else:
         log.debug(
@@ -513,12 +514,13 @@ def toggle_acl(packagename, action, branch='devel', username=None,
         else:
             msg = pkgdbinfo['message']
         log.info(
-            "{0}{1}{2}{3} for {4} on package {5} branch {6}".format(bold,
-                                                                    msg,
-                                                                    reset,
-                                                                    pkgdbclient.username,
-                                                                    packagename,
-                                                                    branch))
+            "{0}{1}{2}{3} for {4} on package {5} branch {6}".format(
+                                                    bold,
+                                                    msg,
+                                                    reset,
+                                                    pkgdbclient.username,
+                                                    packagename,
+                                                    branch))
 
 
 def orphan_package(packagename, branch='devel', allpkgs=False,
