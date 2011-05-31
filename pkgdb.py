@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
 # pkgdb - a commandline frontend for the Fedora package database
 #
 # Copyright (C) 2011 Pierre-Yves Chibon
@@ -12,6 +13,7 @@
 # your option) any later version.
 # See http://www.gnu.org/copyleft/gpl.html  for the full text of the
 # license.
+"""
 
 from fedora.client import PackageDB, AppError, ServerError
 from bugzilla.rhbugzilla import RHBugzilla3
