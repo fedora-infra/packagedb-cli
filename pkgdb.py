@@ -40,7 +40,7 @@ if '--debug' in sys.argv:
 elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
-cmdlist = ['acl', 'list']
+cmdlist = ['acl', 'list', 'orphan', 'request']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
@@ -50,21 +50,21 @@ class ActionError(Exception):
     pass
 
 
-def _get_client_authentified(pkgdbclient, username=None, password=None):
-    """ Returned a BaseClient with authentification 
+def _get_client_authentified(username=None, password=None):
+    """ Returned a BaseClient with authentification
 
     :arg pkgdbclient a PackageDB object to which username and password
     are added
     :karg username FAS username, if None it is asked to the user
     :karg password FAS password, if None it is asked to the user
     """
-    if username is None:
-        username = raw_input('FAS username: ')
-    if password is None:
-        password = getpass.getpass()
-    pkgdbclient.username = username
-    pkgdbclient.password = password
-    return pkgdbclient
+    if pkgdbclient.password is None:
+        if username is None:
+            username = raw_input('FAS username: ')
+        if password is None:
+            password = getpass.getpass()
+        pkgdbclient.username = username
+        pkgdbclient.password = password
 
 
 def _get_group_info(group, statusmap, tmpstring="", prevstring="",
@@ -121,7 +121,7 @@ def _get_package_id(packagename, branch):
     from dispatcher on packagedb).
 
     :arg name, name of the package to query
-    :arg branch branch for which the package id is returned Branch 
+    :arg branch branch for which the package id is returned Branch
     can be "devel", "f-14"...
     :return package_id a string of the package_id in the packageListings
     """
@@ -138,6 +138,56 @@ def _get_package_id(packagename, branch):
         return None
 
 
+def _orphan_one_package(packagename, branch='devel', username=None,
+            password=None):
+    """
+    Orphan one package from pkgdb.
+    """
+    if branch is None:
+        branch = 'devel'
+    _get_client_authentified(username=username, password=password)
+
+    log.info("Orphaning package %s on branch %s" % (packagename,
+            branch))
+    pkgdbinfo = pkgdbclient.send_request(
+            '/acls/dispatcher/set_owner',
+            auth=True, req_params={'owner': 'orphan',
+                                    'pkg_name': packagename,
+                                    'collectn_list': branch})
+    log.debug("output: %s" % pkgdbinfo)
+
+    if "message" in pkgdbinfo.keys():
+        print bold + pkgdbinfo["message"] + reset + "\n"
+    else:
+        print bold + "Changed owner of %s to orphan" % packagename \
+                + reset + "\n"
+
+
+def _retire_one_package(packagename, branch='devel', username=None,
+            password=None):
+    """
+    Retire one package from pkgdb.
+    """
+
+    if branch is None:
+        branch = 'devel'
+    _get_client_authentified(username=username, password=password)
+    packageid = _get_package_id(packagename, branch)
+
+    log.info("Retiring package %s (%s) on branch %s" % (packagename,
+                packageid, branch))
+
+    pkgdbinfo = pkgdbclient.send_request(
+            '/acls/dispatcher/toggle_retirement',
+            auth=True, req_params={'pkg_listing_id': packageid})
+
+    log.debug("output: %s" % pkgdbinfo)
+
+    if "retirement" in pkgdbinfo.keys():
+        print bold + packagename, pkgdbinfo["retirement"] \
+                + reset + "\n"
+
+
 def get_packages(motif=None):
     """
     Retrieve the list of all packages in packagedb.
@@ -147,7 +197,7 @@ def get_packages(motif=None):
     Querying "pkgdb list --all back*" will return you all the packages
     from pkgdb starting with back* (case insensitive), this includes
     orphand and eol'd packages as well as active packges.
-    
+
     :karg motif the motif used to search for the packages. If the motif
     does not end with a "*", one is added.
     """
@@ -178,7 +228,7 @@ def get_orphaned_packages(motif=None, eol=False):
     argument to True.
     The motif is present for later used once the online version of
     packagedb will be adjusted to allow it.
-    
+
     :karg motif the motif used to search for the packages. If the motif
     does not end with a "*", one is added.
     :karg eol if true only the EOL packages are returned.
@@ -228,68 +278,18 @@ def get_packager_info(packager):
                     packager, auth=False,
                     req_params={'tg_paginate_limit': 0})
 
+    pkgs = []
     if pkgdbinfo['eol']:
         print "User EOL'd"
     if 'pkgs' in pkgdbinfo:
         for pkg in pkgdbinfo['pkgs']:
             log.info(pkg.keys())
+            pkgs.append(pkg['name'])
             print "  ", pkg['name'], " " * (30 - len(pkg['name'])), \
                 pkg['summary']
                 #pkgdbinfo['statusMap'][pkg['statuscode']]
         print "Total: %s packages" % len(pkgdbinfo['pkgs'])
-    log.info(pkgdbinfo.keys())
-
-
-def toggle_acl(packagename, action, branch='devel', username=None,
-    password=None):
-    """
-    Request for a user and a branch the action for a given package.
-
-    :arg packagename is the name of the package for which you would like
-    to request an ACL.
-    :arg action is action which is requested for this package, actions
-    allowed are: [watchbugzilla, watchcommit, commit, approveacls]
-    :karg branch name of the branch for which to toggle the ACL. By
-    default this branch is 'devel' but can also be 'f-14'...
-    :karg username the FAS username for the user requesting the ACL.
-    :karg password the FAS password for the user requesting the ACL.
-    """
-    if action not in actionlist and action !='all':
-        raise ActionError("Action '%s' is not in the list: %s" % (
-            action, ",".join(actionlist)))
-    pkgdbclient_auth = _get_client_authentified(pkgdbclient,
-                            username=username, password=password)
-    packageid = _get_package_id(packagename, branch)
-
-    # if action == 'all' then we toggle all the ACLs
-    if action == 'all':
-        for action in actionlist:
-            params = {'container_id': '%s:%s' % (packageid, action)}
-            pkgdbinfo = pkgdbclient_auth.send_request(
-                        '/acls/dispatcher/toggle_acl_request',
-                        auth=True, req_params=params)
-            log.debug(pkgdbinfo)
-            if 'aclStatus' in pkgdbinfo.keys():
-                msg = pkgdbinfo['aclStatus']
-            else:
-                msg = pkgdbinfo['message']
-            log.info("%s%s%s for %s on package %s branch %s" % (bold,
-                msg, reset, pkgdbclient_auth.username,
-                packagename, branch))
-    # else we toggle only the given one
-    else:
-        params = {'container_id': '%s:%s' % (packageid, action)}
-        pkgdbinfo = pkgdbclient_auth.send_request(
-                        '/acls/dispatcher/toggle_acl_request',
-                        auth=True, req_params=params)
-        log.debug(pkgdbinfo)
-        if 'aclStatus' in pkgdbinfo.keys():
-            msg = pkgdbinfo['aclStatus']
-        else:
-            msg = pkgdbinfo['message']
-        log.info("%s%s%s for %s on package %s branch %s" % (bold,
-            msg, reset, pkgdbclient_auth.username,
-            packagename, branch))
+    return pkgs
 
 
 def get_package_info(packagename, branch=None, pending=False,
@@ -405,10 +405,10 @@ def get_last_build(packagename, tag):
         package=packagename)
     versions = []
     for build in data:
-        version = "%s-%s-%s" % (
+        nvr = "%s-%s-%s" % (
             build['package_name'], build['version'],
             build['release'])
-        versions.append(version)
+        versions.append(nvr)
         print "%sLast build:%s%s by %s for %s in Updates".rstrip() % (
             " " * 8,
             " " * 5,
@@ -422,19 +422,149 @@ def get_last_build(packagename, tag):
     data = kojiclient.getLatestBuilds(tag,
         package=packagename)
     for build in data:
-        version = "%s-%s-%s" % (
+        nvr = "%s-%s-%s" % (
             build['package_name'], build['version'],
             build['release'])
-        if version not in versions:
-            versions.append(version)
+        if nvr not in versions:
+            versions.append(nvr)
             print "%sLast build:%s%s by %s for %s in " \
                     "Updates-testing" % (
                 " " * 6,
                 " " * 5,
                 build['completion_time'].split(" ")[0],
                 build['owner_name'],
-                version
+                nvr
             )
+
+
+def toggle_acl(packagename, action, branch='devel', username=None,
+    password=None):
+    """
+    Request for a user and a branch the action for a given package.
+
+    :arg packagename is the name of the package for which you would like
+    to request an ACL.
+    :arg action is action which is requested for this package, actions
+    allowed are: [watchbugzilla, watchcommit, commit, approveacls]
+    :karg branch name of the branch for which to toggle the ACL. By
+    default this branch is 'devel' but can also be 'f-14'...
+    :karg username the FAS username for the user requesting the ACL.
+    :karg password the FAS password for the user requesting the ACL.
+    """
+    if branch is None:
+        branch = 'devel'
+
+    if action not in actionlist and action != 'all':
+        raise ActionError("Action '%s' is not in the list: %s,all" % (
+            action, ",".join(actionlist)))
+    _get_client_authentified(username=username, password=password)
+    packageid = _get_package_id(packagename, branch)
+
+    # if action == 'all' then we toggle all the ACLs
+    if action == 'all':
+        log.debug("Toggle all acl for user: %s" % pkgdbclient.username)
+        for action in actionlist:
+            log.debug("Toggle acl %s for user %s and package %s "\
+             "on branch %s" %
+             (action, pkgdbclient.username, packagename, branch))
+            params = {'container_id': '%s:%s' % (packageid, action)}
+            pkgdbinfo = pkgdbclient.send_request(
+                        '/acls/dispatcher/toggle_acl_request',
+                        auth=True, req_params=params)
+            log.debug(pkgdbinfo)
+            if 'aclStatus' in pkgdbinfo.keys():
+                msg = pkgdbinfo['aclStatus']
+            else:
+                msg = pkgdbinfo['message']
+            log.info("%s%s%s for %s on package %s branch %s" % (bold,
+                msg, reset, pkgdbclient.username,
+                packagename, branch))
+    # else we toggle only the given one
+    else:
+        log.debug("Toggle acl %s for user %s and package %s on branch %s" %
+             (action, pkgdbclient.username, packagename, branch))
+        params = {'container_id': '%s:%s' % (packageid, action)}
+        pkgdbinfo = pkgdbclient.send_request(
+                        '/acls/dispatcher/toggle_acl_request',
+                        auth=True, req_params=params)
+        log.debug(pkgdbinfo)
+        if 'aclStatus' in pkgdbinfo.keys():
+            msg = pkgdbinfo['aclStatus']
+        else:
+            msg = pkgdbinfo['message']
+        log.info("%s%s%s for %s on package %s branch %s" % (bold,
+            msg, reset, pkgdbclient.username,
+            packagename, branch))
+
+
+def orphan_package(packagename, branch='devel', allpkgs=False,
+    username=None, password=None):
+    """
+    Orphan packages from pkgdb.
+
+    :arg packagename the name of the package to orphan
+    :kwarg branch the name of the branch to orphan. By default it is
+    'devel' but it can also be 'all'.
+    :kwarg allpkgs default to False, if True then all the packages of
+    the user will be orphaned
+    :kwarg username the FAS username
+    :kwarg password the FAS password of the user
+    """
+    if branch is None:
+        branch = 'devel'
+    _get_client_authentified(username=username, password=password)
+
+    if allpkgs is True:
+        pkgs = get_packager_info(pkgdbclient.username)
+
+        for pkg in pkgs:
+            if branch == "all":
+                #TODO: implement this feature
+                print "logic not implemented yet"
+            else:
+                _orphan_one_package(pkg, branch, username, password)
+    else:
+        if branch == "all":
+            #TODO: implement this feature
+            print "logic not implemented yet"
+        else:
+            _orphan_one_package(packagename, branch, username, password)
+
+
+def retire_package(packagename, branch='devel', allpkgs=False,
+    username=None, password=None):
+    """
+    Retire packages from pkgdb.
+
+    /!\ only orphaned package can be retired.
+
+    :arg packagename the name of the package to be retired
+    :kwarg branch the name of the branch. By default it is
+    'devel' but it can also be 'all'.
+    :kwarg allpkgs default to False, if True then all the packages of
+    the user will be
+    :kwarg username the FAS username
+    :kwarg password the FAS password of the user
+    """
+    if branch is None:
+        branch = 'devel'
+    _get_client_authentified(username=username, password=password)
+
+    if allpkgs is True:
+        pkgs = get_packager_info(pkgdbclient.username)
+
+        for pkg in pkgs:
+            if branch == "all":
+                #TODO: implement this feature
+                print "logic not implemented yet"
+            else:
+                _retire_one_package(pkg, branch, username, password)
+    else:
+        if branch == "all":
+            #TODO: implement this feature
+            print "logic not implemented yet"
+        else:
+            _retire_one_package(packagename, branch, username, password)
 
 
 def setup_action_parser(action):
@@ -447,21 +577,17 @@ def setup_action_parser(action):
     log.info('Action called: %s' % action)
     p = argparse.ArgumentParser(usage="%(prog)s " + \
             "%s [options]" % action)
+
     if action == 'acl':
         p.add_argument('package', help="Name of the package to query")
-        p.add_argument('branch', default=None, nargs="?",
+        p.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package to query")
-        p.add_argument('--toggle', dest="action",
-                help="Request a specific ACL for this package (actions"\
-                " are %s)" % ", ".join(actionlist))
         p.add_argument('--pending', action="store_true", default=False,
                 help="Display only ACL awaiting review")
         p.add_argument('--noextra', action="store_false", default=True,
                 help="Do not display extra information (number of bugs"\
                 " opened and last build)")
-        ## I don't want the '--' but I can't find the right way w/o it
-        #p.add_argument('ask', action="store_true", default=False,
-                #help="Ask for acl on this package")
+
     elif action == 'list':
         p.add_argument('--all', action="store_true", default=False,
                 dest='all', help="List all packages starting with the" \
@@ -471,10 +597,29 @@ def setup_action_parser(action):
                 dest='orphaned', help="List all orphaned packages")
         p.add_argument('--eol', action="store_true", default=False,
                 dest='eol', help="List all orphaned and eol'd packages")
-        p.add_argument('--user', dest='user', default=False,
+        p.add_argument('--user', dest='username', default=False,
                 help="List all the packages of the user <user>")
         p.add_argument('pattern', default=None, nargs="?",
                 help="Pattern to query")
+
+    elif action == 'orphan':
+        p.add_argument('package', help="Name of the package to orphan")
+        p.add_argument('branch', default='devel', nargs="?",
+                    help="Branch of the package to orphan " \
+                    "(default: devel, can be: all)")
+        p.add_argument('--retire', action="store_true", default=False,
+                help="Retire the given package")
+        p.add_argument('--all', action="store_true", default=False,
+                help="Orphan all your packages")
+
+    elif action == "request":
+        p.add_argument('package', help="Name of the package")
+        p.add_argument("action",
+                help="Request a specific ACL for this package (actions"\
+                " are %s)" % ", ".join(actionlist))
+        p.add_argument('branch', default='devel', nargs="?",
+                    help="Branch of the package for which the ACL is " \
+                    "requested (default: devel)")
     return p
 
 
@@ -489,10 +634,11 @@ def setup_parser():
     # General connection options
     p.add_argument('command')
     p.add_argument('argument', nargs=argparse.REMAINDER)
-    p.add_argument('--user',
-                help="username")
-    p.add_argument('--password',
-                help="password")
+    p.add_argument('--user', dest="username",
+                help="FAS username")
+    p.add_argument('--password', dest="password",
+                help="FAS password (if not provided, will be asked " \
+                "later)")
     p.add_argument('--verbose', action='store_true',
                 help="give more info about what's going on")
     p.add_argument('--debug', action='store_true',
@@ -505,45 +651,62 @@ def main():
     # Set up parser for global args
     parser = setup_parser()
     # Parse the commandline
-    args = parser.parse_args()
+    arg = parser.parse_args()
     # Get our action from these args
-    if args.command in cmdlist:
-        action = args.command
+    if arg.command in cmdlist:
+        action = arg.command
     else:
         raise argparse.ArgumentTypeError(
             "command must be one of: %s" % ','.join(cmdlist))
     # Parse action-specific args
     action_parser = setup_action_parser(action)
-    log.info("*** " + ", ".join(args.argument))
-    args = action_parser.parse_args(args.argument)
+    log.info("*** " + ", ".join(arg.argument))
+    args = action_parser.parse_args(arg.argument)
     if action == "acl":
         log.info("package : %s" % args.package)
         log.info("branch  : %s" % args.branch)
-        log.info("toggle  : %s" % args.action)
-        #log.info("orphan : %s" % args.orphan)
         #log.info("approve : %s" % args.approve)
-        if (args.action is not None):
-            toggle_acl(args.package, args.action, args.branch)
-        log.info("package: %s" % args.package)
-        log.info("branch: %s" % args.branch)
         get_package_info(args.package, args.branch, args.pending,
                         args.noextra)
+
     elif action == "list":
         log.info("pattern : %s" % args.pattern)
         log.info("all     : %s" % args.all)
-        log.info("user    : %s" % args.user)
+        log.info("user    : %s" % args.username)
         if(args.all is not None and args.all):
             log.info(args)
             get_packages("*")
         elif (args.orphaned is not None and args.orphaned):
             get_orphaned_packages(args.pattern, args.eol)
-        elif (args.user is not None and args.user):
-            get_packager_info(args.user)
+        elif (args.username is not None and args.username):
+            get_packager_info(args.username)
         elif (args.pattern is not None):
             get_packages(args.pattern)
         else:
             raise argparse.ArgumentTypeError(
             "Not enough argument given")
+
+    elif action == "orphan":
+        log.info("user    : %s" % arg.username)
+        log.info("package : %s" % args.package)
+        log.info("branch  : %s" % args.branch)
+        #log.info("pattern : %s" % args.pattern)
+        log.info("all     : %s" % args.all)
+        log.info("retire  : %s" % args.retire)
+        orphan_package(args.package, args.branch, args.all,
+                arg.username, arg.password)
+        if args.retire is True:
+            retire_package(args.package, args.branch,
+                arg.username, arg.password)
+
+    elif action == "request":
+        log.info("user    : %s" % arg.username)
+        log.info("package : %s" % args.package)
+        log.info("branch  : %s" % args.branch)
+        log.info("acl     : %s" % args.action)
+        toggle_acl(args.package, args.action, args.branch,
+                arg.username, arg.password)
+
 
 if __name__ == '__main__':
     try:
