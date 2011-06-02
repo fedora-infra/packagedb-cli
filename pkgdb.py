@@ -545,14 +545,16 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
 
         for pkg in pkgs:
             if branch == "all":
-                #TODO: implement this feature
-                print "logic not implemented yet"
+                branches = _get_active_branches()
+                for branch in branches:
+                    _orphan_one_package(pkg, branch, username, password)
             else:
                 _orphan_one_package(pkg, branch, username, password)
     else:
         if branch == "all":
-            #TODO: implement this feature
-            print "logic not implemented yet"
+            branches = _get_active_branches()
+            for branch in branches:
+                _orphan_one_package(pkg, branch, username, password)
         else:
             _orphan_one_package(packagename, branch, username, password)
 
@@ -581,14 +583,16 @@ def retire_package(packagename, branch='devel', allpkgs=False,
 
         for pkg in pkgs:
             if branch == "all":
-                #TODO: implement this feature
-                print "logic not implemented yet"
+                branches = _get_active_branches()
+                for branch in branches:
+                    _orphan_one_package(pkg, branch, username, password)
             else:
                 _retire_one_package(pkg, branch, username, password)
     else:
         if branch == "all":
-            #TODO: implement this feature
-            print "logic not implemented yet"
+            branches = _get_active_branches()
+            for branch in branches:
+                _orphan_one_package(pkg, branch, username, password)
         else:
             _retire_one_package(packagename, branch, username, password)
 
