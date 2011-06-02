@@ -186,12 +186,18 @@ def _retire_one_package(packagename, branch='devel', username=None,
 
     if branch is None:
         branch = 'devel'
+
+    log.info("Retiring package {0} on branch {2}".format(packagename,
+                                                            branch))
+
     _get_client_authentified(username=username, password=password)
     packageid = _get_package_id(packagename, branch)
 
-    log.info("Retiring package {0} ({1}) on branch {2}".format(packagename,
-                                                            packageid,
-                                                            branch))
+    if packageid is None:
+        print "Cannot retire package {0} on branch {1}, "\
+                "package ID could not be found".format(packagename,
+                                                        branch)
+        return
 
     pkgdbinfo = pkgdbclient.send_request(
             '/acls/dispatcher/toggle_retirement',
