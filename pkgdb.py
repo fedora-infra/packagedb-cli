@@ -345,14 +345,14 @@ def get_package_info(packagename, branch=None, pending=False,
     pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(packagename),
                                          auth=False)
 
-    log.debug("Query bugzilla")
-    bugbz = bzclient.query(
-        {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
-         'component': packagename})
     print pkgdbinfo['title']
     if 'packageListings' in pkgdbinfo:
         print pkgdbinfo['packageListings'][0]['package']['summary']
         if extra:
+            log.debug("Query bugzilla")
+            bugbz = bzclient.query(
+                    {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
+                    'component': packagename})
             print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
         for collection in pkgdbinfo['packageListings']:
             if branch is None or branch == \
