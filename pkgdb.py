@@ -154,6 +154,35 @@ def _get_active_branches():
     return branches.keys()
 
 
+def _get_last_build(packagename, tag):
+    """
+    Print information about the last build of a package for a given koji
+    tag.
+
+    :arg packagename the name of the package for which we are looking for
+    the last build.
+    :arg tag the tag used in koji. See `koji list-tags` for the complete
+    list of available tag.
+    """
+    log.debug("Search last build for {0} in {1}".format(packagename, tag))
+    data = kojiclient.getLatestBuilds(tag,
+        package=packagename)
+    versions = []
+    for build in data:
+        nvr = "{0}-{1}-{2}".format(
+            build['package_name'],
+            build['version'],
+            build['release'])
+        versions.append(nvr)
+        print "{0}Last build:{1}{2} by {3} for {4} in {5}".rstrip().format(
+            " " * 8,
+            " " * 5,
+            build['completion_time'].split(" ")[0],
+            build['owner_name'],
+            version,
+            tag)
+
+
 def _orphan_one_package(packagename, branch='devel', username=None,
             password=None):
     """
@@ -349,6 +378,7 @@ def get_package_info(packagename, branch=None, pending=False,
     if 'packageListings' in pkgdbinfo:
         print pkgdbinfo['packageListings'][0]['package']['summary']
         if extra:
+            # print the number of opened bugs
             log.debug("Query bugzilla")
             bugbz = bzclient.query(
                     {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
@@ -399,6 +429,7 @@ def get_package_info(packagename, branch=None, pending=False,
                         print info
 
                 if extra:
+                    # print the last build
                     tag = collection['collection']['koji_name']
                     get_last_build(packagename, tag)
 
@@ -423,40 +454,11 @@ def get_last_build(packagename, tag):
     # for updates and updates-testing
     if "f" in tag:
         tag = tag + "-updates"
-    log.debug("Search last build for {0} in {1}".format(packagename, tag))
-    data = kojiclient.getLatestBuilds(tag,
-        package=packagename)
-    versions = []
-    for build in data:
-        nvr = "{0}-{1}-{2}".format(
-            build['package_name'],
-            build['version'],
-            build['release'])
-        versions.append(nvr)
-        print "{0}Last build:{1}{2} by {3} for {4} in Updates".rstrip().format(
-            " " * 8,
-            " " * 5,
-            build['completion_time'].split(" ")[0],
-            build['owner_name'],
-            version)
-    if "f" in tag:
+        _get_last_build(packagename, tag)
         tag = tag + "-testing"
-    log.debug("Search last build for {0} in {1}".format(packagename, tag))
-    data = kojiclient.getLatestBuilds(tag,
-        package=packagename)
-    for build in data:
-        nvr = "{0}-{1}-{2}".format(
-            build['package_name'], build['version'],
-            build['release'])
-        if nvr not in versions:
-            versions.append(nvr)
-            print \
-              "{0}Last build:{1}{2} by {3} for {4} in Updates-testing".format(
-                  " " * 6,
-                  " " * 5,
-                  build['completion_time'].split(" ")[0],
-                  build['owner_name'],
-                  nvr)
+        _get_last_build(packagename, tag)
+    else:
+        _get_last_build(packagename, tag)
 
 
 def toggle_acl(packagename, action, branch='devel', username=None,
@@ -550,7 +552,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
 
     pkgs = get_packager_info(pkgdbclient.username)
     # transform the packagename to make it a regex
-    motif = "^" + packagename.replace("*",".*") + "$"
+    motif = "^" + packagename.replace("*", ".*") + "$"
     for pkg in pkgs:
         if allpkgs is True:
             log.debug("Orphan all packages")
@@ -574,6 +576,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
         else:
             print "Could not find {0} in the list of your packages".format(
                     packagename)
+
 
 def retire_package(packagename, branch='devel', allpkgs=False,
     username=None, password=None):
