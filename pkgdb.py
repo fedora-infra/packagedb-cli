@@ -22,6 +22,7 @@ import logging
 import getpass
 import koji
 import sys
+import re
 
 version = '0.0.1'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
@@ -533,6 +534,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
     username=None, password=None):
     """
     Orphan packages from pkgdb.
+    This implies that the owner is changed to "orphan".
 
     :arg packagename the name of the package to orphan
     :kwarg branch the name of the branch to orphan. By default it is
@@ -546,24 +548,32 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
         branch = 'devel'
     _get_client_authentified(username=username, password=password)
 
-    if allpkgs is True:
-        pkgs = get_packager_info(pkgdbclient.username)
-
-        for pkg in pkgs:
+    pkgs = get_packager_info(pkgdbclient.username)
+    # transform the packagename to make it a regex
+    motif = "^" + packagename.replace("*",".*") + "$"
+    for pkg in pkgs:
+        if allpkgs is True:
+            log.debug("Orphan all packages")
             if branch == "all":
+                log.debug("Orphan in all branches")
                 branches = _get_active_branches()
                 for branch in branches:
                     _orphan_one_package(pkg, branch, username, password)
             else:
                 _orphan_one_package(pkg, branch, username, password)
-    else:
-        if branch == "all":
-            branches = _get_active_branches()
-            for branch in branches:
-                _orphan_one_package(pkg, branch, username, password)
+        elif re.match(packagename, pkg):
+            log.debug("motif   : {0}".format(motif))
+            log.debug("package : {0}".format(pkg))
+            if branch == "all":
+                log.debug("Orphan in all branches")
+                branches = _get_active_branches()
+                for branch in branches:
+                    _orphan_one_package(pkg, branch, username, password)
+            else:
+                _orphan_one_package(packagename, branch, username, password)
         else:
-            _orphan_one_package(packagename, branch, username, password)
-
+            print "Could not find {0} in the list of your packages".format(
+                    packagename)
 
 def retire_package(packagename, branch='devel', allpkgs=False,
     username=None, password=None):
@@ -586,9 +596,11 @@ def retire_package(packagename, branch='devel', allpkgs=False,
 
     if allpkgs is True:
         pkgs = get_packager_info(pkgdbclient.username)
+        log.debug("Retire all packages")
 
         for pkg in pkgs:
             if branch == "all":
+                log.debug("Retire in all branches")
                 branches = _get_active_branches()
                 for branch in branches:
                     _orphan_one_package(pkg, branch, username, password)
@@ -596,6 +608,7 @@ def retire_package(packagename, branch='devel', allpkgs=False,
                 _retire_one_package(pkg, branch, username, password)
     else:
         if branch == "all":
+            log.debug("Retire in all branches")
             branches = _get_active_branches()
             for branch in branches:
                 _orphan_one_package(pkg, branch, username, password)
