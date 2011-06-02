@@ -627,51 +627,55 @@ def setup_action_parser(action):
     parsed. Actions can be "acl" or "list".
     """
     log.info('Action called: {0}'.format(action))
-    p = argparse.ArgumentParser(usage="%(prog)s {0} [options]".format(action))
+    parser = argparse.ArgumentParser(
+                usage="%(prog)s {0} [options]".format(action))
 
     if action == 'acl':
-        p.add_argument('package', help="Name of the package to query")
-        p.add_argument('branch', default='devel', nargs="?",
+        parser.add_argument('package', help="Name of the package to query")
+        parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package to query")
-        p.add_argument('--pending', action="store_true", default=False,
-                help="Display only ACL awaiting review")
-        p.add_argument('--noextra', action="store_false", default=True,
-                help="Do not display extra information (number of bugs"\
-                " opened and last build)")
+        parser.add_argument('--pending', action="store_true", default=False,
+                    help="Display only ACL awaiting review")
+        parser.add_argument('--noextra', action="store_false", default=True,
+                    help="Do not display extra information (number of " \
+                    "bugs opened and last build)")
 
     elif action == 'list':
-        p.add_argument('--all', action="store_true", default=False,
-                dest='all', help="List all packages starting with the" \
-                " given pattern (without pattern this may take a while)"
-                )
-        p.add_argument('--orphaned', action="store_true", default=False,
-                dest='orphaned', help="List all orphaned packages")
-        p.add_argument('--eol', action="store_true", default=False,
-                dest='eol', help="List all orphaned and eol'd packages")
-        p.add_argument('--user', dest='username', default=False,
-                help="List all the packages of the user <user>")
-        p.add_argument('pattern', default=None, nargs="?",
-                help="Pattern to query")
+        parser.add_argument('--all', action="store_true", default=False,
+                    dest='all', help="List all packages starting " \
+                    "with the given pattern (without pattern this may " \
+                    "take a while)")
+        parser.add_argument('--orphaned', action="store_true", default=False,
+                    dest='orphaned', help="List all orphaned packages")
+        parser.add_argument('--eol', action="store_true", default=False,
+                    dest='eol', 
+                    help="List all orphaned and eol'd packages")
+        parser.add_argument('--user', dest='username', default=False,
+                    help="List all the packages of the user <user>")
+        parser.add_argument('pattern', default=None, nargs="?",
+                    help="Pattern to query")
 
     elif action == 'orphan':
-        p.add_argument('package', help="Name of the package to orphan")
-        p.add_argument('branch', default='devel', nargs="?",
+        parser.add_argument('package',
+                    help="Name of the package to orphan or " \
+                    "simple pattern")
+        parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package to orphan " \
                     "(default: devel, can be: all)")
-        p.add_argument('--retire', action="store_true", default=False,
-                help="Retire the given package")
-        p.add_argument('--all', action="store_true", default=False,
-                help="Orphan all your packages")
+        parser.add_argument('--retire', action="store_true", default=False,
+                    help="Retire the given package")
+        parser.add_argument('--all', action="store_true", default=False,
+                    help="Orphan all your packages")
 
     elif action == "request":
-        p.add_argument('package', help="Name of the package")
-        p.add_argument("action",
-                help="Request a specific ACL for this package (actions"\
-                " are {0})".format(", ".join(actionlist)))
-        p.add_argument('branch', default='devel', nargs="?",
+        parser.add_argument('package', help="Name of the package")
+        parser.add_argument("action",
+                    help="Request a specific ACL for this package " \
+                    "(actions are {0})".format(", ".join(actionlist)))
+        parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
                     "requested (default: devel)")
-    return p
+    return parser
 
 
 def setup_parser():
@@ -679,22 +683,22 @@ def setup_parser():
     Set the main arguments.
     """
     usage = "\nCommands: {0}".format(', '.join(cmdlist))
-    p = argparse.ArgumentParser(
+    parser = argparse.ArgumentParser(
     usage="%(prog)s [global options] COMMAND [options]" + usage,
     prog="pkgdb")
     # General connection options
-    p.add_argument('command')
-    p.add_argument('argument', nargs=argparse.REMAINDER)
-    p.add_argument('--user', dest="username",
+    parser.add_argument('command')
+    parser.add_argument('argument', nargs=argparse.REMAINDER)
+    parser.add_argument('--user', dest="username",
                 help="FAS username")
-    p.add_argument('--password', dest="password",
+    parser.add_argument('--password', dest="password",
                 help="FAS password (if not provided, will be asked " \
                 "later)")
-    p.add_argument('--verbose', action='store_true',
+    parser.add_argument('--verbose', action='store_true',
                 help="give more info about what's going on")
-    p.add_argument('--debug', action='store_true',
+    parser.add_argument('--debug', action='store_true',
                 help="output bunches of debugging info")
-    return p
+    return parser
 
 
 def main():
