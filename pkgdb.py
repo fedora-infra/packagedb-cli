@@ -43,7 +43,7 @@ if '--debug' in sys.argv:
 elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
-cmdlist = ['acl', 'list', 'orphan', 'request']
+cmdlist = ['acl', 'list', 'request', 'update', 'orphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
@@ -532,6 +532,81 @@ def toggle_acl(packagename, action, branch='devel', username=None,
                                                     branch))
 
 
+def answer_acl_request(packagename, action, user, answer, branch=None,
+                username=None, password=None):
+    """
+    Answer a requested ACL.
+    This method allows you to approve or deny a requested acl.
+
+    :arg packagename is the name of the package
+    :arg action is the name of the ACL
+    :arg user is the FAS name of the user who requested the ACL
+    :arg answer your answer to the request (approve/deny)
+    :karg branch is the name of the branch for which you reply
+    (default = devel)
+    :karg username your FAS username
+    :karg password your FAS password
+    """
+    if branch is None:
+        branch = 'devel'
+
+    if action not in actionlist and action != 'all':
+        raise ActionError("Action '{0}' is not in the list: {1},all".format(
+                action, ",".join(actionlist)))
+    _get_client_authentified(username=username, password=password)
+    packageid = _get_package_id(packagename, branch)
+
+    # Answer all branches
+    if action == 'all':
+        log.debug("Answer all acl for user: {0}".format(
+                                                pkgdbclient.username))
+        for action in actionlist:
+            log.debug(
+            "Answer acl {0} for user {1} and package {2} on branch {3}".format(
+                action, user, packagename, branch))
+            params = {"pkgid": packageid, "person_name": user,
+                    "new_acl": action, "statusname": answer}
+            pkgdbinfo = pkgdbclient.send_request(
+                        '/acls/dispatcher/set_acl_status',
+                        auth=True, req_params=params)
+            log.debug(pkgdbinfo)
+            if 'aclStatus' in pkgdbinfo.keys():
+                msg = pkgdbinfo['aclStatus']
+            else:
+                msg = pkgdbinfo['message']
+            log.info(
+            "{0}{1}{3} for {4} on package {5} branch {6}".format(
+                                                    bold,
+                                                    msg,
+                                                    reset,
+                                                    pkgdbclient.username,
+                                                    packagename,
+                                                    branch))
+    # else we anser only the given one
+    else:
+        log.debug(
+            "Answer acl {0} for user {1} and package {2} on branch {3}".format(
+                action, user, packagename, branch))
+        params = {"pkgid": packageid, "person_name": user,
+                    "new_acl": action, "statusname": answer}
+        pkgdbinfo = pkgdbclient.send_request(
+                        '/acls/dispatcher/set_acl_status',
+                        auth=True, req_params=params)
+        log.debug(pkgdbinfo)
+        if 'aclStatus' in pkgdbinfo.keys():
+            msg = pkgdbinfo['aclStatus']
+        else:
+            msg = pkgdbinfo['message']
+        log.info(
+            "{0}{1}{2}{3} for {4} on package {5} branch {6}".format(
+                                                    bold,
+                                                    msg,
+                                                    reset,
+                                                    pkgdbclient.username,
+                                                    packagename,
+                                                    branch))
+
+
 def orphan_package(packagename, branch='devel', allpkgs=False,
     username=None, password=None):
     """
@@ -648,7 +723,7 @@ def setup_action_parser(action):
         parser.add_argument('--orphaned', action="store_true", default=False,
                     dest='orphaned', help="List all orphaned packages")
         parser.add_argument('--eol', action="store_true", default=False,
-                    dest='eol', 
+                    dest='eol',
                     help="List all orphaned and eol'd packages")
         parser.add_argument('--user', dest='username', default=False,
                     help="List all the packages of the user <user>")
@@ -671,10 +746,27 @@ def setup_action_parser(action):
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
                     help="Request a specific ACL for this package " \
-                    "(actions are {0})".format(", ".join(actionlist)))
+                    "(actions are {0},all)".format(", ".join(actionlist)))
         parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
-                    "requested (default: devel)")
+                    "requested (default: devel, can be: all)")
+
+    elif action == "update":
+        parser.add_argument('package', help="Name of the package")
+        parser.add_argument("action",
+                    help="Request a specific ACL for this package " \
+                    "(actions are {0},all)".format(", ".join(actionlist)))
+        parser.add_argument('user',
+                    help="FAS username of the person who requested ACL " \
+                    "on this package")
+        parser.add_argument('branch', default='devel', nargs="?",
+                    help="Branch of the package for which the ACL is " \
+                    "requested (default: devel, can be: all)")
+        parser.add_argument('--approve', action="store_true", default=False,
+                    help="Approve the requested ACL")
+        parser.add_argument('--deny', action="store_true", default=False,
+                    help="Deny the requested ACL")
+
     return parser
 
 
@@ -761,6 +853,20 @@ def main():
         log.info("acl     : {0}".format(args.action))
         toggle_acl(args.package, args.action, args.branch,
                 arg.username, arg.password)
+
+    elif action == "update":
+        log.info("user      : {0}".format(arg.username))
+        log.info("package   : {0}".format(args.package))
+        log.info("acl       : {0}".format(args.action))
+        log.info("requester : {0}".format(args.user))
+        log.info("branch    : {0}".format(args.branch))
+        log.info("approve   : {0}".format(args.approve))
+        log.info("deny      : {0}".format(args.deny))
+        answer = args.deny
+        if args.approve:
+            answer = args.approve
+        answer_acl_request(args.package, args.action, args.user,
+                answer, args.branch, arg.username, arg.password)
 
 
 if __name__ == '__main__':
