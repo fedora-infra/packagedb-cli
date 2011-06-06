@@ -40,6 +40,7 @@ logging.basicConfig()
 log = logging.getLogger("pkgdb")
 if '--debug' in sys.argv:
     log.setLevel(logging.DEBUG)
+    #pkgdbclient.debug = True
 elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
@@ -355,7 +356,7 @@ def get_orphaned_packages(motif=None, eol=False):
     log.info(pkgdbinfo.keys())
 
 
-def get_packager_info(packager):
+def get_packager_info(packager, output=True):
     """
     Retrieve the list of all the package for which the given packager
     has
@@ -375,15 +376,18 @@ def get_packager_info(packager):
 
     pkgs = []
     if pkgdbinfo['eol']:
-        print "User EOL'd"
+        if output:
+            print "User EOL'd"
     if 'pkgs' in pkgdbinfo:
         for pkg in pkgdbinfo['pkgs']:
             log.info(pkg.keys())
             pkgs.append(pkg['name'])
-            print "  ", pkg['name'], " " * (30 - len(pkg['name'])), \
-                pkg['summary']
+            if output:
+                print "  ", pkg['name'], " " * (30 - len(pkg['name'])), \
+                    pkg['summary']
                 #pkgdbinfo['statusMap'][pkg['statuscode']]
-        print "Total: {0} packages".format(len(pkgdbinfo['pkgs']))
+        if output:
+            print "Total: {0} packages".format(len(pkgdbinfo['pkgs']))
     return pkgs
 
 
@@ -627,10 +631,13 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
         branch = 'devel'
     _get_client_authentified(username=username, password=password)
 
-    pkgs = get_packager_info(pkgdbclient.username)
-    # transform the packagename to make it a regex
-    motif = "^" + packagename.replace("*", ".*") + "$"
+    pkgs = get_packager_info(pkgdbclient.username, output=False)
+    log.debug("Packages: {0}".format(pkgs))
+    if packagename is not None:
+        # transform the packagename to make it a regex
+        motif = "^" + packagename.replace("*", ".*") + "$"
     for pkg in pkgs:
+        log.info("Package: {0}".format(pkg))
         if allpkgs is True:
             log.debug("Orphan all packages")
             if branch == "all":
@@ -696,7 +703,7 @@ def retire_package(packagename, branch='devel', allpkgs=False,
             _retire_one_package(packagename, branch, username, password)
 
 
-def setup_action_parser(action):
+def setup_action_parser(action, last_args=None):
     """
     Parse the remaining argument for action specific arguments.
 
@@ -733,15 +740,23 @@ def setup_action_parser(action):
                     help="Pattern to query")
 
     elif action == 'orphan':
-        parser.add_argument('package',
+        if "--all" in last_args:
+            parser.add_argument('--package')
+            parser.add_argument('--branch')
+            parser.add_argument('--retire', action="store_true", default=False,
+                    help="Retire the given package")
+            parser.add_argument('--all', action="store_true", default=False,
+                    help="Orphan all your packages")
+        else:
+            parser.add_argument('package',
                     help="Name of the package to orphan or " \
                     "simple pattern")
-        parser.add_argument('branch', default='devel', nargs="?",
+            parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package to orphan " \
                     "(default: devel, can be: all)")
-        parser.add_argument('--retire', action="store_true", default=False,
+            parser.add_argument('--retire', action="store_true", default=False,
                     help="Retire the given package")
-        parser.add_argument('--all', action="store_true", default=False,
+            parser.add_argument('--all', action="store_true", default=False,
                     help="Orphan all your packages")
 
     elif action == "request":
@@ -808,7 +823,7 @@ def main():
         raise argparse.ArgumentTypeError(
             "command must be one of: {0}".format(','.join(cmdlist)))
     # Parse action-specific args
-    action_parser = setup_action_parser(action)
+    action_parser = setup_action_parser(action, arg.argument)
     log.info("*** {0}".format(", ".join(arg.argument)))
     args = action_parser.parse_args(arg.argument)
     if action == "acl":
