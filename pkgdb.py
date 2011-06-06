@@ -53,6 +53,13 @@ class ActionError(Exception):
     pass
 
 
+class PackageIDError(Exception):
+    """ This class is raised when a package_id could not be found for a
+    specific package name or combination of package name and branch.
+    """
+    pass
+
+
 def _get_client_authentified(username=None, password=None):
     """ Returned a BaseClient with authentification
 
@@ -128,7 +135,8 @@ def _get_package_id(packagename, branch):
     can be "devel", "f-14"...
     :return package_id a string of the package_id in the packageListings
     """
-    log.debug("Retrieve package_id from pkgdb for {0}".format(packagename))
+    log.debug("Retrieve package_id from pkgdb for {0} branch {1}".format(
+            packagename, branch))
     pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(
             packagename, auth=False))
     if 'packageListings' in pkgdbinfo.keys():
@@ -138,7 +146,12 @@ def _get_package_id(packagename, branch):
                         packagename, pkgdbinfo['packageListings'][0]['id']))
                 return branches['id']
     else:
-        return None
+        # line splitted for now, when translation will come in line
+        # the splitted string should be put back together.
+        raise PackageIDError(
+        "The package_id for package '{0}' in branch '{1}' could not be" \
+        " found".format(
+            packagename, branch))
 
 
 def _get_active_branches():
@@ -223,12 +236,6 @@ def _retire_one_package(packagename, branch='devel', username=None,
     _get_client_authentified(username=username, password=password)
     packageid = _get_package_id(packagename, branch)
 
-    if packageid is None:
-        print "Cannot retire package {0} on branch {1}, "\
-                "package ID could not be found".format(packagename,
-                                                        branch)
-        return
-
     pkgdbinfo = pkgdbclient.send_request(
             '/acls/dispatcher/toggle_retirement',
             auth=True, req_params={'pkg_listing_id': packageid})
@@ -238,6 +245,41 @@ def _retire_one_package(packagename, branch='devel', username=None,
     if "retirement" in pkgdbinfo.keys():
         print "{0}{1}{2}{3}\n".format(bold, packagename,
                                       pkgdbinfo["retirement"], reset)
+
+
+def _answer_acl(action, user, packagename, answer, branch):
+    """
+    Answer a requested ACL.
+    This method allows you to approve or deny a single acl.
+
+    :arg action is the name of the ACL
+    :arg user is the FAS name of the user who requested the ACL
+    :arg packagename is the name of the package
+    :arg answer your answer to the request (approve/deny)
+    :karg branch is the name of the branch for which you reply
+    """
+    packageid = _get_package_id(packagename, branch)
+    log.debug(
+    "Answer acl {0} for user {1} and package {2} ({3}) on branch {4}".format(
+        action, user, packagename, packageid, branch))
+    params = {"pkgid": packageid, "person_name": user,
+            "new_acl": action, "statusname": answer}
+    pkgdbinfo = pkgdbclient.send_request(
+                '/acls/dispatcher/set_acl_status',
+                auth=True, req_params=params)
+    log.debug(pkgdbinfo)
+    if pkgdbinfo['status'] is True:
+        print "{0}{1} {2}{3} for {4} on package {5} branch {6}".format(
+                                            bold,
+                                            action,
+                                            answer,
+                                            reset,
+                                            pkgdbclient.username,
+                                            packagename,
+                                            branch)
+    else:
+        print "ACL request could not be {0}, do you have the rights to" \
+        " so?".format(answer)
 
 
 def get_packages(motif=None):
@@ -536,7 +578,8 @@ def answer_acl_request(packagename, action, user, answer, branch=None,
                 username=None, password=None):
     """
     Answer a requested ACL.
-    This method allows you to approve or deny a requested acl.
+    This method allows you to approve or deny a specific requested acl
+    or all acl requested by the user.
 
     :arg packagename is the name of the package
     :arg action is the name of the ACL
@@ -554,57 +597,16 @@ def answer_acl_request(packagename, action, user, answer, branch=None,
         raise ActionError("Action '{0}' is not in the list: {1},all".format(
                 action, ",".join(actionlist)))
     _get_client_authentified(username=username, password=password)
-    packageid = _get_package_id(packagename, branch)
 
-    # Answer all branches
+    # Answer all actions requested
     if action == 'all':
         log.debug("Answer all acl for user: {0}".format(
                                                 pkgdbclient.username))
         for action in actionlist:
-            log.debug(
-            "Answer acl {0} for user {1} and package {2} on branch {3}".format(
-                action, user, packagename, branch))
-            params = {"pkgid": packageid, "person_name": user,
-                    "new_acl": action, "statusname": answer}
-            pkgdbinfo = pkgdbclient.send_request(
-                        '/acls/dispatcher/set_acl_status',
-                        auth=True, req_params=params)
-            log.debug(pkgdbinfo)
-            if 'aclStatus' in pkgdbinfo.keys():
-                msg = pkgdbinfo['aclStatus']
-            else:
-                msg = pkgdbinfo['message']
-            log.info(
-            "{0}{1}{3} for {4} on package {5} branch {6}".format(
-                                                    bold,
-                                                    msg,
-                                                    reset,
-                                                    pkgdbclient.username,
-                                                    packagename,
-                                                    branch))
-    # else we anser only the given one
+            _answer_acl(action, user, packagename, answer, branch)
+    # else we answer only the given one
     else:
-        log.debug(
-            "Answer acl {0} for user {1} and package {2} on branch {3}".format(
-                action, user, packagename, branch))
-        params = {"pkgid": packageid, "person_name": user,
-                    "new_acl": action, "statusname": answer}
-        pkgdbinfo = pkgdbclient.send_request(
-                        '/acls/dispatcher/set_acl_status',
-                        auth=True, req_params=params)
-        log.debug(pkgdbinfo)
-        if 'aclStatus' in pkgdbinfo.keys():
-            msg = pkgdbinfo['aclStatus']
-        else:
-            msg = pkgdbinfo['message']
-        log.info(
-            "{0}{1}{2}{3} for {4} on package {5} branch {6}".format(
-                                                    bold,
-                                                    msg,
-                                                    reset,
-                                                    pkgdbclient.username,
-                                                    packagename,
-                                                    branch))
+        _answer_acl(action, user, packagename, answer, branch)
 
 
 def orphan_package(packagename, branch='devel', allpkgs=False,
@@ -862,9 +864,9 @@ def main():
         log.info("branch    : {0}".format(args.branch))
         log.info("approve   : {0}".format(args.approve))
         log.info("deny      : {0}".format(args.deny))
-        answer = args.deny
+        answer = "Denied"
         if args.approve:
-            answer = args.approve
+            answer = "Approved"
         answer_acl_request(args.package, args.action, args.user,
                 answer, args.branch, arg.username, arg.password)
 
