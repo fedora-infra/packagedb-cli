@@ -642,11 +642,12 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
             log.debug("Orphan all packages")
             if branch == "all":
                 log.debug("Orphan in all branches")
-                branches = _get_active_branches()
-                for branch in branches:
-                    _orphan_one_package(pkg, branch, username, password)
+                pkgdbclient.change_owner(pkgdbclient.username, 'orphan',
+                    "*")
             else:
-                _orphan_one_package(pkg, branch, username, password)
+                log.debug("Orphan branch {0}".format(branch))
+                pkgdbclient.change_owner(pkgdbclient.username, 'orphan',
+                    "*", branch)
         elif re.match(packagename, pkg):
             log.debug("motif   : {0}".format(motif))
             log.debug("package : {0}".format(pkg))
