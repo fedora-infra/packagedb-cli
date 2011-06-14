@@ -776,7 +776,7 @@ def setup_action_parser(action, last_args=None):
                     "simple pattern")
             parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package to orphan " \
-                    "(default: devel, can be: all)")
+                    "(default: 'devel', can be: 'all')")
             parser.add_argument('--retire', action="store_true", default=False,
                     help="Retire the given package")
             parser.add_argument('--all', action="store_true", default=False,
@@ -786,22 +786,22 @@ def setup_action_parser(action, last_args=None):
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
                     help="Request a specific ACL for this package " \
-                    "(actions are {0},all)".format(", ".join(actionlist)))
+                    "(actions are '{0}', 'all')".format("', '".join(actionlist)))
         parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
-                    "requested (default: devel, can be: all)")
+                    "requested (default: 'devel', can be: 'all')")
 
     elif action == "update":
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
                     help="Request a specific ACL for this package " \
-                    "(actions are {0},all)".format(", ".join(actionlist)))
+                    "(actions are: '{0}', 'all')".format("', '".join(actionlist)))
         parser.add_argument('user',
                     help="FAS username of the person who requested ACL " \
                     "on this package")
         parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
-                    "requested (default: devel, can be: all)")
+                    "requested (default: 'devel', can be: 'all')")
         parser.add_argument('--approve', action="store_true", default=False,
                     help="Approve the requested ACL")
         parser.add_argument('--deny', action="store_true", default=False,
