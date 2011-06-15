@@ -44,6 +44,9 @@ if '--debug' in sys.argv:
 elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
+if '--nocolor' in sys.argv:
+    red = reset
+
 cmdlist = ['acl', 'list', 'request', 'update', 'orphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
@@ -833,6 +836,8 @@ def setup_parser():
     parser.add_argument('--password', dest="password",
                 help="FAS password (if not provided, will be asked " \
                 "later)")
+    parser.add_argument('--nocolor', action='store_true',
+                help="Removes color from output")
     parser.add_argument('--verbose', action='store_true',
                 help="Gives more info about what's going on")
     parser.add_argument('--debug', action='store_true',
