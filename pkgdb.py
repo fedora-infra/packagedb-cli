@@ -834,9 +834,9 @@ def setup_parser():
                 help="FAS password (if not provided, will be asked " \
                 "later)")
     parser.add_argument('--verbose', action='store_true',
-                help="give more info about what's going on")
+                help="Gives more info about what's going on")
     parser.add_argument('--debug', action='store_true',
-                help="output bunches of debugging info")
+                help="Outputs bunches of debugging info")
     return parser
 
 
