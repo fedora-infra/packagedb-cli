@@ -193,7 +193,7 @@ def _get_last_build(packagename, tag):
             " " * 5,
             build['completion_time'].split(" ")[0],
             build['owner_name'],
-            version,
+            nvr,
             tag)
 
 
