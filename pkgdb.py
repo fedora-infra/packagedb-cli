@@ -104,11 +104,13 @@ def _get_group_info(group, statusmap, tmpstring="", prevstring="",
     true then only statuscode corresponding to "awaiting review" are
     returned
     """
+    has_acl = False
     for acl in ['watchbugzilla', 'watchcommits', 'commit',
                 'approveacls']:
         tmpstring = tmpstring + " " * (24 - len(tmpstring))
         if acl in group['aclOrder'].keys() and \
                 group['aclOrder'][acl] is not None:
+            has_acl = True
             aclout = statusmap[str(
                         group['aclOrder'][acl]['statuscode'])]
             tmpstring = tmpstring + aclout + " " * (16 - len(aclout))
@@ -116,6 +118,11 @@ def _get_group_info(group, statusmap, tmpstring="", prevstring="",
         else:
             tmpstring = tmpstring + " " * 16
             prevstring = ""
+    if not has_acl:
+        # return None if there are no ACLs (it used to have ACLs in
+        # past)
+        return
+
     if pending and "awaiting" in tmpstring.lower():
         return tmpstring.rstrip()
     elif pending:
