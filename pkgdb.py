@@ -482,7 +482,7 @@ def get_package_info(packagename, branch=None, pending=False,
                 # print group information
                 print "{0}Group:".format(" " * 8)
                 for group in collection['groups']:
-                    tmp = " " * 8 + group['groupname']
+                    tmp = " " * 10 + group['groupname']
                     prevstring = group['groupname']
                     info = _get_group_info(group, pkgdbinfo['statusMap'],
                                         tmp, prevstring,
