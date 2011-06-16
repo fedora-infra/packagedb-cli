@@ -45,7 +45,9 @@ elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
 
 if '--nocolor' in sys.argv:
-    red = reset
+    red = "         "
+    bold = "         "
+    reset = "         "
 
 cmdlist = ['acl', 'list', 'request', 'update', 'orphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
