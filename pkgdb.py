@@ -291,7 +291,7 @@ def _answer_acl(action, user, packagename, answer, branch):
         " so?".format(answer)
 
 
-def _toggle_one_acl(packagename, action, branch):
+def _toggle_one_acl(packagename, action, branch, cancel=False):
     """
     Request for an action on a specific branch for a specific package.
 
@@ -300,6 +300,8 @@ def _toggle_one_acl(packagename, action, branch):
     :arg action is action which is requested for this package, actions
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
     :arg branch name of the branch for which to toggle the ACL.
+    :karg cancel change the toggling of the ACL from requesting to a new
+    ACL to obsoleting an already requested ACL.
     """
     packageid = _get_package_id(packagename, branch)
     log.debug(
@@ -557,7 +559,7 @@ def get_last_build(packagename, tag):
         _get_last_build(packagename, tag)
 
 
-def toggle_acl(packagename, action, branch='devel',
+def toggle_acl(packagename, action, branch='devel', cancel=False,
     username=None, password=None):
     """
     Request for a user and a branch the action for a given package.
@@ -568,6 +570,8 @@ def toggle_acl(packagename, action, branch='devel',
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
     :karg branch name of the branch for which to toggle the ACL. By
     default this branch is 'devel' but can also be 'f-14'...
+    :karg cancel change the toggling of the ACL from requesting to a new
+    ACL to obsoleting an already requested ACL.
     :karg username the FAS username for the user requesting the ACL.
     :karg password the FAS password for the user requesting the ACL.
     """
@@ -593,7 +597,8 @@ def toggle_acl(packagename, action, branch='devel',
                         pkgdbclient.username))
             for action in actionlist:
                 try:
-                    msg = _toggle_one_acl(packagename, action, branch)
+                    msg = _toggle_one_acl(packagename, action, branch,
+                                        cancel)
                 except ServerError, err:
                     log.info(
                     "Could not toggle acl '{0}' for branch '{1}'".format(
@@ -611,7 +616,7 @@ def toggle_acl(packagename, action, branch='devel',
         # else we toggle only the given one
         else:
             try:
-                msg = _toggle_one_acl(packagename, action, branch)
+                msg = _toggle_one_acl(packagename, action, branch, cancel)
             except ServerError, err:
                 log.info("Could not toggle acl '{0}' for branch '{1}'".format(
                 action, branch))
@@ -811,6 +816,8 @@ def setup_action_parser(action, last_args=None):
                     help="Orphan all your packages")
 
     elif action == "request":
+        parser.add_argument('--cancel', action="store_true", default=False,
+                    help="Obsolete an ACL request")
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
                     help="Request (or obsolete a request) for specific ACL on this package " \
@@ -926,8 +933,9 @@ def main():
         log.info("package : {0}".format(args.package))
         log.info("branch  : {0}".format(args.branch))
         log.info("acl     : {0}".format(args.action))
+        log.info("cancel     : {0}".format(args.cancel))
         toggle_acl(args.package, action=args.action,
-                branch=args.branch,
+                branch=args.branch, cancel=args.cancel,
                 username=arg.username, password=arg.password)
 
     elif action == "update":
