@@ -295,6 +295,32 @@ def _answer_acl(action, user, packagename, answer, branch):
         " so?".format(answer)
 
 
+def _toggle_one_acl(packagename, action, branch):
+    """
+    Request for an action on a specific branch for a specific package.
+
+    :arg packagename is the name of the package for which you would like
+    to request an ACL.
+    :arg action is action which is requested for this package, actions
+    allowed are: [watchbugzilla, watchcommit, commit, approveacls]
+    :arg branch name of the branch for which to toggle the ACL.
+    """
+    packageid = _get_package_id(packagename, branch)
+    log.debug(
+    "Toggle acl '{0}' for user {1} and package {2} on branch {3}".format(
+        action, pkgdbclient.username, packagename, branch))
+    params = {'container_id': '{0}:{1}'.format(packageid, action)}
+    pkgdbinfo = pkgdbclient.send_request(
+                '/acls/dispatcher/toggle_acl_request',
+                auth=True, req_params=params)
+    log.debug(pkgdbinfo)
+    if 'aclStatus' in pkgdbinfo.keys():
+        msg = pkgdbinfo['aclStatus']
+    else:
+        msg = pkgdbinfo['message']
+    return msg
+
+
 def get_packages(motif=None, name_only=False):
     """
     Retrieve the list of all packages in packagedb.
@@ -556,58 +582,52 @@ def toggle_acl(packagename, action, branch='devel', username=None,
     if branch is None:
         branch = 'devel'
 
-    if action not in actionlist and action != 'all':
-        raise ActionError("Action '{0}' is not in the list: {1},all".format(
-                action, ",".join(actionlist)))
-    _get_client_authentified(username=username, password=password)
-    packageid = _get_package_id(packagename, branch)
-
-    # if action == 'all' then we toggle all the ACLs
-    if action == 'all':
-        log.debug("Toggle all acl for user: {0}".format(pkgdbclient.username))
-        for action in actionlist:
-            log.debug(
-            "Toggle acl {0} for user {1} and package {2} on branch {3}".format(
-                action, pkgdbclient.username, packagename, branch))
-            params = {'container_id': '{0}:{1}'.format(packageid, action)}
-            pkgdbinfo = pkgdbclient.send_request(
-                        '/acls/dispatcher/toggle_acl_request',
-                        auth=True, req_params=params)
-            log.debug(pkgdbinfo)
-            if 'aclStatus' in pkgdbinfo.keys():
-                msg = pkgdbinfo['aclStatus']
-            else:
-                msg = pkgdbinfo['message']
-            log.info(
-            "{0}{1}{2} for {3} on package {4} branch {5}".format(
-                                                    bold,
-                                                    msg,
-                                                    reset,
-                                                    pkgdbclient.username,
-                                                    packagename,
-                                                    branch))
-    # else we toggle only the given one
+    if branch == 'all':
+        branches = _get_active_branches()
     else:
-        log.debug(
-            "Toggle acl {0} for user {1} and package {2} on branch {3}".format(
-                action, pkgdbclient.username, packagename, branch))
-        params = {'container_id': '{0}:{1}'.format(packageid, action)}
-        pkgdbinfo = pkgdbclient.send_request(
-                        '/acls/dispatcher/toggle_acl_request',
-                        auth=True, req_params=params)
-        log.debug(pkgdbinfo)
-        if 'aclStatus' in pkgdbinfo.keys():
-            msg = pkgdbinfo['aclStatus']
-        else:
-            msg = pkgdbinfo['message']
-        log.info(
-            "{0}{1}{2} for {3} on package {4} branch {5}".format(
+        branches = [branch]
+
+    _get_client_authentified(username=username, password=password)
+    for branch in branches:
+        if action not in actionlist and action != 'all':
+            raise ActionError("Action '{0}' is not in the list: {1},all".format(
+                    action, ",".join(actionlist)))
+
+        msg = ""
+        # if action == 'all' then we toggle all the ACLs
+        if action == 'all':
+            log.debug("Toggle all acl for user: {0}".format(pkgdbclient.username))
+            for action in actionlist:
+                try:
+                    msg = _toggle_one_acl(packagename, action, branch)
+                except ServerError, er:
+                    log.info("Could not toggle acl '{0}' for branch '{1}'".format(
+                    action, branch))
+                    log.debug(er)
+                if msg != "":
+                    print "{0}{1}{2} for {3} on package {4} branch {5}".format(
                                                     bold,
                                                     msg,
                                                     reset,
                                                     pkgdbclient.username,
                                                     packagename,
-                                                    branch))
+                                                    branch)
+        # else we toggle only the given one
+        else:
+            try:
+                msg = _toggle_one_acl(packagename, action, branch)
+            except ServerError, er:
+                log.info("Could not toggle acl '{0}' for branch '{1}'".format(
+                action, branch))
+                log.debug(er)
+            if msg != "":
+                print "{0}{1}{2} for {3} on package {4} branch {5}".format(
+                                                    bold,
+                                                    msg,
+                                                    reset,
+                                                    pkgdbclient.username,
+                                                    packagename,
+                                                    branch)
 
 
 def answer_acl_request(packagename, action, user, answer, branch=None,
@@ -797,7 +817,7 @@ def setup_action_parser(action, last_args=None):
     elif action == "request":
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
-                    help="Request a specific ACL for this package " \
+                    help="Request (or obsolete a request) for specific ACL on this package " \
                     "(actions are '{0}', 'all')".format("', '".join(actionlist)))
         parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
