@@ -46,7 +46,7 @@ elif '--verbose' in sys.argv:
 
 if '--nocolor' in sys.argv:
     red = ""
-    bold = "" 
+    bold = ""
     reset = ""
 
 cmdlist = ['acl', 'list', 'request', 'update', 'orphan']
@@ -83,8 +83,7 @@ def _get_client_authentified(username=None, password=None):
         pkgdbclient.password = password
 
 
-def _get_group_info(group, statusmap, tmpstring="", prevstring="",
-                    pending=False):
+def _get_group_info(group, statusmap, tmpstring="", pending=False):
     """
     For a given group (or user) check the ACL to print the ACL of the
     group or person.
@@ -104,7 +103,6 @@ def _get_group_info(group, statusmap, tmpstring="", prevstring="",
     :karg tmpstring temporary string used to keep information and set
     the layout. At the end it contains the whole row which is the object
     returned
-    :karg prevstring previous string.
     :karg pending by default all statuscode are returned, if pending is
     true then only statuscode corresponding to "awaiting review" are
     returned
@@ -119,10 +117,8 @@ def _get_group_info(group, statusmap, tmpstring="", prevstring="",
             aclout = statusmap[str(
                         group['aclOrder'][acl]['statuscode'])]
             tmpstring = tmpstring + aclout + " " * (16 - len(aclout))
-            prevstring = group['aclOrder'][acl]['acl']
         else:
             tmpstring = tmpstring + " " * 16
-            prevstring = ""
     if not has_acl:
         # return None if there are no ACLs (it used to have ACLs in
         # past)
@@ -349,7 +345,7 @@ def get_packages(motif=None, name_only=False):
                     req_params={'tg_paginate_limit': 0})
     print pkgdbinfo['title']
     for pkg in pkgdbinfo['packages']:
-        out = "   " + pkg['name']+ " " * (33 - \
+        out = "   " + pkg['name'] + " " * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
         if name_only:
@@ -394,7 +390,7 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False):
     print pkgdbinfo.keys()
     print pkgdbinfo['title']
     for pkg in pkgdbinfo['pkgs']:
-        out = "   " + pkg['name']+ " " * (33 - \
+        out = "   " + pkg['name'] + " " * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
         if name_only:
@@ -435,7 +431,7 @@ def get_packager_info(packager, output=True, name_only=False):
             log.info(name_only)
             pkgs.append(pkg['name'])
             if output:
-                out = "   " + pkg['name']+ " " * (33 - \
+                out = "   " + pkg['name'] + " " * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
                 if name_only:
@@ -514,10 +510,8 @@ def get_package_info(packagename, branch=None, pending=False,
                 print "{0}Group:".format(" " * 8)
                 for group in collection['groups']:
                     tmp = " " * 10 + group['groupname']
-                    prevstring = group['groupname']
                     info = _get_group_info(group, pkgdbinfo['statusMap'],
-                                        tmp, prevstring,
-                                        pending=pending)
+                                        tmp, pending=pending)
                     if info is not None and info != "":
                         print info
 
@@ -525,10 +519,8 @@ def get_package_info(packagename, branch=None, pending=False,
                 print "{0}Comaintainer(s):".format(" " * 8)
                 for people in collection['people']:
                     tmp = " " * 10 + people['username']
-                    prevstring = tmp
                     info = _get_group_info(people, pkgdbinfo['statusMap'],
-                                        tmp, prevstring,
-                                        pending=pending)
+                                        tmp, pending=pending)
                     if info is not None and info != "":
                         print info
 
@@ -565,8 +557,8 @@ def get_last_build(packagename, tag):
         _get_last_build(packagename, tag)
 
 
-def toggle_acl(packagename, action, branch='devel', username=None,
-    password=None):
+def toggle_acl(packagename, action, branch='devel',
+    username=None, password=None):
     """
     Request for a user and a branch the action for a given package.
 
@@ -590,22 +582,26 @@ def toggle_acl(packagename, action, branch='devel', username=None,
     _get_client_authentified(username=username, password=password)
     for branch in branches:
         if action not in actionlist and action != 'all':
-            raise ActionError("Action '{0}' is not in the list: {1},all".format(
+            raise ActionError(
+                    "Action '{0}' is not in the list: {1},all".format(
                     action, ",".join(actionlist)))
 
         msg = ""
         # if action == 'all' then we toggle all the ACLs
         if action == 'all':
-            log.debug("Toggle all acl for user: {0}".format(pkgdbclient.username))
+            log.debug("Toggle all acl for user: {0}".format(
+                        pkgdbclient.username))
             for action in actionlist:
                 try:
                     msg = _toggle_one_acl(packagename, action, branch)
-                except ServerError, er:
-                    log.info("Could not toggle acl '{0}' for branch '{1}'".format(
+                except ServerError, err:
+                    log.info(
+                    "Could not toggle acl '{0}' for branch '{1}'".format(
                     action, branch))
-                    log.debug(er)
+                    log.debug(err)
                 if msg != "":
-                    print "{0}{1}{2} for {3} on package {4} branch {5}".format(
+                    print "{0}{1}{2} for {3} on package {4} branch {5}"\
+                    "".format(
                                                     bold,
                                                     msg,
                                                     reset,
@@ -616,10 +612,10 @@ def toggle_acl(packagename, action, branch='devel', username=None,
         else:
             try:
                 msg = _toggle_one_acl(packagename, action, branch)
-            except ServerError, er:
+            except ServerError, err:
                 log.info("Could not toggle acl '{0}' for branch '{1}'".format(
                 action, branch))
-                log.debug(er)
+                log.debug(err)
             if msg != "":
                 print "{0}{1}{2} for {3} on package {4} branch {5}".format(
                                                     bold,
@@ -818,7 +814,8 @@ def setup_action_parser(action, last_args=None):
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
                     help="Request (or obsolete a request) for specific ACL on this package " \
-                    "(actions are '{0}', 'all')".format("', '".join(actionlist)))
+                    "(actions are '{0}', 'all')".format(
+                                            "', '".join(actionlist)))
         parser.add_argument('branch', default='devel', nargs="?",
                     help="Branch of the package for which the ACL is " \
                     "requested (default: 'devel', can be: 'all')")
@@ -827,7 +824,8 @@ def setup_action_parser(action, last_args=None):
         parser.add_argument('package', help="Name of the package")
         parser.add_argument("action",
                     help="Request a specific ACL for this package " \
-                    "(actions are: '{0}', 'all')".format("', '".join(actionlist)))
+                    "(actions are: '{0}', 'all')".format(
+                                            "', '".join(actionlist)))
         parser.add_argument('user',
                     help="FAS username of the person who requested ACL " \
                     "on this package")
@@ -887,7 +885,7 @@ def main():
         log.info("package : {0}".format(args.package))
         log.info("branch  : {0}".format(args.branch))
         #log.info("approve : {0}".format(args.approve))
-        get_package_info(args.package, branch=args.branch, 
+        get_package_info(args.package, branch=args.branch,
                         pending=args.pending, extra=args.noextra)
 
     elif action == "list":
@@ -928,8 +926,9 @@ def main():
         log.info("package : {0}".format(args.package))
         log.info("branch  : {0}".format(args.branch))
         log.info("acl     : {0}".format(args.action))
-        toggle_acl(args.package, args.action, args.branch,
-                arg.username, arg.password)
+        toggle_acl(args.package, action=args.action,
+                branch=args.branch,
+                username=arg.username, password=arg.password)
 
     elif action == "update":
         log.info("user      : {0}".format(arg.username))
