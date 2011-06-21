@@ -291,32 +291,44 @@ def _answer_acl(action, user, packagename, answer, branch):
         " so?".format(answer)
 
 
-def _toggle_one_acl(packagename, action, branch, cancel=False):
+def _handle_acl_request(packagename, action, branch, cancel=False):
     """
-    Request for an action on a specific branch for a specific package.
+    Set or remove (cancel) an ACL request for an action on a specific
+    branch for a specific package.
 
     :arg packagename is the name of the package for which you would like
     to request an ACL.
     :arg action is action which is requested for this package, actions
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
-    :arg branch name of the branch for which to toggle the ACL.
+    :arg branch name of the branch for which to process the ACL.
     :karg cancel change the toggling of the ACL from requesting to a new
     ACL to obsoleting an already requested ACL.
     """
     packageid = _get_package_id(packagename, branch)
     log.debug(
-    "Toggle acl '{0}' for user {1} and package {2} on branch {3}".format(
+    "Process acl '{0}' for user {1} and package {2} on branch {3}".format(
         action, pkgdbclient.username, packagename, branch))
-    params = {'container_id': '{0}:{1}'.format(packageid, action)}
+    params = {'pkgid' : packageid,
+              'person_name' : pkgdbclient.username,
+              'new_acl' : action,
+              'statusname' : "Awaiting Review"}
+    if cancel:
+            params['statusname'] = "Obsolete"
     pkgdbinfo = pkgdbclient.send_request(
-                '/acls/dispatcher/toggle_acl_request',
+                '/acls/dispatcher/set_acl_status/',
                 auth=True, req_params=params)
     log.debug(pkgdbinfo)
-    if 'aclStatus' in pkgdbinfo.keys():
-        msg = pkgdbinfo['aclStatus']
+    wentok = False
+    if 'status' in pkgdbinfo.keys() \
+            and str(pkgdbinfo['status']) == "True":
+        msg = "ACL {2}{0}{4} for user {1} was set to {2}'{3}'{4} on package {5} branch {6}".format(
+        action, pkgdbclient.username, bold, params['statusname'], reset,
+        packagename, branch)
+        wentok = True
     else:
-        msg = pkgdbinfo['message']
-    return msg
+        msg = "Something went wrong and we could not set the ACL as you wished"
+    print msg
+    return wentok
 
 
 def get_packages(motif=None, name_only=False):
@@ -559,7 +571,7 @@ def get_last_build(packagename, tag):
         _get_last_build(packagename, tag)
 
 
-def toggle_acl(packagename, action, branch='devel', cancel=False,
+def handle_acl(packagename, action, branch='devel', cancel=False,
     username=None, password=None):
     """
     Request for a user and a branch the action for a given package.
@@ -568,7 +580,7 @@ def toggle_acl(packagename, action, branch='devel', cancel=False,
     to request an ACL.
     :arg action is action which is requested for this package, actions
     allowed are: [watchbugzilla, watchcommit, commit, approveacls]
-    :karg branch name of the branch for which to toggle the ACL. By
+    :karg branch name of the branch for which to set/remove the ACL. By
     default this branch is 'devel' but can also be 'f-14'...
     :karg cancel change the toggling of the ACL from requesting to a new
     ACL to obsoleting an already requested ACL.
@@ -591,44 +603,29 @@ def toggle_acl(packagename, action, branch='devel', cancel=False,
                     action, ",".join(actionlist)))
 
         msg = ""
-        # if action == 'all' then we toggle all the ACLs
+        # if action == 'all' then we set/remove all the ACLs
         if action == 'all':
-            log.debug("Toggle all acl for user: {0}".format(
+            log.debug("Process all acl for user: {0}".format(
                         pkgdbclient.username))
             for action in actionlist:
                 try:
-                    msg = _toggle_one_acl(packagename, action, branch,
-                                        cancel)
+                    msg = _handle_acl_request(packagename, action,
+                                        branch, cancel)
                 except ServerError, err:
                     log.info(
-                    "Could not toggle acl '{0}' for branch '{1}'".format(
+                    "Could not process acl '{0}' for branch '{1}'".format(
                     action, branch))
                     log.debug(err)
-                if msg != "":
-                    print "{0}{1}{2} for {3} on package {4} branch {5}"\
-                    "".format(
-                                                    bold,
-                                                    msg,
-                                                    reset,
-                                                    pkgdbclient.username,
-                                                    packagename,
-                                                    branch)
-        # else we toggle only the given one
+
+        # else we process only the given one
         else:
             try:
-                msg = _toggle_one_acl(packagename, action, branch, cancel)
+                msg = _handle_acl_request(packagename, action, branch,
+                                        cancel)
             except ServerError, err:
-                log.info("Could not toggle acl '{0}' for branch '{1}'".format(
+                log.info("Could not process acl '{0}' for branch '{1}'".format(
                 action, branch))
                 log.debug(err)
-            if msg != "":
-                print "{0}{1}{2} for {3} on package {4} branch {5}".format(
-                                                    bold,
-                                                    msg,
-                                                    reset,
-                                                    pkgdbclient.username,
-                                                    packagename,
-                                                    branch)
 
 
 def answer_acl_request(packagename, action, user, answer, branch=None,
@@ -934,7 +931,7 @@ def main():
         log.info("branch  : {0}".format(args.branch))
         log.info("acl     : {0}".format(args.action))
         log.info("cancel     : {0}".format(args.cancel))
-        toggle_acl(args.package, action=args.action,
+        handle_acl(args.package, action=args.action,
                 branch=args.branch, cancel=args.cancel,
                 username=arg.username, password=arg.password)
 
