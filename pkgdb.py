@@ -612,14 +612,8 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
             log.debug("Process all acl for user: {0}".format(
                         pkgdbclient.username))
             for action in actionlist:
-                try:
-                    msg = _handle_acl_request(packagename, action,
+                msg = _handle_acl_request(packagename, action,
                                         branch, cancel)
-                except ServerError, err:
-                    log.info(
-                    "Could not process acl '{0}' for branch '{1}'".format(
-                    action, branch))
-                    log.debug(err)
 
         # else we process only the given one
         else:
