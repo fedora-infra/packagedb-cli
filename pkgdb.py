@@ -308,21 +308,25 @@ def _handle_acl_request(packagename, action, branch, cancel=False):
     log.debug(
     "Process acl '{0}' for user {1} and package {2} on branch {3}".format(
         action, pkgdbclient.username, packagename, branch))
+    statusname = "Awaiting Review"
     params = {'pkgid' : packageid,
-              'person_name' : pkgdbclient.username,
-              'new_acl' : action,
-              'statusname' : "Awaiting Review"}
+            'person_name' : pkgdbclient.username,
+            'acl_name' : action,
+            'set_acl' : True}
     if cancel:
-            params['statusname'] = "Obsolete"
+        params['set_acl'] = False
+        statusname = "Obsolete"
     pkgdbinfo = pkgdbclient.send_request(
-                '/acls/dispatcher/set_acl_status/',
+                '/acls/dispatcher/set_remove_acl_request/',
                 auth=True, req_params=params)
     log.debug(pkgdbinfo)
     wentok = False
-    if 'status' in pkgdbinfo.keys() \
+    if "message" in pkgdbinfo.keys():
+        msg = "{0}: {1}".format(action, pkgdbinfo["message"])
+    elif 'status' in pkgdbinfo.keys() \
             and str(pkgdbinfo['status']) == "True":
         msg = "ACL {2}{0}{4} for user {1} was set to {2}'{3}'{4} on package {5} branch {6}".format(
-        action, pkgdbclient.username, bold, params['statusname'], reset,
+        action, pkgdbclient.username, bold, statusname, reset,
         packagename, branch)
         wentok = True
     else:
@@ -626,7 +630,7 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
                 log.info("Could not process acl '{0}' for branch '{1}'".format(
                 action, branch))
                 log.debug(err)
-
+    return msg
 
 def answer_acl_request(packagename, action, user, answer, branch=None,
                 username=None, password=None):
