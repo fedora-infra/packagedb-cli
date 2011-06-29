@@ -29,7 +29,7 @@ Installation
 Install Prerequisites
 ~~~~~~~~~~~~~~~~~~~~~
 ::
-  yum install koji python-fedora
+  yum install python-fedora
 
 Get and Run the Source
 ~~~~~~~~~~~~~~~~~~~~~~~~
