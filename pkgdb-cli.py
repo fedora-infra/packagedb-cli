@@ -849,7 +849,7 @@ def setup_parser():
     usage = "\nCommands: {0}".format(', '.join(cmdlist))
     parser = argparse.ArgumentParser(
     usage="%(prog)s [global options] COMMAND [options]" + usage,
-    prog="pkgdb")
+    prog="pkgdb-cli")
     # General connection options
     parser.add_argument('command')
     parser.add_argument('argument', nargs=argparse.REMAINDER)
