@@ -23,6 +23,7 @@ import getpass
 import koji
 import sys
 import re
+import fedora_cert
 
 version = '0.0.1'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
@@ -68,6 +69,8 @@ class PackageIDError(Exception):
 
 def _get_client_authentified(username=None, password=None):
     """ Returned a BaseClient with authentification
+    
+    If the username is None, tries to retrieve it from fedora_cert.
 
     :arg pkgdbclient a PackageDB object to which username and password
     are added
@@ -76,7 +79,11 @@ def _get_client_authentified(username=None, password=None):
     """
     if pkgdbclient.password is None:
         if username is None:
-            username = raw_input('FAS username: ')
+            try:
+                username = fedora_cert.read_user_cert()
+            except:
+                log.debug('Could not read Fedora cert, using login name')
+                username = raw_input('FAS username: ')
         if password is None:
             password = getpass.getpass()
         pkgdbclient.username = username
