@@ -25,7 +25,7 @@ import sys
 import re
 import fedora_cert
 
-version = '0.0.1'
+version = '1.1.0'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
@@ -50,7 +50,7 @@ if '--nocolor' in sys.argv:
     bold = ""
     reset = ""
 
-cmdlist = ['acl', 'list', 'request', 'update', 'orphan']
+cmdlist = ['acl', 'list', 'request', 'update', 'orphan', 'unorphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
@@ -69,7 +69,7 @@ class PackageIDError(Exception):
 
 def _get_client_authentified(username=None, password=None):
     """ Returned a BaseClient with authentification
-    
+
     If the username is None, tries to retrieve it from fedora_cert.
 
     :arg pkgdbclient a PackageDB object to which username and password
@@ -212,8 +212,8 @@ def _get_last_build(packagename, tag):
             tag)
 
 
-def _orphan_one_package(packagename, branch='devel', username=None,
-            password=None):
+def _update_owner_one_package(packagename, branch='devel', action="orphan",
+            username=None, password=None):
     """
     Orphan one package from pkgdb.
     """
@@ -221,10 +221,15 @@ def _orphan_one_package(packagename, branch='devel', username=None,
         branch = 'devel'
     _get_client_authentified(username=username, password=password)
 
-    log.info("Orphaning package {0} on branch {1}".format(packagename, branch))
+    log.info("{0}ing package {1} on branch {2}".format(action.capitalize(),
+        packagename, branch))
+
+    owner = "orphan"
+    if action.lower() != "orphan":
+        owner = pkgdbclient.username
     pkgdbinfo = pkgdbclient.send_request(
             '/acls/dispatcher/set_owner',
-            auth=True, req_params={'owner': 'orphan',
+            auth=True, req_params={'owner': owner,
                                     'pkg_name': packagename,
                                     'collectn_list': branch})
     log.debug("output: {0}".format(pkgdbinfo))
@@ -232,9 +237,11 @@ def _orphan_one_package(packagename, branch='devel', username=None,
     if "message" in pkgdbinfo.keys():
         print "{0}{1}{2}\n".format(bold, pkgdbinfo["message"], reset)
     else:
-        print "{0}Changed owner of {1} to orphan{2}\n".format(bold,
-                                                              packagename,
-                                                              reset)
+        print "{0}Changed owner of {1} to {2} in branch {3} {4}\n".format(bold,
+                                                            packagename,
+                                                            owner,
+                                                            branch,
+                                                            reset)
 
 
 def _retire_one_package(packagename, branch='devel', username=None,
@@ -316,10 +323,10 @@ def _handle_acl_request(packagename, action, branch, cancel=False):
     "Process acl '{0}' for user {1} and package {2} on branch {3}".format(
         action, pkgdbclient.username, packagename, branch))
     statusname = "Awaiting Review"
-    params = {'pkgid' : packageid,
-            'person_name' : pkgdbclient.username,
-            'acl_name' : action,
-            'set_acl' : True}
+    params = {'pkgid': packageid,
+            'person_name': pkgdbclient.username,
+            'acl_name': action,
+            'set_acl': True}
     if cancel:
         params['set_acl'] = False
         statusname = "Obsolete"
@@ -633,6 +640,7 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
                 log.debug(err)
     return msg
 
+
 def answer_acl_request(packagename, action, user, answer, branch=None,
                 username=None, password=None):
     """
@@ -699,9 +707,11 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
                 log.debug("Orphan in all branches")
                 branches = _get_active_branches()
                 for branch in branches:
-                    _orphan_one_package(pkg, branch, username, password)
+                    _update_owner_one_package(pkg, branch, action="orphan",
+                            username=username, password=password)
             else:
-                _orphan_one_package(pkg, branch, username, password)
+                _update_owner_one_package(pkg, branch, action="orphan",
+                        username=username, password=password)
         elif re.match(packagename, pkg):
             log.debug("motif   : {0}".format(motif))
             log.debug("package : {0}".format(pkg))
@@ -709,12 +719,42 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
                 log.debug("Orphan in all branches")
                 branches = _get_active_branches()
                 for branch in branches:
-                    _orphan_one_package(pkg, branch, username, password)
+                    _update_owner_one_package(pkg, branch, action="orphan",
+                            username=username, password=password)
             else:
-                _orphan_one_package(packagename, branch, username, password)
+                _update_owner_one_package(packagename, branch, action="orphan",
+                        username=username, password=password)
         else:
             print "Could not find {0} in the list of your packages".format(
                     packagename)
+
+
+def unorphan_package(packagename, branch='devel',
+        username=None, password=None):
+    """
+    Unorphan packages from pkgdb.
+
+    :arg packagename the name of the package to orphan
+    :kwarg branch the name of the branch to orphan. By default it is
+    'devel' but it can also be 'all'.
+    :kwarg username the FAS username
+    :kwarg password the FAS password of the user
+    """
+    if branch is None:
+        branch = 'devel'
+    _get_client_authentified(username=username, password=password)
+
+    log.debug("Packages: {0}".format(packagename))
+
+    if branch == "all":
+        log.debug("Orphan in all branches")
+        branches = _get_active_branches()
+        for branch in branches:
+            _update_owner_one_package(packagename, branch, action="unorphan",
+                username=username, password=password)
+    else:
+        _update_owner_one_package(packagename, branch, action="unorphan",
+                username=username, password=password)
 
 
 def retire_package(packagename, branch='devel', allpkgs=False,
@@ -745,7 +785,8 @@ def retire_package(packagename, branch='devel', allpkgs=False,
                 log.debug("Retire in all branches")
                 branches = _get_active_branches()
                 for branch in branches:
-                    _orphan_one_package(pkg, branch, username, password)
+                    _update_owner_one_package(pkg, branch, action="orphan",
+                        username=username, password=password)
             else:
                 _retire_one_package(pkg, branch, username, password)
     else:
@@ -753,7 +794,8 @@ def retire_package(packagename, branch='devel', allpkgs=False,
             log.debug("Retire in all branches")
             branches = _get_active_branches()
             for branch in branches:
-                _orphan_one_package(pkg, branch, username, password)
+                _update_owner_one_package(pkg, branch, action="orphan",
+                        username=username, password=password)
         else:
             _retire_one_package(packagename, branch, username, password)
 
@@ -816,6 +858,13 @@ def setup_action_parser(action, last_args=None):
                     help="Retire the given package")
             parser.add_argument('--all', action="store_true", default=False,
                     help="Orphan all your packages")
+
+    elif action == 'unorphan':
+        parser.add_argument('package',
+                help="Name of the package to unorphan")
+        parser.add_argument('branch', default='devel', nargs="?",
+                help="Branch of the package to unorphan " \
+                "(default: 'devel', can be: 'all')")
 
     elif action == "request":
         parser.add_argument('--cancel', action="store_true", default=False,
@@ -928,6 +977,13 @@ def main():
                 arg.username, arg.password)
         if args.retire is True:
             retire_package(args.package, args.branch,
+                arg.username, arg.password)
+
+    elif action == "unorphan":
+        log.info("user    : {0}".format(arg.username))
+        log.info("package : {0}".format(args.package))
+        log.info("branch  : {0}".format(args.branch))
+        unorphan_package(args.package, args.branch,
                 arg.username, arg.password)
 
     elif action == "request":
