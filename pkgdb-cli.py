@@ -520,6 +520,9 @@ def get_package_info(packagename, branch=None, pending=False,
                 or branch == "all" \
                 or branch == collection['collection']['branchname']:
 
+                owner = collection['owner']
+                if collection['owner'] == 'orphan':
+                    owner = red + collection['owner'] + reset
                 # Retrieve ACL information
                 print "{0}{1}{2}{3}Owner:{4}{5}".rstrip().format(
                     red + bold,
@@ -529,7 +532,9 @@ def get_package_info(packagename, branch=None, pending=False,
                            len(collection['collection'][
                                 'branchname'])),
                     " " * 10,
-                    collection['owner'])
+                    owner)
+                if collection['owner'] == 'orphan':
+                    continue
 
                 # print header of the table
                 tmp = " " * 24
