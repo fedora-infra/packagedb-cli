@@ -365,7 +365,7 @@ def get_packages(motif=None, name_only=False):
     """
     if motif is not None:
         log.info("Query packages starting with: {0}".format(motif))
-        if not motif.endswith("*"):
+        if "*" not in motif:
             motif = motif.strip() + "*"
         pkgdbinfo = pkgdbclient.send_request('/acls/list/{0}'.format(motif),
                                              auth=False,
@@ -432,7 +432,7 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False):
     log.info(pkgdbinfo.keys())
 
 
-def get_packager_info(packager, output=True, name_only=False):
+def get_packager_info(packager, motif="", output=True, name_only=False):
     """
     Retrieve the list of all the package for which the given packager
     has
@@ -444,6 +444,7 @@ def get_packager_info(packager, output=True, name_only=False):
     (default options)
 
     :arg packager name of the packager for who to retrieve info
+    :arg motif a motif search in the package a packager owns
     :karg output if False the packager information are not printed to
     std.out
     :karg name_only if true only the name of the package is returned.
@@ -453,16 +454,23 @@ def get_packager_info(packager, output=True, name_only=False):
                 packager), auth=False,
                 req_params={'tg_paginate_limit': 0})
 
+    if motif is None:
+        motif = ""
+    if "*" not in motif:
+            motif = motif.strip() + "*"
+    motif = motif.replace("*", ".*")
     pkgs = []
     if pkgdbinfo['eol']:
         if output:
             print "User EOL'd"
     if 'pkgs' in pkgdbinfo:
+        cnt = 0
         for pkg in pkgdbinfo['pkgs']:
             log.info(pkg.keys())
             log.info(name_only)
             pkgs.append(pkg['name'])
-            if output:
+            if output and re.search("^{0}$".format(motif), pkg['name']):
+                cnt = cnt + 1
                 out = "   " + pkg['name'] + " " * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
@@ -472,7 +480,7 @@ def get_packager_info(packager, output=True, name_only=False):
                 print out
                 #pkgdbinfo['statusMap'][pkg['statuscode']]
         if output:
-            print "Total: {0} packages".format(len(pkgdbinfo['pkgs']))
+            print "Total: {0} packages".format(cnt)
     return pkgs
 
 
@@ -964,7 +972,7 @@ def main():
             get_orphaned_packages(args.pattern, eol=args.eol,
                                     name_only=args.name_only)
         elif (args.username is not None and args.username):
-            get_packager_info(args.username, name_only=args.name_only)
+            get_packager_info(args.username, motif=args.pattern, name_only=args.name_only)
         elif (args.pattern is not None):
             get_packages(args.pattern, name_only=args.name_only)
         else:
