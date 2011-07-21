@@ -297,7 +297,7 @@ def _answer_acl(action, user, packagename, answer, branch):
                                             action,
                                             answer,
                                             reset,
-                                            pkgdbclient.username,
+                                            user,
                                             packagename,
                                             branch)
     else:
