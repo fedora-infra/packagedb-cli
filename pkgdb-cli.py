@@ -541,8 +541,6 @@ def get_package_info(packagename, branch=None, pending=False,
                                 'branchname'])),
                     " " * 10,
                     owner)
-                if collection['owner'] == 'orphan':
-                    continue
 
                 # print header of the table
                 tmp = " " * 24
