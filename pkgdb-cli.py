@@ -543,7 +543,6 @@ def get_packager_info(packager, motif="", output=True, name_only=False,
                     pkg['summary']
                 if name_only:
                     out = "   " + pkg['name']
-
                 branches = []
                 for info in pkg['listings']:
                     if status_map[str(info['statuscode'])] != "Orphaned" and \
