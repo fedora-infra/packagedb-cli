@@ -183,6 +183,35 @@ def _get_active_branches():
     return branches.keys()
 
 
+def _get_action_pending(packagename, branch, user):
+    """
+    Returns the actions which are pending for approval for a given
+    package, branch and user.
+    
+    :arg packagename, the name of the package for which we want to check
+    the ACL
+    :arg branch the branch that we look at
+    :arg user, the FAS account that we look at
+    """
+    log.debug("Query pkgdb for {0} in branch {1}".format(packagename, branch))
+    pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(packagename),
+                                         auth=False)
+
+    log.debug("Retrieve pending ACL")
+    aclout = []
+    statusmap = pkgdbinfo['statusMap']
+    if 'packageListings' in pkgdbinfo:
+        for collection in pkgdbinfo['packageListings']:
+            if branch == collection['collection']['branchname']:
+                for people in collection['people']:
+                    for acl in ['watchbugzilla', 'watchcommits', 'commit',
+                'approveacls']:
+                        if acl in people['aclOrder'].keys() \
+                            and people['aclOrder'][acl] is not None \
+                            and people['aclOrder'][acl]['statuscode'] == 8:
+                            aclout.append(acl)
+    return aclout
+
 def _get_last_build(packagename, tag):
     """
     Print information about the last build of a package for a given koji
@@ -689,7 +718,8 @@ def answer_acl_request(packagename, action, user, answer, branch=None,
     if action == 'all':
         log.debug("Answer all acl for user: {0}".format(
                                                 pkgdbclient.username))
-        for action in actionlist:
+        # Retrieve only the action which are pending
+        for action in _get_action_pending(packagename, branch, user):
             _answer_acl(action, user, packagename, answer, branch)
     # else we answer only the given one
     else:
