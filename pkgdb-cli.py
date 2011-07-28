@@ -593,11 +593,20 @@ def get_last_build(packagename, tag):
     # for updates and updates-testing
     if "f" in tag:
         tag = tag + "-updates"
-        _get_last_build(packagename, tag)
+        try:
+            _get_last_build(packagename, tag)
+        except Exception, er:
+            print er
         tag = tag + "-testing"
-        _get_last_build(packagename, tag)
+        try:
+            _get_last_build(packagename, tag)
+        except Exception, er:
+            print er
     else:
-        _get_last_build(packagename, tag)
+        try:
+            _get_last_build(packagename, tag)
+        except Exception, er:
+            print er
 
 
 def handle_acl(packagename, action, branch='devel', cancel=False,
