@@ -399,11 +399,11 @@ def get_packages(motif=None, name_only=False):
         pkgdbinfo = pkgdbclient.send_request('/acls/list/{0}'.format(motif),
                                              auth=False,
                                              req_params={
-                'tg_paginate_limit': 0})
+                'pkgs_tgp_limit': 0})
     else:
         log.info("Query all packages")
         pkgdbinfo = pkgdbclient.send_request('/acls/list/', auth=False,
-                    req_params={'tg_paginate_limit': 0})
+                    req_params={'pkgs_tgp_limit': 0})
     print pkgdbinfo['title']
     for pkg in pkgdbinfo['packages']:
         out = "   " + pkg['name'] + " " * (33 - \
@@ -443,11 +443,11 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False):
         if not motif.endswith("*"):
             motif = motif.strip() + "*"
         pkgdbinfo = pkgdbclient.send_request(url + motif, auth=False,
-                    req_params={'tg_paginate_limit': 0})
+                    req_params={'pkgs_tgp_limit': 0})
     else:
         log.info("Query all orphaned packages")
         pkgdbinfo = pkgdbclient.send_request(url, auth=False,
-                    req_params={'tg_paginate_limit': 0})
+                    req_params={'pkgs_tgp_limit': 0})
     print pkgdbinfo.keys()
     print pkgdbinfo['title']
     for pkg in pkgdbinfo['pkgs']:
@@ -481,7 +481,7 @@ def get_packager_info(packager, motif="", output=True, name_only=False):
     log.info("Query pkgdb for packager: {0}".format(packager))
     pkgdbinfo = pkgdbclient.send_request('/users/packages/{0}'.format(
                 packager), auth=False,
-                req_params={'tg_paginate_limit': 0})
+                req_params={'pkgs_tgp_limit': 0})
 
     if motif is None:
         motif = ""
