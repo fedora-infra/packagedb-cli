@@ -790,6 +790,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
     if packagename is not None:
         # transform the packagename to make it a regex
         motif = "^" + packagename.replace("*", ".*") + "$"
+    found = False
     for pkg in pkgs:
         log.info("Package: {0}".format(pkg))
         if allpkgs is True:
@@ -806,6 +807,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
         elif re.match(packagename, pkg):
             log.debug("motif   : {0}".format(motif))
             log.debug("package : {0}".format(pkg))
+            found = True
             if branch == "all":
                 log.debug("Orphan in all branches")
                 branches = _get_active_branches()
@@ -815,9 +817,9 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
             else:
                 _update_owner_one_package(packagename, branch, action="orphan",
                         username=username, password=password)
-        else:
-            print "Could not find {0} in the list of your packages".format(
-                    packagename)
+    if not found:
+        print "Could not find {0} in the list of your packages".format(
+                packagename)
 
 
 def unorphan_package(packagename, branch='devel',
