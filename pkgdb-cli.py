@@ -378,7 +378,7 @@ def _handle_acl_request(packagename, action, branch, cancel=False):
     return wentok
 
 
-def get_packages(motif=None, name_only=False):
+def get_packages(motif=None, name_only=False, branch='all'):
     """
     Retrieve the list of all packages in packagedb.
     This list can be reduced using a motif (pattern) which is optional.
@@ -391,32 +391,50 @@ def get_packages(motif=None, name_only=False):
     :karg motif the motif used to search for the packages. If the motif
     does not end with a "*", one is added.
     :karg name_only if true only the name of the package is returned.
+    :karg branch restricts the results to a given branch or not.
     """
     if motif is not None:
         log.info("Query packages starting with: {0}".format(motif))
         if "*" not in motif:
             motif = motif.strip() + "*"
         pkgdbinfo = pkgdbclient.send_request('/acls/list/{0}'.format(motif),
-                                             auth=False,
-                                             req_params={
-                'pkgs_tgp_limit': 0})
+                                             auth=False)#,
+                                             #req_params={
+                #'pkgs_tgp_limit': 0}) ## works if it is tg_paginate_limit
     else:
         log.info("Query all packages")
         pkgdbinfo = pkgdbclient.send_request('/acls/list/', auth=False,
                     req_params={'pkgs_tgp_limit': 0})
+
+    collectn_map = pkgdbinfo['collectn_map']
+    status_map = pkgdbinfo['statusMap']
+    log.debug("collection map: {0}".format(collectn_map))
+    log.debug("status map: {0}".format(status_map))
+
     print pkgdbinfo['title']
+    cnt = 0
     for pkg in pkgdbinfo['packages']:
-        out = "   " + pkg['name'] + " " * (33 - \
+        out = "   " + pkg['name'] + ' ' * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
         if name_only:
             out = "   ", pkg['name']
-        print out
-    print "Total: {0} packages".format(len(pkgdbinfo['packages']))
-    log.info(pkgdbinfo.keys())
+
+        branches = []
+        for info in pkg['listings']:
+            if str(info['collectionid']) in collectn_map.keys():
+                branches.append(collectn_map[str(info['collectionid'])])
+            else:
+                log.debug(info)
+
+        if branch == 'all' or branch in branches:
+            print out
+            cnt = cnt + 1
+    print 'Total: {0} packages'.format(cnt)
 
 
-def get_orphaned_packages(motif=None, eol=False, name_only=False):
+def get_orphaned_packages(motif=None, eol=False, name_only=False,
+    branch='all'):
     """
     Retrieve the list of orphans packages.
 
@@ -429,6 +447,7 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False):
     does not end with a "*", one is added.
     :karg eol if true only the EOL packages are returned.
     :karg name_only if true only the name of the package is returned.
+    :karg branch restricts the results to a given branch or not.
     """
     url = '/acls/orphans/'
     if eol is not None and eol:
@@ -439,7 +458,7 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False):
         # see: https://admin.fedoraproject.org/pkgdb/acls/orphans
         # vs https://admin.fedoraproject.org/pkgdb/acls/orphans/b*
         # the second returns the list of orphan + eol'd
-        log.info("Query orphaned packages starting with: {0}".format(motif))
+        log.info('Query orphaned packages starting with: {0}'.format(motif))
         if not motif.endswith("*"):
             motif = motif.strip() + "*"
         pkgdbinfo = pkgdbclient.send_request(url + motif, auth=False,
@@ -448,20 +467,32 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False):
         log.info("Query all orphaned packages")
         pkgdbinfo = pkgdbclient.send_request(url, auth=False,
                     req_params={'pkgs_tgp_limit': 0})
-    print pkgdbinfo.keys()
+    collectn_map = pkgdbinfo['collectn_map']
+    status_map = pkgdbinfo['statusMap']
+    log.debug("collection map: {0}".format(collectn_map))
+    log.debug("status map: {0}".format(status_map))
     print pkgdbinfo['title']
+    log.debug("**")
+    cnt = 0
     for pkg in pkgdbinfo['pkgs']:
         out = "   " + pkg['name'] + " " * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
         if name_only:
             out = "   " + pkg['name']
-        print out
-    print "Total: {0} packages".format(len(pkgdbinfo['pkgs']))
-    log.info(pkgdbinfo.keys())
+        branches = []
+        for info in pkg['listings']:
+            if status_map[str(info['statuscode'])] == "Orphaned" and \
+                str(info['collectionid']) in collectn_map.keys():
+                branches.append(collectn_map[str(info['collectionid'])])
+        if branch == 'all' or branch in branches:
+            print out, "[" + "],[".join(branches) + "]"
+            cnt = cnt + 1
+    print 'Total: {0} packages'.format(cnt)
 
 
-def get_packager_info(packager, motif="", output=True, name_only=False):
+def get_packager_info(packager, motif="", output=True, name_only=False,
+    branch='all'):
     """
     Retrieve the list of all the package for which the given packager
     has
@@ -477,11 +508,16 @@ def get_packager_info(packager, motif="", output=True, name_only=False):
     :karg output if False the packager information are not printed to
     std.out
     :karg name_only if true only the name of the package is returned.
+    :karg branch restricts the results to a given branch or not.
     """
     log.info("Query pkgdb for packager: {0}".format(packager))
     pkgdbinfo = pkgdbclient.send_request('/users/packages/{0}'.format(
                 packager), auth=False,
                 req_params={'pkgs_tgp_limit': 0})
+    collectn_map = pkgdbinfo['collectn_map']
+    status_map = pkgdbinfo['statusMap']
+    log.debug("collection map: {0}".format(collectn_map))
+    log.debug("status map: {0}".format(status_map))
 
     if motif is None:
         motif = ""
@@ -499,15 +535,20 @@ def get_packager_info(packager, motif="", output=True, name_only=False):
             log.info(name_only)
             pkgs.append(pkg['name'])
             if output and re.search("^{0}$".format(motif), pkg['name']):
-                cnt = cnt + 1
                 out = "   " + pkg['name'] + " " * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
                 if name_only:
                     out = "   " + pkg['name']
-                log.info(out)
-                print out
-                #pkgdbinfo['statusMap'][pkg['statuscode']]
+
+                branches = []
+                for info in pkg['listings']:
+                    if status_map[str(info['statuscode'])] != "Orphaned" and \
+                        str(info['collectionid']) in collectn_map.keys():
+                        branches.append(collectn_map[str(info['collectionid'])])
+                if branch == 'all' or branch in branches:
+                    print out
+                    cnt = cnt + 1
         if output:
             print "Total: {0} packages".format(cnt)
     return pkgs
@@ -873,9 +914,8 @@ def setup_action_parser(action, last_args=None):
 
     elif action == 'list':
         parser.add_argument('--all', action="store_true", default=False,
-                    dest='all', help="List all packages starting " \
-                    "with the given pattern (without pattern this may " \
-                    "take a while)")
+                    dest='all', help="Query all the package in the collection"
+                    "This may take a while.")
         parser.add_argument('--nameonly', action="store_true", default=False,
                     dest='name_only',
                     help="Returns only the name of the package (without the description)")
@@ -886,6 +926,8 @@ def setup_action_parser(action, last_args=None):
                     help="List all orphaned and eol'd packages")
         parser.add_argument('--user', dest='username', default=False,
                     help="List all the packages of the user <user>")
+        parser.add_argument('--branch', dest='branch', default="all",
+                    help="Specify a branch (default:'all')")
         parser.add_argument('pattern', default=None, nargs="?",
                     help="Pattern to query")
 
@@ -997,21 +1039,26 @@ def main():
                         pending=args.pending, extra=args.noextra)
 
     elif action == "list":
-        log.info("pattern : {0}".format(args.pattern))
-        log.info("all     : {0}".format(args.all))
-        log.info("orphaned: {0}".format(args.orphaned))
-        log.info("user    : {0}".format(args.username))
+        log.info("pattern  : {0}".format(args.pattern))
+        log.info("all      : {0}".format(args.all))
+        log.info("orphaned : {0}".format(args.orphaned))
+        log.info("user     : {0}".format(args.username))
         log.info("name only: {0}".format(args.name_only))
+        log.info("branch   : {0}".format(args.branch))
         if(args.all is not None and args.all):
             log.info(args)
-            get_packages("*")
+            get_packages(None, branch=args.branch)
         elif (args.orphaned is not None and args.orphaned):
             get_orphaned_packages(args.pattern, eol=args.eol,
-                                    name_only=args.name_only)
+                                    name_only=args.name_only,
+                                    branch=args.branch)
         elif (args.username is not None and args.username):
-            get_packager_info(args.username, motif=args.pattern, name_only=args.name_only)
+            get_packager_info(args.username, motif=args.pattern,
+                                    name_only=args.name_only,
+                                    branch=args.branch)
         elif (args.pattern is not None):
-            get_packages(args.pattern, name_only=args.name_only)
+            get_packages(args.pattern, name_only=args.name_only,
+                                    branch=args.branch)
         else:
             raise argparse.ArgumentTypeError(
             "Not enough argument given")
