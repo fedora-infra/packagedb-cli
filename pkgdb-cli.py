@@ -411,14 +411,15 @@ def get_packages(motif=None, name_only=False, branch='all'):
     log.debug("collection map: {0}".format(collectn_map))
     log.debug("status map: {0}".format(status_map))
 
-    print pkgdbinfo['title']
+    if not name_only:
+        print pkgdbinfo['title']
     cnt = 0
     for pkg in pkgdbinfo['packages']:
         out = "   " + pkg['name'] + ' ' * (33 - \
                     len(pkg['name'])) + \
                     pkg['summary']
         if name_only:
-            out = "   ", pkg['name']
+            out = "   "+ pkg['name']
 
         branches = []
         for info in pkg['listings']:
@@ -430,7 +431,8 @@ def get_packages(motif=None, name_only=False, branch='all'):
         if branch == 'all' or branch in branches:
             print out
             cnt = cnt + 1
-    print 'Total: {0} packages'.format(cnt)
+    if not name_only:
+        print 'Total: {0} packages'.format(cnt)
 
 
 def get_orphaned_packages(motif=None, eol=False, name_only=False,
