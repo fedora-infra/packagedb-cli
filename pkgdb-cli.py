@@ -490,7 +490,8 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False,
         if branch == 'all' or branch in branches:
             print out, "[" + "],[".join(branches) + "]"
             cnt = cnt + 1
-    print 'Total: {0} packages'.format(cnt)
+    if not name_only:
+        print 'Total: {0} packages'.format(cnt)
 
 
 def get_packager_info(packager, motif="", output=True, name_only=False,
@@ -551,7 +552,7 @@ def get_packager_info(packager, motif="", output=True, name_only=False,
                 if branch == 'all' or branch in branches:
                     print out
                     cnt = cnt + 1
-        if output:
+        if output and not name_only:
             print "Total: {0} packages".format(cnt)
     return pkgs
 
