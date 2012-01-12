@@ -282,7 +282,7 @@ def _retire_one_package(packagename, branch='devel', username=None,
     if branch is None:
         branch = 'devel'
 
-    log.info("Retiring package {0} on branch {2}".format(packagename,
+    log.info("Retiring package {0} on branch {1}".format(packagename,
                                                             branch))
 
     _get_client_authentified(username=username, password=password)
