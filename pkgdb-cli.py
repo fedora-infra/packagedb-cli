@@ -795,7 +795,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
         motif = "^" + packagename.replace("*", ".*") + "$"
     found = False
     for pkg in pkgs:
-        log.info("Package: {0}".format(pkg))
+        #log.info("Package: {0}".format(pkg))
         if allpkgs is True:
             log.debug("Orphan all packages")
             if branch == "all":
