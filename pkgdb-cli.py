@@ -788,41 +788,53 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
         branch = 'devel'
     _get_client_authentified(username=username, password=password)
 
-    pkgs = get_packager_info(pkgdbclient.username, output=False)
-    log.debug("Packages: {0}".format(pkgs))
-    if packagename is not None:
-        # transform the packagename to make it a regex
-        motif = "^" + packagename.replace("*", ".*") + "$"
-    found = False
-    for pkg in pkgs:
-        #log.info("Package: {0}".format(pkg))
-        if allpkgs is True:
-            log.debug("Orphan all packages")
-            if branch == "all":
-                log.debug("Orphan in all branches")
-                branches = _get_active_branches()
-                for branch in branches:
-                    _update_owner_one_package(pkg, branch, action="orphan",
-                            username=username, password=password)
-            else:
+    if packagename is not None and not '*' in packagename:
+        if branch == "all":
+            log.debug("Orphan {0} in all branches".format(packagename))
+            branches = _get_active_branches()
+            for branch in branches:
                 _update_owner_one_package(pkg, branch, action="orphan",
-                        username=username, password=password)
-        elif re.match(packagename, pkg):
-            log.debug("motif   : {0}".format(motif))
-            log.debug("package : {0}".format(pkg))
-            found = True
-            if branch == "all":
-                log.debug("Orphan in all branches")
-                branches = _get_active_branches()
-                for branch in branches:
+                                username=username, password=password)
+        else:
+            log.debug("Orphan {0} in {1}".format(packagename, branch))
+            _update_owner_one_package(packagename, branch, action="orphan",
+                                username=username, password=password)
+    else:
+        log.info('Search package {0} in the list of packages owned by {1}'.format(
+            packagename, pkgdbclient.username))
+        pkgs = get_packager_info(pkgdbclient.username, output=False)
+        if packagename is not None:
+            # transform the packagename to make it a regex
+            motif = "^" + packagename.replace("*", ".*") + "$"
+        found = False
+        for pkg in pkgs:
+            if allpkgs is True:
+                log.debug("Orphan all packages")
+                if branch == "all":
+                    log.debug("Orphan in all branches")
+                    branches = _get_active_branches()
+                    for branch in branches:
+                        _update_owner_one_package(pkg, branch, action="orphan",
+                                username=username, password=password)
+                else:
                     _update_owner_one_package(pkg, branch, action="orphan",
                             username=username, password=password)
-            else:
-                _update_owner_one_package(packagename, branch, action="orphan",
-                        username=username, password=password)
-    if not found:
-        print "Could not find {0} in the list of your packages".format(
-                packagename)
+            elif re.match(packagename, pkg):
+                log.debug("motif   : {0}".format(motif))
+                log.debug("package : {0}".format(pkg))
+                found = True
+                if branch == "all":
+                    log.debug("Orphan in all branches")
+                    branches = _get_active_branches()
+                    for branch in branches:
+                        _update_owner_one_package(pkg, branch, action="orphan",
+                                username=username, password=password)
+                else:
+                    _update_owner_one_package(packagename, branch, action="orphan",
+                            username=username, password=password)
+        if not found:
+            print "Could not find {0} in the list of your packages".format(
+                    packagename)
 
 
 def unorphan_package(packagename, branch='devel',
