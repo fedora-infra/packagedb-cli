@@ -88,7 +88,7 @@ def _get_client_authentified(username=None, password=None):
                 log.debug('Could not read Fedora cert, using login name')
                 username = raw_input('FAS username: ')
         if password is None:
-            password = getpass.getpass()
+            password = getpass.getpass('FAS password: ')
         pkgdbclient.username = username
         pkgdbclient.password = password
 
