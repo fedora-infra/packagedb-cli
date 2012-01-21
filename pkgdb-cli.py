@@ -25,7 +25,7 @@ import sys
 import re
 import fedora_cert
 
-version = '1.1.0'
+version = '1.2.1'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
