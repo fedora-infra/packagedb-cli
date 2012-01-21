@@ -29,8 +29,6 @@ version = '1.1.0'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
-#pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
-                        #insecure=True)
 bzclient = RHBugzilla3(url='https://bugzilla.redhat.com/xmlrpc.cgi')
 bold = "\033[1m"
 red = "\033[0;31m"
@@ -49,6 +47,11 @@ if '--nocolor' in sys.argv:
     red = ""
     bold = ""
     reset = ""
+
+if '--test' in sys.argv:
+    print "Testing environment"
+    pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
+        insecure=True)
 
 cmdlist = ['acl', 'list', 'request', 'update', 'orphan', 'unorphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
@@ -1028,6 +1031,8 @@ def setup_parser():
                 help="Gives more info about what's going on")
     parser.add_argument('--debug', action='store_true',
                 help="Outputs bunches of debugging info")
+    parser.add_argument('--test', action='store_true',
+                help="Uses a test instance instead of the real pkgdb.")
     return parser
 
 
