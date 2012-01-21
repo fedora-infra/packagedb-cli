@@ -709,6 +709,7 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
         branches = [branch]
 
     _get_client_authentified(username=username, password=password)
+    log.debug('Branches: %s' % branches)
     for branch in branches:
         if action not in actionlist and action != 'all':
             raise ActionError(
@@ -720,8 +721,8 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
         if action == 'all':
             log.debug("Process all acl for user: {0}".format(
                         pkgdbclient.username))
-            for action in actionlist:
-                msg = _handle_acl_request(packagename, action,
+            for act in actionlist:
+                msg = _handle_acl_request(packagename, act,
                                         branch, cancel)
 
         # else we process only the given one
