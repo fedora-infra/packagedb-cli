@@ -1,3 +1,4 @@
 *.pyc
 \[PATCH\]*
 00*
+dist/
