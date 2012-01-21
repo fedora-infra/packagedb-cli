@@ -1110,7 +1110,7 @@ def main():
         log.info("package : {0}".format(args.package))
         log.info("branch  : {0}".format(args.branch))
         log.info("acl     : {0}".format(args.action))
-        log.info("cancel     : {0}".format(args.cancel))
+        log.info("cancel  : {0}".format(args.cancel))
         handle_acl(args.package, action=args.action,
                 branch=args.branch, cancel=args.cancel,
                 username=arg.username, password=arg.password)
