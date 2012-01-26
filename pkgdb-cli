@@ -245,7 +245,7 @@ def _get_last_build(packagename, tag):
 
 
 def _update_owner_one_package(packagename, branch='devel', action="orphan",
-            username=None, password=None):
+            username=None, password=None, owner=None):
     """
     Orphan one package from pkgdb.
     """
@@ -256,9 +256,11 @@ def _update_owner_one_package(packagename, branch='devel', action="orphan",
     log.info("{0}ing package {1} on branch {2}".format(action.capitalize(),
         packagename, branch))
 
-    owner = "orphan"
-    if action.lower() != "orphan":
-        owner = pkgdbclient.username
+    if action.lower() == "orphan":
+        owner = "orphan"
+    else:
+        if not owner:
+            owner = pkgdbclient.username
     pkgdbinfo = pkgdbclient.send_request(
             '/acls/dispatcher/set_owner',
             auth=True, req_params={'owner': owner,
@@ -840,7 +842,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
                     packagename)
 
 
-def unorphan_package(packagename, branch='devel',
+def unorphan_package(packagename, branch='devel', owner=None,
         username=None, password=None):
     """
     Unorphan packages from pkgdb.
@@ -848,6 +850,8 @@ def unorphan_package(packagename, branch='devel',
     :arg packagename the name of the package to orphan
     :kwarg branch the name of the branch to orphan. By default it is
     'devel' but it can also be 'all'.
+    :kwarg owner, the FAS name to which assign the package. If not
+    specified will use the FAS username of the current user.
     :kwarg username the FAS username
     :kwarg password the FAS password of the user
     """
@@ -862,10 +866,10 @@ def unorphan_package(packagename, branch='devel',
         branches = _get_active_branches()
         for branch in branches:
             _update_owner_one_package(packagename, branch, action="unorphan",
-                username=username, password=password)
+                username=username, password=password, owner=owner)
     else:
         _update_owner_one_package(packagename, branch, action="unorphan",
-                username=username, password=password)
+                username=username, password=password, owner=owner)
 
 
 def retire_package(packagename, branch='devel', allpkgs=False,
@@ -977,6 +981,11 @@ def setup_action_parser(action, last_args=None):
         parser.add_argument('branch', default='devel', nargs="?",
                 help="Branch of the package to unorphan " \
                 "(default: 'devel', can be: 'all')")
+        parser.add_argument('--owner', default=None,
+                help="FAS username of the owner of the package " \
+                "This allows to give your package or an orphaned " \
+                "package to someone else. " \
+                "(default: current FAS user)")
 
     elif action == "request":
         parser.add_argument('--cancel', action="store_true", default=False,
@@ -1102,8 +1111,9 @@ def main():
         log.info("user    : {0}".format(arg.username))
         log.info("package : {0}".format(args.package))
         log.info("branch  : {0}".format(args.branch))
-        unorphan_package(args.package, args.branch,
-                arg.username, arg.password)
+        log.info("owner  : {0}".format(args.owner))
+        unorphan_package(args.package, args.branch, args.owner,
+                arg.username, arg.password,)
 
     elif action == "request":
         log.info("user    : {0}".format(arg.username))
