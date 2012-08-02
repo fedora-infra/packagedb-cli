@@ -4,8 +4,10 @@
 from fedora.client import PackageDB
 import unittest
 import logging
+import imp
 
-pkgdb = __import__('pkgdb-cli')
+pkgdb = imp.load_source('pkgdb', 'pkgdb-cli')
+
 
 
 class testPkgdDBCli(unittest.TestCase):
@@ -25,7 +27,6 @@ class testPkgdDBCli(unittest.TestCase):
         out = pkgdb.get_package_info('guake', 'all', True, True)
 
     def testGetPackages(self):
-        pass
         pkgdb.get_packages('R-*', branch='all')
         pkgdb.get_packages('R-*', branch='devel')
 
@@ -70,7 +71,7 @@ def suite():
 if __name__ == '__main__':
 
     suiteFew = unittest.TestSuite()
-    suiteFew.addTest(testPkgdDBCli("testgetPackageInfo"))
+    suiteFew.addTest(testPkgdDBCli("testGetPackageInfo"))
     suiteFew.addTest(testPkgdDBCli("testGetOrphanedPackages"))
     suiteFew.addTest(testPkgdDBCli("testGetPackagerInfo"))
     suiteFew.addTest(testPkgdDBCli("testOrphanPackage"))
