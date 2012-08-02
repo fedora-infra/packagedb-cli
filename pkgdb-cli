@@ -16,7 +16,7 @@
 """
 
 from fedora.client import PackageDB, AppError, ServerError
-from bugzilla.rhbugzilla import RHBugzilla3
+from bugzilla.rhbugzilla import RHBugzilla
 import argparse
 import logging
 import getpass
@@ -29,7 +29,7 @@ version = '1.2.1'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
-bzclient = RHBugzilla3(url='https://bugzilla.redhat.com/xmlrpc.cgi')
+bzclient = RHBugzilla(url='https://bugzilla.redhat.com/xmlrpc.cgi')
 bold = "\033[1m"
 red = "\033[0;31m"
 reset = "\033[0;0m"
