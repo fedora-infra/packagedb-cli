@@ -61,6 +61,11 @@ class testPkgdDBCli(unittest.TestCase):
     def testUnOrphanPackage(self):
         pkgdb.unorphan_package('R-ROC', 'devel', None, None)
 
+    def testGetBranches(self):
+        branches = pkgdb._get_active_branches()
+        self.assertTrue(len(branches) >= 5)
+        self.assertTrue(len(branches) <= 6)
+
 
 def suite():
     suite = unittest.TestSuite()
@@ -77,4 +82,5 @@ if __name__ == '__main__':
     suiteFew.addTest(testPkgdDBCli("testOrphanPackage"))
     suiteFew.addTest(testPkgdDBCli("testUnOrphanPackage"))
     #suiteFew.addTest(testPkgdDBCli("testGetPackages"))
+    suiteFew.addTest(testPkgdDBCli("testGetBranches"))
     unittest.TextTestRunner(verbosity=2).run(suite())
