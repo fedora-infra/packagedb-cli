@@ -173,9 +173,12 @@ def _get_package_id(packagename, branch):
             packagename, branch))
 
 
-def _get_active_branches():
+def _get_active_branches(packagename=None):
     """
     Query pkgdb to retrieve all none-EOL branches.
+
+    :kwarg packagename, if provided returns only the branches active for
+        this package.
 
     Returns a list containing the names of these branches
     """
@@ -183,14 +186,23 @@ def _get_active_branches():
             req_params={'eol': None})
     branches = dict((b[0]['branchname'], b[0])
             for b in data.collections)
-    return branches.keys()
+    branches = branches.keys()
+    if packagename:
+        pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(
+            packagename), auth=False)
+        branchs = []
+        if 'packageListings' in pkgdbinfo:
+            for collection in pkgdbinfo['packageListings']:
+                branchs.append(collection['collection']['branchname'])
+        branches = list(set(branchs).intersection(set(branches)))
+    return branches
 
 
 def _get_action_pending(packagename, branch, user):
     """
     Returns the actions which are pending for approval for a given
     package, branch and user.
-    
+
     :arg packagename, the name of the package for which we want to check
     the ACL
     :arg branch the branch that we look at
@@ -702,30 +714,36 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
     :karg username the FAS username for the user requesting the ACL.
     :karg password the FAS password for the user requesting the ACL.
     """
+    if action not in actionlist and action != 'all':
+        raise ActionError(
+                "Action '{0}' is not in the list: {1},all".format(
+                action, ",".join(actionlist)))
+
     if branch is None:
         branch = 'devel'
 
     if branch == 'all':
-        branches = _get_active_branches()
+        branches = _get_active_branches(packagename)
     else:
         branches = [branch]
 
     _get_client_authentified(username=username, password=password)
     log.debug('Branches: %s' % branches)
     for branch in branches:
-        if action not in actionlist and action != 'all':
-            raise ActionError(
-                    "Action '{0}' is not in the list: {1},all".format(
-                    action, ",".join(actionlist)))
-
         msg = ""
         # if action == 'all' then we set/remove all the ACLs
         if action == 'all':
             log.debug("Process all acl for user: {0}".format(
                         pkgdbclient.username))
             for act in actionlist:
-                msg = _handle_acl_request(packagename, act,
-                                        branch, cancel)
+                try:
+                    msg = _handle_acl_request(packagename, act, branch,
+                                        cancel)
+                except ServerError, err:
+                    log.info("Could not process acl '{0}' for branch "
+                        "'{1}' of package '{2}'".format(act, branch,
+                        packagename))
+                    log.debug(err)
 
         # else we process only the given one
         else:
