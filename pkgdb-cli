@@ -53,7 +53,8 @@ if '--test' in sys.argv:
     pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
         insecure=True)
 
-cmdlist = ['acl', 'list', 'request', 'update', 'orphan', 'unorphan']
+cmdlist = ['acl', 'branches', 'list', 'request', 'update', 'orphan',
+    'unorphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
@@ -1156,6 +1157,13 @@ def main():
             answer = "Approved"
         answer_acl_request(args.package, args.action, args.user,
                 answer, args.branch, arg.username, arg.password)
+
+    elif action == "branches":
+        log.info("List all active branches")
+        branches = _get_active_branches()
+        branches.sort()
+        branches.reverse()
+        print "The active branches are: {0}".format(branches)
 
 
 if __name__ == '__main__':
