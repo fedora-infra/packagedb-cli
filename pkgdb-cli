@@ -1163,7 +1163,7 @@ def main():
         branches = _get_active_branches()
         branches.sort()
         branches.reverse()
-        print "The active branches are: {0}".format(branches)
+        print "The active branches are: '{0}'".format("', '".join(branches))
 
 
 if __name__ == '__main__':
