@@ -4,7 +4,7 @@
 """
 # pkgdb - a commandline frontend for the Fedora package database
 #
-# Copyright (C) 2011, 2012 Pierre-Yves Chibon
+# Copyright (C) 2011-2013 Pierre-Yves Chibon
 # Author: Pierre-Yves Chibon <pingou@pingoured.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@ import sys
 import re
 import fedora_cert
 
-version = '1.2.1'
+version = '1.3.0'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
