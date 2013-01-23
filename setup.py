@@ -13,4 +13,6 @@ setup(
     download_url = 'https://fedorahosted.org/releases/p/a/packagedb-cli/',
     url = 'https://fedorahosted.org/packagedb-cli/',
     scripts=['pkgdb-cli'],
+	author='Pierre-Yves Chibon',
+	author_email='pingou@pingoured.fr',
     )
