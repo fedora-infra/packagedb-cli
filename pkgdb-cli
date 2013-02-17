@@ -1047,7 +1047,11 @@ def setup_parser():
     usage="%(prog)s [global options] COMMAND [options]" + usage,
     prog="pkgdb-cli")
     # General connection options
-    parser.add_argument('command')
+    parser.add_argument('command', help='The type of action you '
+				'would like to perform. Action must be one of %s. '
+				'Run pkgdb-cli <action> -h to get the help of this '
+				'specific action.' %
+				', '.join(cmdlist))
     parser.add_argument('argument', nargs=argparse.REMAINDER)
     parser.add_argument('--user', dest="username",
                 help="FAS username")
