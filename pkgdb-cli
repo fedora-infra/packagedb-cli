@@ -53,8 +53,6 @@ if '--test' in sys.argv:
     pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
         insecure=True)
 
-cmdlist = ['acl', 'branches', 'list', 'request', 'update', 'orphan',
-    'unorphan']
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
@@ -938,9 +936,7 @@ def setup_parser():
     """
     Set the main arguments.
     """
-    usage = "\nCommands: {0}".format(', '.join(cmdlist))
     parser = argparse.ArgumentParser(
-    usage="%(prog)s [global options] COMMAND [options]" + usage,
     prog="pkgdb-cli")
     # General connection options
     parser.add_argument('--user', dest="username",
