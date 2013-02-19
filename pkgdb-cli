@@ -934,110 +934,6 @@ def retire_package(packagename, branch='devel', allpkgs=False,
             _retire_one_package(packagename, branch, username, password)
 
 
-def setup_action_parser(action, last_args=None):
-    """
-    Parse the remaining argument for action specific arguments.
-
-    :arg action the action for which the rest of the arguments will be
-    parsed. Actions can be "acl" or "list".
-    """
-    log.info('Action called: {0}'.format(action))
-    parser = argparse.ArgumentParser(
-                usage="%(prog)s {0} [options]".format(action))
-
-    if action == 'acl':
-        parser.add_argument('package', help="Name of the package to query")
-        parser.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package to query (default: 'devel', can be: 'all')")
-        parser.add_argument('--pending', action="store_true", default=False,
-                    help="Display only ACL awaiting review")
-        parser.add_argument('--noextra', action="store_false", default=True,
-                    help="Do not display extra information (number of " \
-                    "bugs opened and last build)")
-
-    elif action == 'list':
-        parser.add_argument('--all', action="store_true", default=False,
-                    dest='all', help="Query all the package in the collection"
-                    "This may take a while.")
-        parser.add_argument('--nameonly', action="store_true", default=False,
-                    dest='name_only',
-                    help="Returns only the name of the package (without the description)")
-        parser.add_argument('--orphaned', action="store_true", default=False,
-                    dest='orphaned', help="List all orphaned packages")
-        parser.add_argument('--eol', action="store_true", default=False,
-                    dest='eol',
-                    help="List all orphaned and eol'd packages")
-        parser.add_argument('--user', dest='username', default=False,
-                    help="List all the packages of the user <user>")
-        parser.add_argument('--branch', dest='branch', default="all",
-                    help="Specify a branch (default:'all')")
-        parser.add_argument('pattern', default=None, nargs="?",
-                    help="Pattern to query")
-
-    elif action == 'orphan':
-        if "--all" in last_args:
-            parser.add_argument('--package')
-            parser.add_argument('--branch')
-            parser.add_argument('--retire', action="store_true", default=False,
-                    help="Retire the given package")
-            parser.add_argument('--all', action="store_true", default=False,
-                    help="Orphan all your packages")
-        else:
-            parser.add_argument('package',
-                    help="Name of the package to orphan or " \
-                    "simple pattern")
-            parser.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package to orphan " \
-                    "(default: 'devel', can be: 'all')")
-            parser.add_argument('--retire', action="store_true", default=False,
-                    help="Retire the given package")
-            parser.add_argument('--all', action="store_true", default=False,
-                    help="Orphan all your packages")
-
-    elif action == 'unorphan':
-        parser.add_argument('package',
-                help="Name of the package to unorphan")
-        parser.add_argument('branch', default='devel', nargs="?",
-                help="Branch of the package to unorphan " \
-                "(default: 'devel', can be: 'all')")
-        parser.add_argument('--owner', default=None,
-                help="FAS username of the owner of the package " \
-                "This allows to give your package or an orphaned " \
-                "package to someone else. " \
-                "(default: current FAS user)")
-
-    elif action == "request":
-        parser.add_argument('--cancel', action="store_true", default=False,
-                    help="Obsolete an ACL request")
-        parser.add_argument('package', help="Name of the package")
-        parser.add_argument("action",
-                    help="Request (or obsolete a request) for specific ACL on this package " \
-                    "(actions are '{0}', 'all')".format(
-                                            "', '".join(actionlist)))
-        parser.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package for which the ACL is " \
-                    "requested (default: 'devel', can be: 'all')")
-
-    elif action == "update":
-        parser.add_argument('package', help="Name of the package")
-        parser.add_argument("action",
-                    help="Request a specific ACL for this package " \
-                    "(actions are: '{0}', 'all')".format(
-                                            "', '".join(actionlist)))
-        parser.add_argument('user',
-                    help="FAS username of the person who requested ACL " \
-                    "on this package")
-        parser.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package for which the ACL is " \
-                    "requested (default: 'devel', can be: 'all')")
-        parser.add_argument('--approve', action="store_true", default=False,
-                    help="Approve the requested ACL")
-        parser.add_argument('--deny', action="store_true", default=False,
-                    help="Deny the requested ACL")
-
-    return parser
-
-
 def setup_parser():
     """
     Set the main arguments.
@@ -1047,12 +943,6 @@ def setup_parser():
     usage="%(prog)s [global options] COMMAND [options]" + usage,
     prog="pkgdb-cli")
     # General connection options
-    parser.add_argument('command', help='The type of action you '
-				'would like to perform. Action must be one of %s. '
-				'Run pkgdb-cli <action> -h to get the help of this '
-				'specific action.' %
-				', '.join(cmdlist))
-    parser.add_argument('argument', nargs=argparse.REMAINDER)
     parser.add_argument('--user', dest="username",
                 help="FAS username")
     parser.add_argument('--password', dest="password",
@@ -1068,7 +958,212 @@ def setup_parser():
                 help="Uses a test instance instead of the real pkgdb.")
     parser.add_argument('--version', action='version',
                 version='pkgdb-cli %s' % (version))
+
+    subparsers = parser.add_subparsers(title='actions')
+
+    ## ACL
+    parser_acl = subparsers.add_parser('acl',
+                    help='Request acl for a given package')
+    parser_acl.add_argument('package', help="Name of the package to query")
+    parser_acl.add_argument('branch', default='devel', nargs="?",
+                    help="Branch of the package to query (default: 'devel', can be: 'all')")
+    parser_acl.add_argument('--pending', action="store_true", default=False,
+                    help="Display only ACL awaiting review")
+    parser_acl.add_argument('--noextra', action="store_false", default=True,
+                    help="Do not display extra information (number of " \
+                    "bugs opened and last build)")
+    parser_acl.set_defaults(func=do_acl)
+
+    ## List
+    parser_list = subparsers.add_parser('list',
+                help='List package according to the specified criteria')
+    parser_list.add_argument('--all', action="store_true",
+                default=False, dest='all',
+                help="Query all the package in the collection. "
+                "This may take a while.")
+    parser_list.add_argument('--nameonly', action="store_true",
+                default=False, dest='name_only',
+                help="Returns only the name of the package (without the description)")
+    parser_list.add_argument('--orphaned', action="store_true",
+                default=False, dest='orphaned',
+                help="List all orphaned packages")
+    parser_list.add_argument('--eol', action="store_true",
+                default=False, dest='eol',
+                help="List all orphaned and eol'd packages")
+    parser_list.add_argument('--user', dest='username', default=False,
+                help="List all the packages of the user <user>")
+    parser_list.add_argument('--branch', dest='branch', default="all",
+                help="Specify a branch (default:'all')")
+    parser_list.add_argument('pattern', default=None, nargs="?",
+                help="Pattern to query")
+    parser_list.set_defaults(func=do_list)
+
+    ## Orphan
+    parser_orphan = subparsers.add_parser('orphan',
+                help='Orphan package(s) according to the specified criteria')
+    parser_orphan.add_argument('package',
+                help="Name of the package to orphan or " \
+                "simple pattern")
+    parser_orphan.add_argument('branch', default='devel', nargs="?",
+                help="Branch of the package to orphan " \
+                "(default: 'devel', can be: 'all')")
+    parser_orphan.add_argument('--retire', action="store_true", default=False,
+                help="Retire the given package")
+    parser_orphan.add_argument('--all', action="store_true", default=False,
+                help="Orphan all your packages")
+    parser_orphan.set_defaults(func=do_orphan)
+
+    ## Unorphan
+    parser_unorphan = subparsers.add_parser('unorphan',
+                help='Unorphan package(s) according to the specified criteria')
+    parser_unorphan.add_argument('package',
+                help="Name of the package to unorphan")
+    parser_unorphan.add_argument('branch', default='devel', nargs="?",
+                help="Branch of the package to unorphan " \
+                "(default: 'devel', can be: 'all')")
+    parser_unorphan.add_argument('--owner', default=None,
+                help="FAS username of the owner of the package " \
+                "This allows to give your package or an orphaned " \
+                "package to someone else. " \
+                "(default: current FAS user)")
+    parser_unorphan.set_defaults(func=do_unorphan)
+
+    ## Request
+    parser_request = subparsers.add_parser('request',
+                help='Request ACLs on package(s) according to the specified criteria')
+    parser_request.add_argument('--cancel', action="store_true", default=False,
+                    help="Obsolete an ACL request")
+    parser_request.add_argument('package', help="Name of the package")
+    parser_request.add_argument("action",
+                    help="Request (or obsolete a request) for specific ACL on this package " \
+                    "(actions are '{0}', 'all')".format(
+                                            "', '".join(actionlist)))
+    parser_request.add_argument('branch', default='devel', nargs="?",
+                    help="Branch of the package for which the ACL is " \
+                    "requested (default: 'devel', can be: 'all')")
+    parser_request.set_defaults(func=do_request)
+
+    ## Update
+    parser_update = subparsers.add_parser('update',
+                help='Update ACLs on package(s) as desired')
+    parser_update.add_argument('package', help="Name of the package")
+    parser_update.add_argument("action",
+                    help="Request a specific ACL for this package " \
+                    "(actions are: '{0}', 'all')".format(
+                                            "', '".join(actionlist)))
+    parser_update.add_argument('user',
+                    help="FAS username of the person who requested ACL " \
+                    "on this package")
+    parser_update.add_argument('branch', default='devel', nargs="?",
+                    help="Branch of the package for which the ACL is " \
+                    "requested (default: 'devel', can be: 'all')")
+    parser_update.add_argument('--approve', action="store_true", default=False,
+                    help="Approve the requested ACL")
+    parser_update.add_argument('--deny', action="store_true", default=False,
+                    help="Deny the requested ACL")
+    parser_update.set_defaults(func=do_update)
+
+
     return parser
+
+
+def do_acl(args):
+    """ Propagate the arguments to handle the ACL correctly.
+    """
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    #log.info("approve : {0}".format(args.approve))
+    get_package_info(args.package, branch=args.branch,
+                    pending=args.pending, extra=args.noextra)
+
+
+def do_list(args):
+    """ Propagate the arguments to handle list correctly.
+    """
+    log.info("pattern  : {0}".format(args.pattern))
+    log.info("all      : {0}".format(args.all))
+    log.info("orphaned : {0}".format(args.orphaned))
+    log.info("user     : {0}".format(args.username))
+    log.info("name only: {0}".format(args.name_only))
+    log.info("branch   : {0}".format(args.branch))
+    if(args.all is not None and args.all):
+        log.info(args)
+        get_packages(None, branch=args.branch)
+    elif (args.orphaned is not None and args.orphaned):
+        get_orphaned_packages(args.pattern, eol=args.eol,
+                                name_only=args.name_only,
+                                branch=args.branch)
+    elif (args.username is not None and args.username):
+        get_packager_info(args.username, motif=args.pattern,
+                                name_only=args.name_only,
+                                branch=args.branch)
+    elif (args.pattern is not None):
+        get_packages(args.pattern, name_only=args.name_only,
+                                branch=args.branch)
+    else:
+        raise argparse.ArgumentTypeError(
+        "Not enough argument given")
+
+
+def do_orphan(args):
+    
+    log.info("user    : {0}".format(arg.username))
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    #log.info("pattern : {0}".format(args.pattern))
+    log.info("all     : {0}".format(args.all))
+    log.info("retire  : {0}".format(args.retire))
+    orphan_package(args.package, args.branch, args.all,
+            arg.username, arg.password)
+    if args.retire is True:
+        retire_package(args.package, args.branch,
+            arg.username, arg.password)
+
+
+def do_unorphan(args):
+    log.info("user    : {0}".format(arg.username))
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    log.info("owner  : {0}".format(args.owner))
+    unorphan_package(args.package, args.branch, args.owner,
+            arg.username, arg.password,)
+
+
+def do_request(args):
+    
+    log.info("user    : {0}".format(arg.username))
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    log.info("acl     : {0}".format(args.action))
+    log.info("cancel  : {0}".format(args.cancel))
+    handle_acl(args.package, action=args.action,
+            branch=args.branch, cancel=args.cancel,
+            username=arg.username, password=arg.password)
+
+
+def do_update(args):
+    
+    log.info("user      : {0}".format(arg.username))
+    log.info("package   : {0}".format(args.package))
+    log.info("acl       : {0}".format(args.action))
+    log.info("requester : {0}".format(args.user))
+    log.info("branch    : {0}".format(args.branch))
+    log.info("approve   : {0}".format(args.approve))
+    log.info("deny      : {0}".format(args.deny))
+    answer = "Denied"
+    if args.approve:
+        answer = "Approved"
+    answer_acl_request(args.package, args.action, args.user,
+            answer, args.branch, arg.username, arg.password)
+
+
+def do_branch(args):
+    
+    log.info("List all active branches")
+    branches = _get_active_branches()
+    branches.sort()
+    branches.reverse()
+    print "The active branches are: '{0}'".format("', '".join(branches))
 
 
 def main():
@@ -1077,99 +1172,8 @@ def main():
     parser = setup_parser()
     # Parse the commandline
     arg = parser.parse_args()
-    # Get our action from these args
-    if arg.command in cmdlist:
-        action = arg.command
-    else:
-        raise argparse.ArgumentTypeError(
-            "command must be one of: {0}".format(','.join(cmdlist)))
-    # Parse action-specific args
-    action_parser = setup_action_parser(action, arg.argument)
-    log.info("*** {0}".format(", ".join(arg.argument)))
-    args = action_parser.parse_args(arg.argument)
-    if action == "acl":
-        log.info("package : {0}".format(args.package))
-        log.info("branch  : {0}".format(args.branch))
-        #log.info("approve : {0}".format(args.approve))
-        get_package_info(args.package, branch=args.branch,
-                        pending=args.pending, extra=args.noextra)
+    arg.func(arg)
 
-    elif action == "list":
-        log.info("pattern  : {0}".format(args.pattern))
-        log.info("all      : {0}".format(args.all))
-        log.info("orphaned : {0}".format(args.orphaned))
-        log.info("user     : {0}".format(args.username))
-        log.info("name only: {0}".format(args.name_only))
-        log.info("branch   : {0}".format(args.branch))
-        if(args.all is not None and args.all):
-            log.info(args)
-            get_packages(None, branch=args.branch)
-        elif (args.orphaned is not None and args.orphaned):
-            get_orphaned_packages(args.pattern, eol=args.eol,
-                                    name_only=args.name_only,
-                                    branch=args.branch)
-        elif (args.username is not None and args.username):
-            get_packager_info(args.username, motif=args.pattern,
-                                    name_only=args.name_only,
-                                    branch=args.branch)
-        elif (args.pattern is not None):
-            get_packages(args.pattern, name_only=args.name_only,
-                                    branch=args.branch)
-        else:
-            raise argparse.ArgumentTypeError(
-            "Not enough argument given")
-
-    elif action == "orphan":
-        log.info("user    : {0}".format(arg.username))
-        log.info("package : {0}".format(args.package))
-        log.info("branch  : {0}".format(args.branch))
-        #log.info("pattern : {0}".format(args.pattern))
-        log.info("all     : {0}".format(args.all))
-        log.info("retire  : {0}".format(args.retire))
-        orphan_package(args.package, args.branch, args.all,
-                arg.username, arg.password)
-        if args.retire is True:
-            retire_package(args.package, args.branch,
-                arg.username, arg.password)
-
-    elif action == "unorphan":
-        log.info("user    : {0}".format(arg.username))
-        log.info("package : {0}".format(args.package))
-        log.info("branch  : {0}".format(args.branch))
-        log.info("owner  : {0}".format(args.owner))
-        unorphan_package(args.package, args.branch, args.owner,
-                arg.username, arg.password,)
-
-    elif action == "request":
-        log.info("user    : {0}".format(arg.username))
-        log.info("package : {0}".format(args.package))
-        log.info("branch  : {0}".format(args.branch))
-        log.info("acl     : {0}".format(args.action))
-        log.info("cancel  : {0}".format(args.cancel))
-        handle_acl(args.package, action=args.action,
-                branch=args.branch, cancel=args.cancel,
-                username=arg.username, password=arg.password)
-
-    elif action == "update":
-        log.info("user      : {0}".format(arg.username))
-        log.info("package   : {0}".format(args.package))
-        log.info("acl       : {0}".format(args.action))
-        log.info("requester : {0}".format(args.user))
-        log.info("branch    : {0}".format(args.branch))
-        log.info("approve   : {0}".format(args.approve))
-        log.info("deny      : {0}".format(args.deny))
-        answer = "Denied"
-        if args.approve:
-            answer = "Approved"
-        answer_acl_request(args.package, args.action, args.user,
-                answer, args.branch, arg.username, arg.password)
-
-    elif action == "branches":
-        log.info("List all active branches")
-        branches = _get_active_branches()
-        branches.sort()
-        branches.reverse()
-        print "The active branches are: '{0}'".format("', '".join(branches))
 
 
 if __name__ == '__main__':
