@@ -823,7 +823,7 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
             log.debug("Orphan {0} in all branches".format(packagename))
             branches = _get_active_branches(packagename)
             for branch in branches:
-                _update_owner_one_package(pkg, branch, action="orphan",
+                _update_owner_one_package(packagename, branch, action="orphan",
                                 username=username, password=password)
         else:
             log.debug("Orphan {0} in {1}".format(packagename, branch))
