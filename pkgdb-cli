@@ -1103,43 +1103,43 @@ def do_list(args):
 
 def do_orphan(args):
     
-    log.info("user    : {0}".format(arg.username))
+    log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
     #log.info("pattern : {0}".format(args.pattern))
     log.info("all     : {0}".format(args.all))
     log.info("retire  : {0}".format(args.retire))
     orphan_package(args.package, args.branch, args.all,
-            arg.username, arg.password)
+            args.username, args.password)
     if args.retire is True:
         retire_package(args.package, args.branch,
-            arg.username, arg.password)
+            args.username, args.password)
 
 
 def do_unorphan(args):
-    log.info("user    : {0}".format(arg.username))
+    log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
     log.info("owner  : {0}".format(args.owner))
     unorphan_package(args.package, args.branch, args.owner,
-            arg.username, arg.password,)
+            args.username, args.password,)
 
 
 def do_request(args):
     
-    log.info("user    : {0}".format(arg.username))
+    log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
     log.info("acl     : {0}".format(args.action))
     log.info("cancel  : {0}".format(args.cancel))
     handle_acl(args.package, action=args.action,
             branch=args.branch, cancel=args.cancel,
-            username=arg.username, password=arg.password)
+            username=args.username, password=args.password)
 
 
 def do_update(args):
     
-    log.info("user      : {0}".format(arg.username))
+    log.info("user      : {0}".format(args.username))
     log.info("package   : {0}".format(args.package))
     log.info("acl       : {0}".format(args.action))
     log.info("requester : {0}".format(args.user))
@@ -1149,8 +1149,9 @@ def do_update(args):
     answer = "Denied"
     if args.approve:
         answer = "Approved"
-    answer_acl_request(args.package, args.action, args.user,
-            answer, args.branch, arg.username, arg.password)
+    print args
+    #answer_acl_request(args.package, args.action, args.user,
+            #answer, args.branch, args.username, args.password)
 
 
 def do_branch(args):
@@ -1187,6 +1188,6 @@ if __name__ == '__main__':
     except AppError, e:
         print '{0}: {1}'.format(e.name, e.message)
         sys.exit(4)
-    except Exception, e:
-        print 'Error: {0}'.format(e)
-        sys.exit(5)
+    #except Exception, e:
+        #print 'Error: {0}'.format(e)
+        #sys.exit(5)
