@@ -15,7 +15,7 @@
 # license.
 """
 
-from fedora.client import PackageDB, AppError, ServerError
+from fedora.client import AccountSystem, PackageDB, AppError, AuthError, ServerError
 from bugzilla.rhbugzilla import RHBugzilla
 import argparse
 import logging
@@ -29,6 +29,7 @@ version = '1.4.1'
 kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
                 {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
+fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 bzclient = RHBugzilla(url='https://bugzilla.redhat.com/xmlrpc.cgi')
 bold = "\033[1m"
 red = "\033[0;31m"
@@ -86,10 +87,17 @@ def _get_client_authentified(username=None, password=None):
             except:
                 log.debug('Could not read Fedora cert, using login name')
                 username = raw_input('FAS username: ')
-        if password is None:
-            password = getpass.getpass('FAS password: ')
         pkgdbclient.username = username
-        pkgdbclient.password = password
+        if password is None:
+            if pkgdbclient.session_id:
+                fasclient.username = username
+                # Really wish there was a better way to verify that a
+                # session_id is not expired
+                try:
+                    discard = fasclient.send_request('/home', auth=True)
+                except AuthError:
+                    password = getpass.getpass('FAS password: ')
+                    pkgdbclient.password = password
 
 
 def _get_group_info(group, statusmap, tmpstring="", pending=False):
@@ -1102,7 +1110,6 @@ def do_list(args):
 
 
 def do_orphan(args):
-    
     log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
@@ -1126,7 +1133,6 @@ def do_unorphan(args):
 
 
 def do_request(args):
-    
     log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
@@ -1138,7 +1144,6 @@ def do_request(args):
 
 
 def do_update(args):
-    
     log.info("user      : {0}".format(args.username))
     log.info("package   : {0}".format(args.package))
     log.info("acl       : {0}".format(args.action))
@@ -1155,7 +1160,7 @@ def do_update(args):
 
 
 def do_branch(args):
-    
+
     log.info("List all active branches")
     branches = _get_active_branches()
     branches.sort()
