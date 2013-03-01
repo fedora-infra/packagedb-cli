@@ -1154,9 +1154,8 @@ def do_update(args):
     answer = "Denied"
     if args.approve:
         answer = "Approved"
-    print args
-    #answer_acl_request(args.package, args.action, args.user,
-            #answer, args.branch, args.username, args.password)
+    answer_acl_request(args.package, args.action, args.user,
+            answer, args.branch, args.username, args.password)
 
 
 def do_branch(args):
@@ -1193,6 +1192,6 @@ if __name__ == '__main__':
     except AppError, e:
         print '{0}: {1}'.format(e.name, e.message)
         sys.exit(4)
-    #except Exception, e:
-        #print 'Error: {0}'.format(e)
-        #sys.exit(5)
+    except Exception, e:
+        print 'Error: {0}'.format(e)
+        sys.exit(5)
