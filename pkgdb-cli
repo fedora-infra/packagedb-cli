@@ -354,8 +354,8 @@ def _answer_acl(action, user, packagename, answer, branch):
                                             packagename,
                                             branch)
     else:
-        print "ACL request could not be {0}, do you have the rights to" \
-        " so?".format(answer)
+        print "ACL request could not be {0}".format(answer)
+        print pkgdbinfo['message']
 
 
 def _handle_acl_request(packagename, action, branch, cancel=False):
