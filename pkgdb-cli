@@ -89,15 +89,23 @@ def _get_client_authentified(username=None, password=None):
                 username = raw_input('FAS username: ')
         pkgdbclient.username = username
         if password is None:
+            require_password = True
             if pkgdbclient.session_id:
                 fasclient.username = username
                 # Really wish there was a better way to verify that a
                 # session_id is not expired
                 try:
                     discard = fasclient.send_request('/home', auth=True)
+                    require_password = False
                 except AuthError:
-                    password = getpass.getpass('FAS password: ')
-                    pkgdbclient.password = password
+                    pass
+                else:
+                    # handle potential race condition between creation of
+                    # pkgdbclient and creation of fasclient
+                    pkgdbclient.session_id = fasclient.session_id
+            if require_password:
+                password = getpass.getpass('FAS password: ')
+                pkgdbclient.password = password
 
 
 def _get_group_info(group, statusmap, tmpstring="", pending=False):
