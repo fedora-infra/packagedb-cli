@@ -1216,4 +1216,5 @@ if __name__ == '__main__':
         sys.exit(4)
     except Exception, e:
         print 'Error: {0}'.format(e)
+        logging.exception("Generic error catched:")
         sys.exit(5)
