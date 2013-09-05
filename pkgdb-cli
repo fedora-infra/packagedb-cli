@@ -956,7 +956,7 @@ def retire_package(packagename, branch='devel', allpkgs=False,
             if branch not in branches:
                 log.info(
                     'Package {0} on {1} is already no longer active'
-                    ''.format(pkg, branch))
+                    ''.format(packagename, branch))
             else:
                 _retire_one_package(packagename, branch, username, password)
 
