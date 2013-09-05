@@ -932,36 +932,24 @@ def retire_package(packagename, branch='devel', allpkgs=False,
     if allpkgs is True:
         pkgs = get_packager_info(pkgdbclient.username)
         log.debug("Retire all packages")
-
-        for pkg in pkgs:
-            branches = _get_active_branches(pkg, 1)
-            if branch == "all":
-                log.debug("Retire in all branches")
-                for branch in branches:
-                    _update_owner_one_package(pkg, branch, action="orphan",
-                        username=username, password=password)
-            else:
-                if branch not in branches:
-                    log.info(
-                        'Package {0} on {1} is already retired'
-                        ''.format(pkg, branch))
-                else:
-                    _retire_one_package(pkg, branch, username, password)
     else:
-        branches = _get_active_branches(packagename, 1)
+        pkgs = [packagename]
+
+    for pkg in pkgs:
+        branches = _get_active_branches(pkg, 1)
         if branch == "all":
             log.debug("Retire in all branches")
             for branch in branches:
-                _update_owner_one_package(packagename, branch,
-                        action="orphan", username=username,
-                        password=password)
+                _update_owner_one_package(
+                    pkg, branch, action="orphan",
+                    username=username, password=password)
         else:
             if branch not in branches:
                 log.info(
                     'Package {0} on {1} is already retired'
-                    ''.format(packagename, branch))
+                    ''.format(pkg, branch))
             else:
-                _retire_one_package(packagename, branch, username, password)
+                _retire_one_package(pkg, branch, username, password)
 
 
 def setup_parser():
