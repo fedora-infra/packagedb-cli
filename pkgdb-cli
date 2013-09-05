@@ -946,12 +946,13 @@ def retire_package(packagename, branch='devel', allpkgs=False,
                 else:
                     _retire_one_package(pkg, branch, username, password)
     else:
-        branches = _get_active_branches(pkg, 1)
+        branches = _get_active_branches(packagename, 1)
         if branch == "all":
             log.debug("Retire in all branches")
             for branch in branches:
-                _update_owner_one_package(pkg, branch, action="orphan",
-                        username=username, password=password)
+                _update_owner_one_package(packagename, branch,
+                        action="orphan", username=username,
+                        password=password)
         else:
             if branch not in branches:
                 log.info(
