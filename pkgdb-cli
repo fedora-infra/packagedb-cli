@@ -188,7 +188,7 @@ def _get_package_id(packagename, branch):
             packagename, branch))
 
 
-def _get_active_branches(packagename=None):
+def _get_active_branches(packagename=None, statuscode=None):
     """
     Query pkgdb to retrieve all none-EOL branches.
 
@@ -208,6 +208,9 @@ def _get_active_branches(packagename=None):
         branchs = []
         if 'packageListings' in pkgdbinfo:
             for collection in pkgdbinfo['packageListings']:
+                if statuscode is not None:
+                    if collection['collection']['statuscode'] != statuscode:
+                        continue
                 branchs.append(collection['collection']['branchname'])
         branches = list(set(branchs).intersection(set(branches)))
     return branches
@@ -929,23 +932,33 @@ def retire_package(packagename, branch='devel', allpkgs=False,
         log.debug("Retire all packages")
 
         for pkg in pkgs:
+            branches = _get_active_branches(pkg, 1)
             if branch == "all":
                 log.debug("Retire in all branches")
-                branches = _get_active_branches(pkg)
                 for branch in branches:
                     _update_owner_one_package(pkg, branch, action="orphan",
                         username=username, password=password)
             else:
-                _retire_one_package(pkg, branch, username, password)
+                if branch not in branches:
+                    log.info(
+                        'Package {0} on {1} is already no longer active'
+                        ''.format(pkg, branch))
+                else:
+                    _retire_one_package(pkg, branch, username, password)
     else:
+        branches = _get_active_branches(pkg, 1)
         if branch == "all":
             log.debug("Retire in all branches")
-            branches = _get_active_branches(pkg)
             for branch in branches:
                 _update_owner_one_package(pkg, branch, action="orphan",
                         username=username, password=password)
         else:
-            _retire_one_package(packagename, branch, username, password)
+            if branch not in branches:
+                log.info(
+                    'Package {0} on {1} is already no longer active'
+                    ''.format(pkg, branch))
+            else:
+                _retire_one_package(packagename, branch, username, password)
 
 
 def setup_parser():
