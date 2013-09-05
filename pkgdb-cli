@@ -51,8 +51,10 @@ if '--nocolor' in sys.argv:
 
 if '--test' in sys.argv:
     print "Testing environment"
-    pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
-        insecure=True)
+    pkgdbclient = PackageDB(
+        'https://admin.stg.fedoraproject.org/pkgdb', insecure=True)
+    fasclient = AccountSystem(
+        'https://admin.stg.fedoraproject.org/accounts', insecure=True)
 
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
@@ -97,7 +99,7 @@ def _get_client_authentified(username=None, password=None):
                 try:
                     discard = fasclient.send_request('/home', auth=True)
                     require_password = False
-                except AuthError:
+                except AuthError, err:
                     pass
                 else:
                     # handle potential race condition between creation of
@@ -330,7 +332,7 @@ def _retire_one_package(packagename, branch='devel', username=None,
     log.debug("output: {0}".format(pkgdbinfo))
 
     if "retirement" in pkgdbinfo.keys():
-        print "{0}{1}{2}{3}\n".format(bold, packagename,
+        print "{0}{1} {2}{3}\n".format(bold, packagename,
                                       pkgdbinfo["retirement"], reset)
 
 
@@ -941,7 +943,7 @@ def retire_package(packagename, branch='devel', allpkgs=False,
             else:
                 if branch not in branches:
                     log.info(
-                        'Package {0} on {1} is already no longer active'
+                        'Package {0} on {1} is already retired'
                         ''.format(pkg, branch))
                 else:
                     _retire_one_package(pkg, branch, username, password)
@@ -956,7 +958,7 @@ def retire_package(packagename, branch='devel', allpkgs=False,
         else:
             if branch not in branches:
                 log.info(
-                    'Package {0} on {1} is already no longer active'
+                    'Package {0} on {1} is already retired'
                     ''.format(packagename, branch))
             else:
                 _retire_one_package(packagename, branch, username, password)
