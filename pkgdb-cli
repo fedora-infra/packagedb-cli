@@ -190,12 +190,22 @@ def _get_package_id(packagename, branch):
             packagename, branch))
 
 
-def _get_active_branches(packagename=None, statuscode=None):
+def _get_active_branches(packagename=None, not_statuscode=None):
     """
     Query pkgdb to retrieve all none-EOL branches.
 
     :kwarg packagename, if provided returns only the branches active for
         this package.
+    :kwarg not_statuscode, exclude the branch in which the package has this
+        statuscode.
+        For reference:
+             1 = 'Active',
+             3 = 'Approved'
+            10 = 'Denied',
+            14 = 'Orphaned',
+            18 = 'Under Development',
+            20 = 'Deprecated',
+
 
     Returns a list containing the names of these branches
     """
@@ -210,8 +220,8 @@ def _get_active_branches(packagename=None, statuscode=None):
         branchs = []
         if 'packageListings' in pkgdbinfo:
             for collection in pkgdbinfo['packageListings']:
-                if statuscode is not None:
-                    if collection['collection']['statuscode'] != statuscode:
+                if not_statuscode is not None:
+                    if str(collection['statuscode']) == str(not_statuscode):
                         continue
                 branchs.append(collection['collection']['branchname'])
         branches = list(set(branchs).intersection(set(branches)))
