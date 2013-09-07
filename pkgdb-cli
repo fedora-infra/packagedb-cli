@@ -15,7 +15,8 @@
 # license.
 """
 
-from fedora.client import AccountSystem, PackageDB, AppError, AuthError, ServerError
+from fedora.client import (AccountSystem, PackageDB, AppError, AuthError,
+                           ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
 import argparse
 import logging
@@ -26,8 +27,8 @@ import re
 import fedora_cert
 
 version = '1.6.0'
-kojiclient = koji.ClientSession('http://koji.fedoraproject.org/kojihub',
-                {})
+kojiclient = koji.ClientSession(
+    'http://koji.fedoraproject.org/kojihub', {})
 pkgdbclient = PackageDB('https://admin.fedoraproject.org/pkgdb')
 fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 bzclient = RHBugzilla(url='https://bugzilla.redhat.com/xmlrpc.cgi')
@@ -148,8 +149,8 @@ def _get_group_info(group, statusmap, tmpstring="", pending=False):
         if acl in group['aclOrder'].keys() and \
                 group['aclOrder'][acl] is not None:
             has_acl = True
-            aclout = statusmap[str(
-                        group['aclOrder'][acl]['statuscode'])]
+            aclout = statusmap[
+                str(group['aclOrder'][acl]['statuscode'])]
             tmpstring = tmpstring + aclout + " " * (16 - len(aclout))
         else:
             tmpstring = tmpstring + " " * 16
@@ -179,22 +180,24 @@ def _get_package_id(packagename, branch):
     :return package_id a string of the package_id in the packageListings
     """
     log.debug("Retrieve package_id from pkgdb for {0} branch {1}".format(
-            packagename, branch))
-    pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(
-            packagename, auth=False))
+              packagename, branch))
+    pkgdbinfo = pkgdbclient.send_request(
+        '/acls/name/{0}'.format(packagename, auth=False))
     if 'packageListings' in pkgdbinfo.keys():
         for branches in pkgdbinfo['packageListings']:
             if branches['collection']['branchname'] == branch:
-                log.debug("Package {0} has package id: {1}".format(
-                        packagename, pkgdbinfo['packageListings'][0]['id']))
+                log.debug(
+                    "Package {0} has package id: {1}".format(
+                        packagename,
+                        pkgdbinfo['packageListings'][0]['id']))
                 return branches['id']
     else:
         # line splitted for now, when translation will come in line
         # the splitted string should be put back together.
         raise PackageIDError(
-        "The package_id for package '{0}' in branch '{1}' could not be" \
-        " found".format(
-            packagename, branch))
+            "The package_id for package '{0}' in branch '{1}' could not be"
+            " found".format(
+                packagename, branch))
 
 
 def _get_active_branches(packagename=None, not_statuscode=None):
@@ -216,10 +219,9 @@ def _get_active_branches(packagename=None, not_statuscode=None):
 
     Returns a list containing the names of these branches
     """
-    data = pkgdbclient.send_request('/collections/', auth=False,
-            req_params={'eol': None})
-    branches = dict((b[0]['branchname'], b[0])
-            for b in data.collections)
+    data = pkgdbclient.send_request(
+        '/collections/', auth=False, req_params={'eol': None})
+    branches = dict((b[0]['branchname'], b[0]) for b in data.collections)
     branches = branches.keys()
     if packagename:
         pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(
@@ -257,12 +259,13 @@ def _get_action_pending(packagename, branch, user):
             if branch == collection['collection']['branchname']:
                 for people in collection['people']:
                     for acl in ['watchbugzilla', 'watchcommits', 'commit',
-                'approveacls']:
+                                'approveacls']:
                         if acl in people['aclOrder'].keys() \
-                            and people['aclOrder'][acl] is not None \
-                            and people['aclOrder'][acl]['statuscode'] == 8:
+                                and people['aclOrder'][acl] is not None \
+                                and people['aclOrder'][acl]['statuscode'] == 8:
                             aclout.append(acl)
     return aclout
+
 
 def _get_last_build(packagename, tag):
     """
@@ -275,8 +278,8 @@ def _get_last_build(packagename, tag):
     list of available tag.
     """
     log.debug("Search last build for {0} in {1}".format(packagename, tag))
-    data = kojiclient.getLatestBuilds(tag,
-        package=packagename)
+    data = kojiclient.getLatestBuilds(
+        tag, package=packagename)
     versions = []
     for build in data:
         nvr = "{0}-{1}-{2}".format(
@@ -293,8 +296,9 @@ def _get_last_build(packagename, tag):
             tag)
 
 
-def _update_owner_one_package(packagename, branch='devel', action="orphan",
-            username=None, password=None, owner=None):
+def _update_owner_one_package(
+        packagename, branch='devel', action="orphan", username=None,
+        password=None, owner=None):
     """
     Orphan one package from pkgdb.
     """
@@ -302,8 +306,8 @@ def _update_owner_one_package(packagename, branch='devel', action="orphan",
         branch = 'devel'
     _get_client_authentified(username=username, password=password)
 
-    log.info("{0}ing package {1} on branch {2}".format(action.capitalize(),
-        packagename, branch))
+    log.info("{0}ing package {1} on branch {2}".format(
+        action.capitalize(), packagename, branch))
 
     if action.lower() == "orphan":
         owner = "orphan"
@@ -311,24 +315,25 @@ def _update_owner_one_package(packagename, branch='devel', action="orphan",
         if not owner:
             owner = pkgdbclient.username
     pkgdbinfo = pkgdbclient.send_request(
-            '/acls/dispatcher/set_owner',
-            auth=True, req_params={'owner': owner,
-                                    'pkg_name': packagename,
-                                    'collectn_list': branch})
+        '/acls/dispatcher/set_owner', auth=True,
+        req_params={'owner': owner,
+                    'pkg_name': packagename,
+                    'collectn_list': branch})
     log.debug("output: {0}".format(pkgdbinfo))
 
     if "message" in pkgdbinfo.keys():
         print "{0}{1}{2}\n".format(bold, pkgdbinfo["message"], reset)
     else:
-        print "{0}Changed owner of {1} to {2} in branch {3} {4}\n".format(bold,
-                                                            packagename,
-                                                            owner,
-                                                            branch,
-                                                            reset)
+        print "{0}Changed owner of {1} to {2} in branch {3} {4}\n".format(
+            bold,
+            packagename,
+            owner,
+            branch,
+            reset)
 
 
-def _retire_one_package(packagename, branch='devel', username=None,
-            password=None):
+def _retire_one_package(
+        packagename, branch='devel', username=None, password=None):
     """
     Retire one package from pkgdb.
     """
@@ -336,21 +341,22 @@ def _retire_one_package(packagename, branch='devel', username=None,
     if branch is None:
         branch = 'devel'
 
-    log.info("Retiring package {0} on branch {1}".format(packagename,
-                                                            branch))
+    log.info("Retiring package {0} on branch {1}".format(
+        packagename,
+        branch))
 
     _get_client_authentified(username=username, password=password)
     packageid = _get_package_id(packagename, branch)
 
     pkgdbinfo = pkgdbclient.send_request(
-            '/acls/dispatcher/toggle_retirement',
-            auth=True, req_params={'pkg_listing_id': packageid})
+        '/acls/dispatcher/toggle_retirement',
+        auth=True, req_params={'pkg_listing_id': packageid})
 
     log.debug("output: {0}".format(pkgdbinfo))
 
     if "retirement" in pkgdbinfo.keys():
-        print "{0}{1} {2}{3}\n".format(bold, packagename,
-                                      pkgdbinfo["retirement"], reset)
+        print "{0}{1} {2}{3}\n".format(
+            bold, packagename, pkgdbinfo["retirement"], reset)
 
 
 def _answer_acl(action, user, packagename, answer, branch):
@@ -366,23 +372,23 @@ def _answer_acl(action, user, packagename, answer, branch):
     """
     packageid = _get_package_id(packagename, branch)
     log.debug(
-    "Answer acl {0} for user {1} and package {2} ({3}) on branch {4}".format(
-        action, user, packagename, packageid, branch))
+        "Answer acl {0} for user {1} and package {2} ({3}) on branch {4}"
+        "".format(action, user, packagename, packageid, branch))
     params = {"pkgid": packageid, "person_name": user,
-            "new_acl": action, "statusname": answer}
+              "new_acl": action, "statusname": answer}
     pkgdbinfo = pkgdbclient.send_request(
-                '/acls/dispatcher/set_acl_status',
-                auth=True, req_params=params)
+        '/acls/dispatcher/set_acl_status',
+        auth=True, req_params=params)
     log.debug(pkgdbinfo)
     if pkgdbinfo['status'] is True:
         print "{0}{1} {2}{3} for {4} on package {5} branch {6}".format(
-                                            bold,
-                                            action,
-                                            answer,
-                                            reset,
-                                            user,
-                                            packagename,
-                                            branch)
+            bold,
+            action,
+            answer,
+            reset,
+            user,
+            packagename,
+            branch)
     else:
         print "ACL request could not be {0}".format(answer)
         print pkgdbinfo['message']
@@ -403,28 +409,29 @@ def _handle_acl_request(packagename, action, branch, cancel=False):
     """
     packageid = _get_package_id(packagename, branch)
     log.debug(
-    "Process acl '{0}' for user {1} and package {2} on branch {3}".format(
-        action, pkgdbclient.username, packagename, branch))
+        "Process acl '{0}' for user {1} and package {2} on branch {3}"
+        "".format(action, pkgdbclient.username, packagename, branch))
     statusname = "Awaiting Review"
     params = {'pkgid': packageid,
-            'person_name': pkgdbclient.username,
-            'acl_name': action,
-            'set_acl': True}
+              'person_name': pkgdbclient.username,
+              'acl_name': action,
+              'set_acl': True}
     if cancel:
         params['set_acl'] = False
         statusname = "Obsolete"
     pkgdbinfo = pkgdbclient.send_request(
-                '/acls/dispatcher/set_remove_acl_request/',
-                auth=True, req_params=params)
+        '/acls/dispatcher/set_remove_acl_request/',
+        auth=True, req_params=params)
     log.debug(pkgdbinfo)
     wentok = False
     if "message" in pkgdbinfo.keys():
         msg = "{0}: {1}".format(action, pkgdbinfo["message"])
     elif 'status' in pkgdbinfo.keys() \
             and str(pkgdbinfo['status']) == "True":
-        msg = "ACL {2}{0}{4} for user {1} was set to {2}'{3}'{4} on package {5} branch {6}".format(
-        action, pkgdbclient.username, bold, statusname, reset,
-        packagename, branch)
+        msg = "ACL {2}{0}{4} for user {1} was set to {2}'{3}'{4} on " \
+            "package {5} branch {6}".format(
+                action, pkgdbclient.username, bold, statusname, reset,
+                packagename, branch)
         wentok = True
     else:
         msg = "Something went wrong and we could not set the ACL as you wished"
@@ -451,14 +458,14 @@ def get_packages(motif=None, name_only=False, branch='all'):
         log.info("Query packages starting with: {0}".format(motif))
         if "*" not in motif:
             motif = motif.strip() + "*"
-        pkgdbinfo = pkgdbclient.send_request('/acls/list/{0}'.format(motif),
-                                             auth=False)#,
-                                             #req_params={
+        pkgdbinfo = pkgdbclient.send_request(
+            '/acls/list/{0}'.format(motif), auth=False)  # ,
+                                             # req_params={
                 #'pkgs_tgp_limit': 0}) ## works if it is tg_paginate_limit
     else:
         log.info("Query all packages")
-        pkgdbinfo = pkgdbclient.send_request('/acls/list/', auth=False,
-                    req_params={'pkgs_tgp_limit': 0})
+        pkgdbinfo = pkgdbclient.send_request(
+            '/acls/list/', auth=False, req_params={'pkgs_tgp_limit': 0})
 
     collectn_map = pkgdbinfo['collectn_map']
     status_map = pkgdbinfo['statusMap']
@@ -469,11 +476,10 @@ def get_packages(motif=None, name_only=False, branch='all'):
         print pkgdbinfo['title']
     cnt = 0
     for pkg in pkgdbinfo['packages']:
-        out = "   " + pkg['name'] + ' ' * (33 - \
-                    len(pkg['name'])) + \
-                    pkg['summary']
+        out = "   " + pkg['name'] + ' ' * (33 - len(pkg['name'])) + \
+            pkg['summary']
         if name_only:
-            out = "   "+ pkg['name']
+            out = "   " + pkg['name']
 
         branches = []
         for info in pkg['listings']:
@@ -489,8 +495,8 @@ def get_packages(motif=None, name_only=False, branch='all'):
         print 'Total: {0} packages'.format(cnt)
 
 
-def get_orphaned_packages(motif=None, eol=False, name_only=False,
-    branch='all'):
+def get_orphaned_packages(
+        motif=None, eol=False, name_only=False, branch='all'):
     """
     Retrieve the list of orphans packages.
 
@@ -517,12 +523,12 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False,
         log.info('Query orphaned packages starting with: {0}'.format(motif))
         if not motif.endswith("*"):
             motif = motif.strip() + "*"
-        pkgdbinfo = pkgdbclient.send_request(url + motif, auth=False,
-                    req_params={'pkgs_tgp_limit': 0})
+        pkgdbinfo = pkgdbclient.send_request(
+            url + motif, auth=False, req_params={'pkgs_tgp_limit': 0})
     else:
         log.info("Query all orphaned packages")
-        pkgdbinfo = pkgdbclient.send_request(url, auth=False,
-                    req_params={'pkgs_tgp_limit': 0})
+        pkgdbinfo = pkgdbclient.send_request(
+            url, auth=False, req_params={'pkgs_tgp_limit': 0})
     collectn_map = pkgdbinfo['collectn_map']
     status_map = pkgdbinfo['statusMap']
     log.debug("collection map: {0}".format(collectn_map))
@@ -531,15 +537,14 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False,
     log.debug("**")
     cnt = 0
     for pkg in pkgdbinfo['pkgs']:
-        out = "   " + pkg['name'] + " " * (33 - \
-                    len(pkg['name'])) + \
-                    pkg['summary']
+        out = "   " + pkg['name'] + " " * (33 - len(pkg['name'])) + \
+            pkg['summary']
         if name_only:
             out = "   " + pkg['name']
         branches = []
         for info in pkg['listings']:
             if status_map[str(info['statuscode'])] == "Orphaned" and \
-                str(info['collectionid']) in collectn_map.keys():
+                    str(info['collectionid']) in collectn_map.keys():
                 branches.append(collectn_map[str(info['collectionid'])])
         if branch == 'all' or branch in branches:
             print out, "[" + "],[".join(branches) + "]"
@@ -548,8 +553,8 @@ def get_orphaned_packages(motif=None, eol=False, name_only=False,
         print 'Total: {0} packages'.format(cnt)
 
 
-def get_packager_info(packager, motif="", output=True, name_only=False,
-    branch='all'):
+def get_packager_info(
+        packager, motif="", output=True, name_only=False, branch='all'):
     """
     Retrieve the list of all the package for which the given packager
     has
@@ -568,9 +573,9 @@ def get_packager_info(packager, motif="", output=True, name_only=False,
     :karg branch restricts the results to a given branch or not.
     """
     log.info("Query pkgdb for packager: {0}".format(packager))
-    pkgdbinfo = pkgdbclient.send_request('/users/packages/{0}'.format(
-                packager), auth=False,
-                req_params={'pkgs_tgp_limit': 0})
+    pkgdbinfo = pkgdbclient.send_request(
+        '/users/packages/{0}'.format(packager), auth=False,
+        req_params={'pkgs_tgp_limit': 0})
     collectn_map = pkgdbinfo['collectn_map']
     status_map = pkgdbinfo['statusMap']
     log.debug("collection map: {0}".format(collectn_map))
@@ -592,16 +597,16 @@ def get_packager_info(packager, motif="", output=True, name_only=False,
             log.info(name_only)
             pkgs.append(pkg['name'])
             if output and re.search("^{0}$".format(motif), pkg['name']):
-                out = "   " + pkg['name'] + " " * (33 - \
-                    len(pkg['name'])) + \
+                out = "   " + pkg['name'] + " " * (33 - len(pkg['name'])) + \
                     pkg['summary']
                 if name_only:
                     out = "   " + pkg['name']
                 branches = []
                 for info in pkg['listings']:
                     if status_map[str(info['statuscode'])] != "Orphaned" and \
-                        str(info['collectionid']) in collectn_map.keys():
-                        branches.append(collectn_map[str(info['collectionid'])])
+                            str(info['collectionid']) in collectn_map.keys():
+                        branches.append(collectn_map[
+                            str(info['collectionid'])])
                 if branch == 'all' or branch in branches:
                     print out
                     cnt = cnt + 1
@@ -610,8 +615,8 @@ def get_packager_info(packager, motif="", output=True, name_only=False,
     return pkgs
 
 
-def get_package_info(packagename, branch=None, pending=False,
-                    extra=True):
+def get_package_info(
+        packagename, branch=None, pending=False, extra=True):
     """
     Return information about the package.
     - Number of bugs open (with the status: new, assigned, needinfo)
@@ -636,8 +641,8 @@ def get_package_info(packagename, branch=None, pending=False,
     from koji
     """
     log.debug("Query pkgdb for {0} in branch {1}".format(packagename, branch))
-    pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(packagename),
-                                         auth=False)
+    pkgdbinfo = pkgdbclient.send_request(
+        '/acls/name/{0}'.format(packagename), auth=False)
 
     print pkgdbinfo['title']
     if 'packageListings' in pkgdbinfo:
@@ -646,13 +651,13 @@ def get_package_info(packagename, branch=None, pending=False,
             # print the number of opened bugs
             log.debug("Query bugzilla")
             bugbz = bzclient.query(
-                    {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
-                    'component': packagename})
+                {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
+                 'component': packagename})
             print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
         for collection in pkgdbinfo['packageListings']:
             if branch is None \
-                or branch == "all" \
-                or branch == collection['collection']['branchname']:
+                    or branch == "all" \
+                    or branch == collection['collection']['branchname']:
 
                 owner = collection['owner']
                 if collection['owner'] == 'orphan':
@@ -662,9 +667,7 @@ def get_package_info(packagename, branch=None, pending=False,
                     red + bold,
                     collection['collection']['branchname'],
                     reset,
-                    " " * (8 -
-                           len(collection['collection'][
-                                'branchname'])),
+                    " " * (8 - len(collection['collection']['branchname'])),
                     " " * 10,
                     owner)
 
@@ -680,7 +683,7 @@ def get_package_info(packagename, branch=None, pending=False,
                 for group in collection['groups']:
                     tmp = " " * 10 + group['groupname']
                     info = _get_group_info(group, pkgdbinfo['statusMap'],
-                                        tmp, pending=pending)
+                                           tmp, pending=pending)
                     if info is not None and info != "":
                         print info
 
@@ -689,7 +692,7 @@ def get_package_info(packagename, branch=None, pending=False,
                 for people in collection['people']:
                     tmp = " " * 10 + people['username']
                     info = _get_group_info(people, pkgdbinfo['statusMap'],
-                                        tmp, pending=pending)
+                                           tmp, pending=pending)
                     if info is not None and info != "":
                         print info
 
@@ -736,7 +739,7 @@ def get_last_build(packagename, tag):
 
 
 def handle_acl(packagename, action, branch='devel', cancel=False,
-    username=None, password=None):
+               username=None, password=None):
     """
     Request for a user and a branch the action for a given package.
 
@@ -753,7 +756,7 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
     """
     if action not in actionlist and action != 'all':
         raise ActionError(
-                "Action '{0}' is not in the list: {1},all".format(
+            "Action '{0}' is not in the list: {1},all".format(
                 action, ",".join(actionlist)))
 
     if branch is None:
@@ -771,31 +774,31 @@ def handle_acl(packagename, action, branch='devel', cancel=False,
         # if action == 'all' then we set/remove all the ACLs
         if action == 'all':
             log.debug("Process all acl for user: {0}".format(
-                        pkgdbclient.username))
+                pkgdbclient.username))
             for act in actionlist:
                 try:
-                    msg = _handle_acl_request(packagename, act, branch,
-                                        cancel)
+                    msg = _handle_acl_request(
+                        packagename, act, branch, cancel)
                 except ServerError, err:
                     log.info("Could not process acl '{0}' for branch "
-                        "'{1}' of package '{2}'".format(act, branch,
-                        packagename))
+                             "'{1}' of package '{2}'".format(
+                                 act, branch, packagename))
                     log.debug(err)
 
         # else we process only the given one
         else:
             try:
                 msg = _handle_acl_request(packagename, action, branch,
-                                        cancel)
+                                          cancel)
             except ServerError, err:
                 log.info("Could not process acl '{0}' for branch '{1}'".format(
-                action, branch))
+                    action, branch))
                 log.debug(err)
     return msg
 
 
 def answer_acl_request(packagename, action, user, answer, branch=None,
-                username=None, password=None):
+                       username=None, password=None):
     """
     Answer a requested ACL.
     This method allows you to approve or deny a specific requested acl
@@ -815,13 +818,13 @@ def answer_acl_request(packagename, action, user, answer, branch=None,
 
     if action not in actionlist and action != 'all':
         raise ActionError("Action '{0}' is not in the list: {1},all".format(
-                action, ",".join(actionlist)))
+            action, ",".join(actionlist)))
     _get_client_authentified(username=username, password=password)
 
     # Answer all actions requested
     if action == 'all':
         log.debug("Answer all acl for user: {0}".format(
-                                                pkgdbclient.username))
+            pkgdbclient.username))
         # Retrieve only the action which are pending
         for action in _get_action_pending(packagename, branch, user):
             _answer_acl(action, user, packagename, answer, branch)
@@ -831,7 +834,7 @@ def answer_acl_request(packagename, action, user, answer, branch=None,
 
 
 def orphan_package(packagename, branch='devel', allpkgs=False,
-    username=None, password=None):
+                   username=None, password=None):
     """
     Orphan packages from pkgdb.
     This implies that the owner is changed to "orphan".
@@ -853,15 +856,17 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
             log.debug("Orphan {0} in all branches".format(packagename))
             branches = _get_active_branches(packagename)
             for branch in branches:
-                _update_owner_one_package(packagename, branch, action="orphan",
-                                username=username, password=password)
+                _update_owner_one_package(
+                    packagename, branch, action="orphan",
+                    username=username, password=password)
         else:
             log.debug("Orphan {0} in {1}".format(packagename, branch))
-            _update_owner_one_package(packagename, branch, action="orphan",
-                                username=username, password=password)
+            _update_owner_one_package(
+                packagename, branch, action="orphan",
+                username=username, password=password)
     else:
-        log.info('Search package {0} in the list of packages owned by {1}'.format(
-            packagename, pkgdbclient.username))
+        log.info('Search package {0} in the list of packages owned by {1}'
+                 ''.format(packagename, pkgdbclient.username))
         pkgs = get_packager_info(pkgdbclient.username, output=False)
         if packagename is not None:
             # transform the packagename to make it a regex
@@ -874,11 +879,13 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
                     log.debug("Orphan in all branches")
                     branches = _get_active_branches(pkg)
                     for branch in branches:
-                        _update_owner_one_package(pkg, branch, action="orphan",
-                                username=username, password=password)
-                else:
-                    _update_owner_one_package(pkg, branch, action="orphan",
+                        _update_owner_one_package(
+                            pkg, branch, action="orphan",
                             username=username, password=password)
+                else:
+                    _update_owner_one_package(
+                        pkg, branch, action="orphan",
+                        username=username, password=password)
             elif re.match(packagename, pkg):
                 log.debug("motif   : {0}".format(motif))
                 log.debug("package : {0}".format(pkg))
@@ -887,18 +894,20 @@ def orphan_package(packagename, branch='devel', allpkgs=False,
                     log.debug("Orphan in all branches")
                     branches = _get_active_branches(pkg)
                     for branch in branches:
-                        _update_owner_one_package(pkg, branch, action="orphan",
-                                username=username, password=password)
-                else:
-                    _update_owner_one_package(packagename, branch, action="orphan",
+                        _update_owner_one_package(
+                            pkg, branch, action="orphan",
                             username=username, password=password)
+                else:
+                    _update_owner_one_package(
+                        packagename, branch, action="orphan",
+                        username=username, password=password)
         if not found:
             print "Could not find {0} in the list of your packages".format(
-                    packagename)
+                packagename)
 
 
 def unorphan_package(packagename, branch='devel', owner=None,
-        username=None, password=None):
+                     username=None, password=None):
     """
     Unorphan packages from pkgdb.
 
@@ -920,15 +929,17 @@ def unorphan_package(packagename, branch='devel', owner=None,
         log.debug("Orphan in all branches")
         branches = _get_active_branches(packagename)
         for branch in branches:
-            _update_owner_one_package(packagename, branch, action="unorphan",
+            _update_owner_one_package(
+                packagename, branch, action="unorphan",
                 username=username, password=password, owner=owner)
     else:
-        _update_owner_one_package(packagename, branch, action="unorphan",
-                username=username, password=password, owner=owner)
+        _update_owner_one_package(
+            packagename, branch, action="unorphan",
+            username=username, password=password, owner=owner)
 
 
 def retire_package(packagename, branch='devel', allpkgs=False,
-    username=None, password=None):
+                   username=None, password=None):
     """
     Retire packages from pkgdb.
 
@@ -975,129 +986,159 @@ def setup_parser():
     """
     Set the main arguments.
     """
-    parser = argparse.ArgumentParser(
-    prog="pkgdb-cli")
+    parser = argparse.ArgumentParser(prog="pkgdb-cli")
     # General connection options
     parser.add_argument('--user', dest="username",
-                help="FAS username")
+                        help="FAS username")
     parser.add_argument('--password', dest="password",
-                help="FAS password (if not provided, will be asked " \
-                "later)")
+                        help="FAS password (if not provided, will be asked "
+                        "later)")
     parser.add_argument('--nocolor', action='store_true',
-                help="Removes color from output")
+                        help="Removes color from output")
     parser.add_argument('--verbose', action='store_true',
-                help="Gives more info about what's going on")
+                        help="Gives more info about what's going on")
     parser.add_argument('--debug', action='store_true',
-                help="Outputs bunches of debugging info")
+                        help="Outputs bunches of debugging info")
     parser.add_argument('--test', action='store_true',
-                help="Uses a test instance instead of the real pkgdb.")
+                        help="Uses a test instance instead of the real pkgdb.")
     parser.add_argument('--version', action='version',
-                version='pkgdb-cli %s' % (version))
+                        version='pkgdb-cli %s' % (version))
 
     subparsers = parser.add_subparsers(title='actions')
 
     ## ACL
-    parser_acl = subparsers.add_parser('acl',
-                    help='Request acl for a given package')
+    parser_acl = subparsers.add_parser(
+        'acl',
+        help='Request acl for a given package')
     parser_acl.add_argument('package', help="Name of the package to query")
-    parser_acl.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package to query (default: 'devel', can be: 'all')")
-    parser_acl.add_argument('--pending', action="store_true", default=False,
-                    help="Display only ACL awaiting review")
-    parser_acl.add_argument('--noextra', action="store_false", default=True,
-                    help="Do not display extra information (number of " \
-                    "bugs opened and last build)")
+    parser_acl.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package to query (default: 'devel', can be: "
+        "'all')")
+    parser_acl.add_argument(
+        '--pending', action="store_true", default=False,
+        help="Display only ACL awaiting review")
+    parser_acl.add_argument(
+        '--noextra', action="store_false", default=True,
+        help="Do not display extra information (number of bugs opened and "
+        "last build)")
     parser_acl.set_defaults(func=do_acl)
 
     ## List
-    parser_list = subparsers.add_parser('list',
-                help='List package according to the specified criteria')
-    parser_list.add_argument('--all', action="store_true",
-                default=False, dest='all',
-                help="Query all the package in the collection. "
-                "This may take a while.")
-    parser_list.add_argument('--nameonly', action="store_true",
-                default=False, dest='name_only',
-                help="Returns only the name of the package (without the description)")
-    parser_list.add_argument('--orphaned', action="store_true",
-                default=False, dest='orphaned',
-                help="List all orphaned packages")
-    parser_list.add_argument('--eol', action="store_true",
-                default=False, dest='eol',
-                help="List all orphaned and eol'd packages")
-    parser_list.add_argument('--user', dest='username', default=False,
-                help="List all the packages of the user <user>")
-    parser_list.add_argument('--branch', dest='branch', default="all",
-                help="Specify a branch (default:'all')")
-    parser_list.add_argument('pattern', default=None, nargs="?",
-                help="Pattern to query")
+    parser_list = subparsers.add_parser(
+        'list',
+        help='List package according to the specified criteria')
+    parser_list.add_argument(
+        '--all', action="store_true",
+        default=False, dest='all',
+        help="Query all the package in the collection. This may take a "
+        "while.")
+    parser_list.add_argument(
+        '--nameonly', action="store_true",
+        default=False, dest='name_only',
+        help="Returns only the name of the package (without the description)")
+    parser_list.add_argument(
+        '--orphaned', action="store_true",
+        default=False, dest='orphaned',
+        help="List all orphaned packages")
+    parser_list.add_argument(
+        '--eol', action="store_true",
+        default=False, dest='eol',
+        help="List all orphaned and eol'd packages")
+    parser_list.add_argument(
+        '--user', dest='username', default=False,
+        help="List all the packages of the user <user>")
+    parser_list.add_argument(
+        '--branch', dest='branch', default="all",
+        help="Specify a branch (default:'all')")
+    parser_list.add_argument(
+        'pattern', default=None, nargs="?",
+        help="Pattern to query")
     parser_list.set_defaults(func=do_list)
 
     ## Orphan
-    parser_orphan = subparsers.add_parser('orphan',
-                help='Orphan package(s) according to the specified criteria')
-    parser_orphan.add_argument('package',
-                help="Name of the package to orphan or " \
-                "simple pattern")
-    parser_orphan.add_argument('branch', default='devel', nargs="?",
-                help="Branch of the package to orphan " \
-                "(default: 'devel', can be: 'all')")
-    parser_orphan.add_argument('--retire', action="store_true", default=False,
-                help="Retire the given package")
-    parser_orphan.add_argument('--all', action="store_true", default=False,
-                help="Orphan all your packages")
+    parser_orphan = subparsers.add_parser(
+        'orphan',
+        help='Orphan package(s) according to the specified criteria')
+    parser_orphan.add_argument(
+        'package',
+        help="Name of the package to orphan or simple pattern")
+    parser_orphan.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package to orphan (default: 'devel', can be: "
+        "'all')")
+    parser_orphan.add_argument(
+        '--retire', action="store_true", default=False,
+        help="Retire the given package")
+    parser_orphan.add_argument(
+        '--all', action="store_true", default=False,
+        help="Orphan all your packages")
     parser_orphan.set_defaults(func=do_orphan)
 
     ## Unorphan
-    parser_unorphan = subparsers.add_parser('unorphan',
-                help='Unorphan package(s) according to the specified criteria')
-    parser_unorphan.add_argument('package',
-                help="Name of the package to unorphan")
-    parser_unorphan.add_argument('branch', default='devel', nargs="?",
-                help="Branch of the package to unorphan " \
-                "(default: 'devel', can be: 'all')")
-    parser_unorphan.add_argument('--owner', default=None,
-                help="FAS username of the owner of the package " \
-                "This allows to give your package or an orphaned " \
-                "package to someone else. " \
-                "(default: current FAS user)")
+    parser_unorphan = subparsers.add_parser(
+        'unorphan',
+        help='Unorphan package(s) according to the specified criteria')
+    parser_unorphan.add_argument(
+        'package',
+        help="Name of the package to unorphan")
+    parser_unorphan.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package to unorphan "
+        "(default: 'devel', can be: 'all')")
+    parser_unorphan.add_argument(
+        '--owner', default=None,
+        help="FAS username of the owner of the package "
+        "This allows to give your package or an orphaned "
+        "package to someone else. "
+        "(default: current FAS user)")
     parser_unorphan.set_defaults(func=do_unorphan)
 
     ## Request
-    parser_request = subparsers.add_parser('request',
-                help='Request ACLs on package(s) according to the specified criteria')
-    parser_request.add_argument('--cancel', action="store_true", default=False,
-                    help="Obsolete an ACL request")
-    parser_request.add_argument('package', help="Name of the package")
-    parser_request.add_argument("action",
-                    help="Request (or obsolete a request) for specific ACL on this package " \
-                    "(actions are '{0}', 'all')".format(
-                                            "', '".join(actionlist)))
-    parser_request.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package for which the ACL is " \
-                    "requested (default: 'devel', can be: 'all')")
+    parser_request = subparsers.add_parser(
+        'request',
+        help='Request ACLs on package(s) according to the specified criteria')
+    parser_request.add_argument(
+        '--cancel', action="store_true", default=False,
+        help="Obsolete an ACL request")
+    parser_request.add_argument(
+        'package', help="Name of the package")
+    parser_request.add_argument(
+        "action",
+        help="Request (or obsolete a request) for specific ACL on this"
+        " package (actions are '{0}', 'all')".format(
+            "', '".join(actionlist)))
+    parser_request.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package for which the ACL is "
+        "requested (default: 'devel', can be: 'all')")
     parser_request.set_defaults(func=do_request)
 
     ## Update
-    parser_update = subparsers.add_parser('update',
-                help='Update ACLs on package(s) as desired')
+    parser_update = subparsers.add_parser(
+        'update',
+        help='Update ACLs on package(s) as desired')
     parser_update.add_argument('package', help="Name of the package")
-    parser_update.add_argument("action",
-                    help="Request a specific ACL for this package " \
-                    "(actions are: '{0}', 'all')".format(
-                                            "', '".join(actionlist)))
-    parser_update.add_argument('user',
-                    help="FAS username of the person who requested ACL " \
-                    "on this package")
-    parser_update.add_argument('branch', default='devel', nargs="?",
-                    help="Branch of the package for which the ACL is " \
-                    "requested (default: 'devel', can be: 'all')")
-    parser_update.add_argument('--approve', action="store_true", default=False,
-                    help="Approve the requested ACL")
-    parser_update.add_argument('--deny', action="store_true", default=False,
-                    help="Deny the requested ACL")
+    parser_update.add_argument(
+        "action",
+        help="Request a specific ACL for this package "
+        "(actions are: '{0}', 'all')".format(
+            "', '".join(actionlist)))
+    parser_update.add_argument(
+        'user',
+        help="FAS username of the person who requested ACL "
+        "on this package")
+    parser_update.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package for which the ACL is "
+        "requested (default: 'devel', can be: 'all')")
+    parser_update.add_argument(
+        '--approve', action="store_true", default=False,
+        help="Approve the requested ACL")
+    parser_update.add_argument(
+        '--deny', action="store_true", default=False,
+        help="Deny the requested ACL")
     parser_update.set_defaults(func=do_update)
-
 
     return parser
 
@@ -1109,7 +1150,7 @@ def do_acl(args):
     log.info("branch  : {0}".format(args.branch))
     #log.info("approve : {0}".format(args.approve))
     get_package_info(args.package, branch=args.branch,
-                    pending=args.pending, extra=args.noextra)
+                     pending=args.pending, extra=args.noextra)
 
 
 def do_list(args):
@@ -1126,18 +1167,17 @@ def do_list(args):
         get_packages(None, branch=args.branch)
     elif (args.orphaned is not None and args.orphaned):
         get_orphaned_packages(args.pattern, eol=args.eol,
-                                name_only=args.name_only,
-                                branch=args.branch)
+                              name_only=args.name_only,
+                              branch=args.branch)
     elif (args.username is not None and args.username):
         get_packager_info(args.username, motif=args.pattern,
-                                name_only=args.name_only,
-                                branch=args.branch)
+                          name_only=args.name_only,
+                          branch=args.branch)
     elif (args.pattern is not None):
         get_packages(args.pattern, name_only=args.name_only,
-                                branch=args.branch)
+                     branch=args.branch)
     else:
-        raise argparse.ArgumentTypeError(
-        "Not enough argument given")
+        raise argparse.ArgumentTypeError("Not enough argument given")
 
 
 def do_orphan(args):
@@ -1148,10 +1188,10 @@ def do_orphan(args):
     log.info("all     : {0}".format(args.all))
     log.info("retire  : {0}".format(args.retire))
     orphan_package(args.package, args.branch, args.all,
-            args.username, args.password)
+                   args.username, args.password)
     if args.retire is True:
         retire_package(args.package, args.branch,
-            args.username, args.password)
+                       args.username, args.password)
 
 
 def do_unorphan(args):
@@ -1160,7 +1200,7 @@ def do_unorphan(args):
     log.info("branch  : {0}".format(args.branch))
     log.info("owner  : {0}".format(args.owner))
     unorphan_package(args.package, args.branch, args.owner,
-            args.username, args.password,)
+                     args.username, args.password,)
 
 
 def do_request(args):
@@ -1170,8 +1210,8 @@ def do_request(args):
     log.info("acl     : {0}".format(args.action))
     log.info("cancel  : {0}".format(args.cancel))
     handle_acl(args.package, action=args.action,
-            branch=args.branch, cancel=args.cancel,
-            username=args.username, password=args.password)
+               branch=args.branch, cancel=args.cancel,
+               username=args.username, password=args.password)
 
 
 def do_update(args):
@@ -1186,7 +1226,7 @@ def do_update(args):
     if args.approve:
         answer = "Approved"
     answer_acl_request(args.package, args.action, args.user,
-            answer, args.branch, args.username, args.password)
+                       answer, args.branch, args.username, args.password)
 
 
 def do_branch(args):
@@ -1205,7 +1245,6 @@ def main():
     # Parse the commandline
     arg = parser.parse_args()
     arg.func(arg)
-
 
 
 if __name__ == '__main__':
