@@ -35,6 +35,13 @@ bold = "\033[1m"
 red = "\033[0;31m"
 reset = "\033[0;0m"
 
+STATUS_ACTIVE = 1
+STATUS_APPROVED = 3
+STATUS_DENIED = 10
+STATUS_ORPHANED = 14
+STATUS_UNDER_DEVELOPMENT = 18
+STATUS_RETIRED = 20
+
 # Initial simple logging stuff
 logging.basicConfig()
 log = logging.getLogger("pkgdb")
@@ -946,7 +953,7 @@ def retire_package(packagename, branch='devel', allpkgs=False,
         pkgs = [packagename]
 
     for pkg in pkgs:
-        branches = _get_active_branches(pkg, 1)
+        branches = _get_active_branches(pkg, not_statuscode=STATUS_RETIRED)
         if branch == "all":
             log.debug("Retire in all branches")
             for branch in branches:
@@ -955,9 +962,11 @@ def retire_package(packagename, branch='devel', allpkgs=False,
                     username=username, password=password)
         else:
             if branch not in branches:
-                log.info(
-                    'Package {0} on {1} is already retired'
-                    ''.format(pkg, branch))
+                print "{0}{1} is already retired in {2}{3}\n".format(
+                    bold,
+                    packagename,
+                    branch,
+                    reset)
             else:
                 _retire_one_package(pkg, branch, username, password)
 
