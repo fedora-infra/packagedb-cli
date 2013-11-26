@@ -1,0 +1,597 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+# pkgdb2 - a commandline frontend for the Fedora package database v2
+#
+# Copyright (C) 2013 Pierre-Yves Chibon
+# Author: Pierre-Yves Chibon <pingou@pingoured.fr>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at
+# your option) any later version.
+# See http://www.gnu.org/copyleft/gpl.html  for the full text of the
+# license.
+"""
+
+from fedora.client import (AccountSystem, AppError, AuthError,
+                           ServerError)
+from bugzilla.rhbugzilla import RHBugzilla
+from pkgdb import PkgDB
+import argparse
+import logging
+import getpass
+import koji
+import sys
+import re
+import fedora_cert
+
+import timeit
+
+version = '2.0.0'
+kojiclient = koji.ClientSession(
+    'http://koji.fedoraproject.org/kojihub', {})
+pkgdbclient = PkgDB('http://209.132.184.188/')
+fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
+bzclient = RHBugzilla(url='https://bugzilla.redhat.com/xmlrpc.cgi')
+bold = "\033[1m"
+red = "\033[0;31m"
+reset = "\033[0;0m"
+
+# Initial simple logging stuff
+logging.basicConfig()
+log = logging.getLogger("pkgdb")
+if '--debug' in sys.argv:
+    log.setLevel(logging.DEBUG)
+    #pkgdbclient.debug = True
+elif '--verbose' in sys.argv:
+    log.setLevel(logging.INFO)
+
+if '--nocolor' in sys.argv:
+    red = ""
+    bold = ""
+    reset = ""
+
+if '--test' in sys.argv:
+    print "Testing environment"
+    fasclient = AccountSystem(
+        'https://admin.stg.fedoraproject.org/accounts', insecure=True)
+
+actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
+
+
+def _get_acls_info(acls):
+    ''' Re-order the ACLs as provided by the PkgDB API in a way that can be
+    easily printed.
+    '''
+    output = {}
+    for acl in acls:
+        user = acl['fas_name']
+        if user not in output:
+            output[user] = {}
+        output[user][acl['acl']] = acl['status']
+    return output
+
+
+def _get_active_branch(packagename=None):
+    ''' Return a list of the active branch for a specific package or simply
+    all the active branches if no package is specified.
+    '''
+    branches = []
+    if packagename:
+        output = pkgdbclient.get_package(packagename)
+        for pkg in output['packages']:
+            branches.append(pkg['collection']['branchname'])
+    else:
+        output = pkgdbclient.get_collections(status='EOL,Under Development')
+        for collect in output['collections']:
+            if collect['status'] == 'EOL':
+                continue
+            branches.append(collect['branchname'])
+    return branches
+
+
+def _get_user_packages(username):
+    ''' Return a list of package whose point of contact is the username
+    provided.
+    '''
+    pkgs = []
+    output = pkgdbclient.get_packages(poc=username)
+    for pkg in output['packages']:
+        pkgs.append(pkg['name'])
+    return pkgs
+
+
+def _get_last_build(packagename, tag):
+    """
+    Print information about the last build of a package for a given koji
+    tag.
+
+    :arg packagename the name of the package for which we are looking for
+    the last build.
+    :arg tag the tag used in koji. See `koji list-tags` for the complete
+    list of available tag.
+    """
+    log.debug("Search last build for {0} in {1}".format(packagename, tag))
+    data = kojiclient.getLatestBuilds(
+        tag, package=packagename)
+    versions = []
+    for build in data:
+        nvr = "{0}-{1}-{2}".format(
+            build['package_name'],
+            build['version'],
+            build['release'])
+        versions.append(nvr)
+        print "{0}Last build:{1}{2} by {3} for {4} in {5}".rstrip().format(
+            " " * 8,
+            " " * 5,
+            build['completion_time'].split(" ")[0],
+            build['owner_name'],
+            nvr,
+            tag)
+
+
+def get_last_build(packagename, tag):
+    """
+    Retrieve from koji the latest build for a given package and a given
+    tag.
+
+    The tag can be something like: dist-F-13, dist-f14.
+    This function will look at dist-f14-updates and
+    dist-f14-updates-testing. It will display both updates and
+    updates-testing build when they exists.
+
+    :arg packagename the *exact* name of the package for which to
+    retrieve the last build information.
+    :arg tag the name of the branch for which to retrieve the
+    information. This name can be 'rawhide' or f-14...
+    """
+    log.debug("Retrieve the last for {0} in {1}".format(packagename, tag))
+    # Add build information from koji
+    # for updates and updates-testing
+    if tag == 'devel':
+        tag = 'rawhide'
+    if "f" in tag:
+        tag = tag + "-updates"
+        try:
+            _get_last_build(packagename, tag)
+        except Exception, er:
+            print er
+        tag = tag + "-testing"
+        try:
+            _get_last_build(packagename, tag)
+        except Exception, er:
+            print er
+    else:
+        try:
+            _get_last_build(packagename, tag)
+        except Exception, er:
+            print er
+
+
+def setup_parser():
+    """
+    Set the main arguments.
+    """
+    parser = argparse.ArgumentParser(prog="pkgdb-cli")
+    # General connection options
+    parser.add_argument('--user', dest="username",
+                        help="FAS username")
+    parser.add_argument('--password', dest="password",
+                        help="FAS password (if not provided, will be asked "
+                        "later)")
+    parser.add_argument('--nocolor', action='store_true',
+                        help="Removes color from output")
+    parser.add_argument('--verbose', action='store_true',
+                        help="Gives more info about what's going on")
+    parser.add_argument('--debug', action='store_true',
+                        help="Outputs bunches of debugging info")
+    parser.add_argument('--test', action='store_true',
+                        help="Uses a test instance instead of the real pkgdb.")
+    parser.add_argument('--version', action='version',
+                        version='pkgdb-cli %s' % (version))
+
+    subparsers = parser.add_subparsers(title='actions')
+
+    ## ACL
+    parser_acl = subparsers.add_parser(
+        'acl',
+        help='Request acl for a given package')
+    parser_acl.add_argument('package', help="Name of the package to query")
+    parser_acl.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package to query (default: 'devel', can be: "
+        "'all')")
+    parser_acl.add_argument(
+        '--pending', action="store_true", default=False,
+        help="Display only ACL awaiting review")
+    parser_acl.add_argument(
+        '--noextra', dest='extra', action="store_false", default=True,
+        help="Do not display extra information (number of bugs opened and "
+        "last build)")
+    parser_acl.set_defaults(func=do_acl)
+
+    ## List
+    parser_list = subparsers.add_parser(
+        'list',
+        help='List package according to the specified criteria')
+    parser_list.add_argument(
+        '--all', action="store_true",
+        default=False, dest='all',
+        help="Query all the package in the collection. This may take a "
+        "while.")
+    parser_list.add_argument(
+        '--nameonly', action="store_true",
+        default=False, dest='name_only',
+        help="Returns only the name of the package (without the description)")
+    parser_list.add_argument(
+        '--orphaned', action="store_true",
+        default=False, dest='orphaned',
+        help="List all orphaned packages")
+    parser_list.add_argument(
+        '--eol', action="store_true",
+        default=False, dest='eol',
+        help="List all orphaned and eol'd packages")
+    parser_list.add_argument(
+        '--user', dest='username', default=False,
+        help="List all the packages of the user <user>")
+    parser_list.add_argument(
+        '--branch', dest='branch', default=None,
+        help="Specify a branch (default:'all')")
+    parser_list.add_argument(
+        'pattern', default=None, nargs="?",
+        help="Pattern to query")
+    parser_list.set_defaults(func=do_list)
+
+    ## Orphan
+    parser_orphan = subparsers.add_parser(
+        'orphan',
+        help='Orphan package(s) according to the specified criteria')
+    parser_orphan.add_argument(
+        'package',
+        help="Name of the package to orphan or simple pattern")
+    parser_orphan.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package to orphan (default: 'devel', can be: "
+        "'all')")
+    parser_orphan.add_argument(
+        '--retire', action="store_true", default=False,
+        help="Retire the given package")
+    parser_orphan.add_argument(
+        '--all', action="store_true", default=False,
+        help="Orphan all your packages")
+    parser_orphan.set_defaults(func=do_orphan)
+
+    ## Unorphan
+    parser_unorphan = subparsers.add_parser(
+        'unorphan',
+        help='Unorphan package(s) according to the specified criteria')
+    parser_unorphan.add_argument(
+        'package',
+        help="Name of the package to unorphan")
+    parser_unorphan.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package to unorphan "
+        "(default: 'devel', can be: 'all')")
+    parser_unorphan.add_argument(
+        '--owner', default=None,
+        help="FAS username of the owner of the package "
+        "This allows to give your package or an orphaned "
+        "package to someone else. "
+        "(default: current FAS user)")
+    parser_unorphan.set_defaults(func=do_unorphan)
+
+    ## Request
+    parser_request = subparsers.add_parser(
+        'request',
+        help='Request ACLs on package(s) according to the specified criteria')
+    parser_request.add_argument(
+        '--cancel', action="store_true", default=False,
+        help="Obsolete an ACL request")
+    parser_request.add_argument(
+        'package', help="Name of the package")
+    parser_request.add_argument(
+        "action",
+        help="Request (or obsolete a request) for specific ACL on this"
+        " package (actions are '{0}', 'all')".format(
+            "', '".join(actionlist)))
+    parser_request.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package for which the ACL is "
+        "requested (default: 'devel', can be: 'all')")
+    parser_request.set_defaults(func=do_request)
+
+    ## Update
+    parser_update = subparsers.add_parser(
+        'update',
+        help='Update ACLs on package(s) as desired')
+    parser_update.add_argument('package', help="Name of the package")
+    parser_update.add_argument(
+        "action",
+        help="Request a specific ACL for this package "
+        "(actions are: '{0}', 'all')".format(
+            "', '".join(actionlist)))
+    parser_update.add_argument(
+        'user',
+        help="FAS username of the person who requested ACL "
+        "on this package")
+    parser_update.add_argument(
+        'branch', default='devel', nargs="?",
+        help="Branch of the package for which the ACL is "
+        "requested (default: 'devel', can be: 'all')")
+    parser_update.add_argument(
+        '--approve', action="store_true", default=False,
+        help="Approve the requested ACL")
+    parser_update.add_argument(
+        '--deny', action="store_true", default=False,
+        help="Deny the requested ACL")
+    parser_update.set_defaults(func=do_update)
+
+    ## Collections
+    parser_branch = subparsers.add_parser(
+        'branch',
+        help='List the active branches')
+    parser_branch.add_argument(
+        '--all', action="store_true", default=False,
+        help="Return all the branches instead of just the active ones")
+    parser_branch.set_defaults(func=do_branch)
+
+    return parser
+
+
+def do_acl(args):
+    """ Propagate the arguments to handle the ACL correctly.
+    """
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    #log.info("approve : {0}".format(args.approve))
+    if args.branch == 'all':
+        args.branch = None
+    output = pkgdbclient.get_package(args.package, branch=args.branch)
+
+    print 'Fedora Package Database -- {0}'.format(args.package)
+    if output['packages']:
+        print output['packages'][0]['package']['summary']
+        if args.extra:
+            # print the number of opened bugs
+            log.debug("Query bugzilla")
+            bugbz = bzclient.query(
+                {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
+                 'component': args.package})
+            print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
+
+    for pkg in output['packages']:
+        if pkg['collection']['status'] == 'EOL':
+            continue
+        owner = pkg['point_of_contact']
+        if owner == 'orphan':
+            owner = red + owner + reset
+
+        # Retrieve ACL information
+        print "\n{0}{1}{2}{3}Point of Contact:{4}{5}".rstrip().format(
+            red + bold,
+            pkg['collection']['branchname'],
+            reset,
+            " " * (8 - len(pkg['collection']['branchname'])),
+            " " * 5,
+            owner)
+
+        # print header of the table
+        tmp = " " * 24
+        for acl in ["watchbugzilla", "watchcommits",
+                    "commit", "approveacls"]:
+            tmp = tmp + acl + " " * (16 - len(acl))
+        print tmp.rstrip()
+
+        # print ACL information
+        print "{0}ACLs:".format(" " * 8)
+        acls = _get_acls_info(pkg['acls'])
+        for user in acls:
+            tmp = " " * 10 + user
+            tmp = tmp + " " * (24 - len(tmp))
+            for acl_title in ["watchbugzilla", "watchcommits",
+                              "commit", "approveacls"]:
+                #print '\n', acl_title
+                if acl_title in acls[user]:
+                    aclout = acls[user][acl_title]
+                    tmp = tmp + aclout + " " * (16 - len(aclout))
+                else:
+                    tmp = tmp + aclout + " " * 8
+            if tmp is not None and tmp.strip() != "":
+                print tmp
+
+        # print the last build
+        if args.extra:
+            tag = pkg['collection']['branchname']
+            get_last_build(pkg['package']['name'], tag)
+
+
+def do_list(args):
+    """ Propagate the arguments to handle list correctly.
+    """
+    log.info("pattern  : {0}".format(args.pattern))
+    log.info("all      : {0}".format(args.all))
+    log.info("orphaned : {0}".format(args.orphaned))
+    log.info("user     : {0}".format(args.username))
+    log.info("name only: {0}".format(args.name_only))
+    log.info("branch   : {0}".format(args.branch))
+    log.info(args)
+    pattern = args.pattern
+    if not pattern and args.all:
+        pattern = '*'
+    elif not pattern and not args.all:
+        raise argparse.ArgumentTypeError("Not enough arguments given")
+
+    if not pattern.endswith('*'):
+        pattern += '*'
+
+    output = pkgdbclient.get_packages(
+        pattern=pattern,
+        branch=args.branch,
+        poc=args.username,
+        orphan=args.orphaned
+    )
+    cnt = 0
+    for pkg in output['packages']:
+        out = "   " + pkg['name'] + ' ' * (33 - len(pkg['name'])) + \
+            pkg['summary']
+        if args.name_only:
+            out = "   " + pkg['name']
+
+        print out
+        cnt = cnt + 1
+    if not args.name_only:
+        print 'Total: {0} packages'.format(cnt)
+
+
+def do_orphan(args):
+    log.info("user    : {0}".format(args.username))
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    log.info("all     : {0}".format(args.all))
+    log.info("retire  : {0}".format(args.retire))
+
+    if args.all is True:
+        pkgs = _get_user_packages(args.username)
+    else:
+        pkgs = [args.package]
+    if args.branch == 'all':
+        branches = _get_active_branch()
+    else:
+        branches = [args.branch]
+
+    output = pkgdbclient.orphan_packages(pkgs, branches)
+    for msg in output['messages']:
+        print msg
+
+    if args.retire is True:
+        output = pkgdbclient.retire_packages(pkgs, branches)
+        for msg in output['messages']:
+            print msg
+
+
+def do_unorphan(args):
+    log.info("user    : {0}".format(args.username))
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    log.info("owner  : {0}".format(args.owner))
+    if args.all is True:
+        pkgs = _get_user_packages(args.username)
+    else:
+        pkgs = [args.package]
+    if args.branch == 'all':
+        branches = _get_active_branch()
+    else:
+        branches = [args.branch]
+
+    output = pkgdbclient.unorphan_packages(pkgs, branches)
+    for msg in output['messages']:
+        print msg
+
+
+def do_request(args):
+    log.info("user    : {0}".format(args.username))
+    log.info("package : {0}".format(args.package))
+    log.info("branch  : {0}".format(args.branch))
+    log.info("acl     : {0}".format(args.action))
+    log.info("cancel  : {0}".format(args.cancel))
+    actions = args.action
+    if actions == 'all':
+        actions = actionlist
+    elif action not in actionlist:
+        raise ActionError(
+            'Action "{0}" is not in the list: {1},all'.format(
+                action, ','.join(actionlist)))
+
+    branch = args.branch
+    if branch == 'all':
+        branch = _get_active_branch(args.package)
+
+    status = 'Awaiting Review'
+    if args.cancel:
+        status = 'Obsolete'
+
+    update_acl(args.package, branches=branch, acls=actions, status=status,
+               user=args.username)
+
+
+def do_update(args):
+    log.info("user      : {0}".format(args.username))
+    log.info("package   : {0}".format(args.package))
+    log.info("acl       : {0}".format(args.action))
+    log.info("requester : {0}".format(args.user))
+    log.info("branch    : {0}".format(args.branch))
+    log.info("approve   : {0}".format(args.approve))
+    log.info("deny      : {0}".format(args.deny))
+
+    actions = args.action
+    if actions == 'all':
+        actions = actionlist
+    elif action not in actionlist:
+        raise ActionError(
+            'Action "{0}" is not in the list: {1},all'.format(
+                action, ','.join(actionlist)))
+
+    branch = args.branch
+    if branch == 'all':
+        branch = _get_active_branch(args.package)
+
+    status = "Denied"
+    if args.approve:
+        status = "Approved"
+
+    update_acl(args.package, branches=branch, acls=actions, status=status,
+               user=args.username)
+
+
+def do_branch(args):
+    log.info("all      : {0}".format(args.all))
+    log.info("List all active branches")
+    if args.all:
+        branches = pkgdbclient.get_collections()
+    else:
+        branches = pkgdbclient.get_collections(
+            status='Active,Under Development')
+    cnt = 0
+    for pkg in branches['collections']:
+        name = '{0} {1}'.format(pkg['name'], pkg['version'])
+        print "   " + pkg['branchname'] + \
+            ' ' * (20 - len(pkg['branchname'])) + name + \
+            ' ' * (20 - len(name)) + pkg['status']
+        cnt = cnt + 1
+    print 'Total: {0} collections'.format(cnt)
+
+
+def main():
+    ''' Main function '''
+    # Set up parser for global args
+    parser = setup_parser()
+    # Parse the commandline
+    arg = parser.parse_args()
+    arg.func(arg)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print "\nInterrupted by user."
+        sys.exit(1)
+    except argparse.ArgumentTypeError, e:
+        print "\nError: {0}".format(e)
+        sys.exit(2)
+    except ServerError, e:
+        print '{0}'.format(e)
+        sys.exit(3)
+    except AppError, e:
+        print '{0}: {1}'.format(e.name, e.message)
+        sys.exit(4)
+    except ValueError, e:
+        print 'Error: {0}'.format(e)
+        print 'Did you log in?'
+        sys.exit(6)
+    except Exception, e:
+        print 'Error: {0}'.format(e)
+        logging.exception("Generic error catched:")
+        sys.exit(5)
