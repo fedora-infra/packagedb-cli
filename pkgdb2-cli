@@ -43,12 +43,6 @@ RESET = "\033[0;0m"
 logging.basicConfig()
 pkgdblog = logging.getLogger("pkgdb")
 log = logging.getLogger("pkgdb-cli")
-if '--debug' in sys.argv:
-    log.setLevel(logging.DEBUG)
-    pkgdblog.setLevel(logging.DEBUG)
-    #pkgdbclient.debug = True
-elif '--verbose' in sys.argv:
-    log.setLevel(logging.INFO)
 
 if '--test' in sys.argv:
     print "Testing environment"
@@ -634,6 +628,12 @@ def main():
         RED = ""
         BOLD = ""
         RESET = ""
+
+    if arg.debug:
+        log.setLevel(logging.DEBUG)
+        pkgdblog.setLevel(logging.DEBUG)
+    elif arg.verbose:
+        log.setLevel(logging.INFO)
 
     arg.func(arg)
 
