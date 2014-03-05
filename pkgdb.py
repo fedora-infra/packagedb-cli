@@ -16,8 +16,12 @@
 """
 
 import json
+import logging
 
 import requests
+
+logging.basicConfig()
+LOG = logging.getLogger("pkgdb")
 
 
 PKGDB_URL = 'http://209.132.184.188'
@@ -29,6 +33,7 @@ class PkgDBException(Exception):
 
     '''
     pass
+
 
 def _parse_service_form(response):
     """ Retrieve the attributes from the html form. """
@@ -149,6 +154,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -173,6 +179,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -200,6 +207,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -229,6 +237,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -258,6 +267,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -289,6 +299,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -318,6 +329,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
@@ -353,6 +365,7 @@ class PkgDB(object):
         output = req.json()
 
         if req.status_code != 200:
+            LOG.debug('full output %s', outout)
             raise PkgDBException(output['error'])
 
         return output
