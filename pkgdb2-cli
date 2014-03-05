@@ -4,7 +4,7 @@
 """
 # pkgdb2 - a commandline frontend for the Fedora package database v2
 #
-# Copyright (C) 2013 Pierre-Yves Chibon
+# Copyright (C) 2013-2014 Pierre-Yves Chibon
 # Author: Pierre-Yves Chibon <pingou@pingoured.fr>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 from fedora.client import (AccountSystem, AppError, AuthError,
                            ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb import PkgDB
+from pkgdb import PkgDB, PkgDBException
 import argparse
 import logging
 import getpass
@@ -29,7 +29,7 @@ import fedora_cert
 
 import timeit
 
-version = '2.0.0'
+version = '2.0'
 kojiclient = koji.ClientSession(
     'http://koji.fedoraproject.org/kojihub', {})
 pkgdbclient = PkgDB('http://209.132.184.188/')
@@ -59,6 +59,12 @@ if '--test' in sys.argv:
         'https://admin.stg.fedoraproject.org/accounts', insecure=True)
 
 actionlist = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
+
+
+class ActionError(Exception):
+    """ This class is raised when an ACL action is requested but not in
+    the list of allowed action. """
+    pass
 
 
 def _get_acls_info(acls):
@@ -234,7 +240,7 @@ def setup_parser():
         default=False, dest='eol',
         help="List all orphaned and eol'd packages")
     parser_list.add_argument(
-        '--user', dest='username', default=False,
+        '--user', dest='user', default=False,
         help="List all the packages of the user <user>")
     parser_list.add_argument(
         '--branch', dest='branch', default=None,
@@ -413,12 +419,12 @@ def do_list(args):
     log.info("pattern  : {0}".format(args.pattern))
     log.info("all      : {0}".format(args.all))
     log.info("orphaned : {0}".format(args.orphaned))
-    log.info("user     : {0}".format(args.username))
+    log.info("user     : {0}".format(args.user))
     log.info("name only: {0}".format(args.name_only))
     log.info("branch   : {0}".format(args.branch))
     log.info(args)
     pattern = args.pattern
-    if not pattern and args.all:
+    if not pattern or args.all:
         pattern = '*'
     elif not pattern and not args.all:
         raise argparse.ArgumentTypeError("Not enough arguments given")
@@ -429,11 +435,11 @@ def do_list(args):
     output = pkgdbclient.get_packages(
         pattern=pattern,
         branch=args.branch,
-        poc=args.username,
+        poc=args.user,
         orphan=args.orphaned
     )
     cnt = 0
-    for pkg in output['packages']:
+    for pkg in sorted(output['packages'], key = lambda pkg: (pkg['name'])):
         out = "   " + pkg['name'] + ' ' * (33 - len(pkg['name'])) + \
             pkg['summary']
         if args.name_only:
@@ -475,7 +481,7 @@ def do_unorphan(args):
     log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
-    log.info("owner  : {0}".format(args.owner))
+    log.info("poc     : {0}".format(args.owner))
     if args.all is True:
         pkgs = _get_user_packages(args.username)
     else:
@@ -525,9 +531,9 @@ def do_update(args):
     log.info("approve   : {0}".format(args.approve))
     log.info("deny      : {0}".format(args.deny))
 
-    actions = args.action
-    if actions == 'all':
-        actions = actionlist
+    action = args.action
+    if action == 'all':
+        action = actionlist
     elif action not in actionlist:
         raise ActionError(
             'Action "{0}" is not in the list: {1},all'.format(
@@ -541,7 +547,7 @@ def do_update(args):
     if args.approve:
         status = "Approved"
 
-    update_acl(args.package, branches=branch, acls=actions, status=status,
+    update_acl(args.package, branches=branch, acls=action, status=status,
                user=args.username)
 
 
@@ -584,9 +590,15 @@ if __name__ == '__main__':
     except ServerError, e:
         print '{0}'.format(e)
         sys.exit(3)
+    except ActionError, e:
+        print '{0}'.format(e.message)
+        sys.exit(7)
     except AppError, e:
         print '{0}: {1}'.format(e.name, e.message)
         sys.exit(4)
+    except PkgDBException, e:
+        print '{0}'.format(e)
+        sys.exit(8)
     except ValueError, e:
         print 'Error: {0}'.format(e)
         print 'Did you log in?'
