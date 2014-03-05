@@ -87,6 +87,7 @@ def __do_login(username=None, password=None):
                 log.debug('Could not read Fedora cert, using login name')
                 username = raw_input('FAS username: ')
         password = getpass.getpass('FAS password: ')
+        pkgdbclient.username = username
         pkgdbclient.login(username, password)
 
 def _get_acls_info(acls):
@@ -110,7 +111,8 @@ def _get_active_branch(packagename=None):
     if packagename:
         output = pkgdbclient.get_package(packagename)
         for pkg in output['packages']:
-            branches.append(pkg['collection']['branchname'])
+            if pkg['collection']['status'] != 'EOL':
+                branches.append(pkg['collection']['branchname'])
     else:
         output = pkgdbclient.get_collections(status='EOL,Under Development')
         for collect in output['collections']:
@@ -303,8 +305,11 @@ def setup_parser():
         help="Branch of the package to unorphan "
         "(default: 'devel', can be: 'all')")
     parser_unorphan.add_argument(
-        '--owner', default=None,
-        help="FAS username of the owner of the package "
+        '--all', action="store_true", default=False,
+        help="Unorphan all your packages")
+    parser_unorphan.add_argument(
+        '--poc', default=None,
+        help="FAS username of the new point of contact of the package "
         "This allows to give your package or an orphaned "
         "package to someone else. "
         "(default: current FAS user)")
@@ -489,13 +494,15 @@ def do_orphan(args):
     else:
         branches = [args.branch]
 
+    __do_login(args.username)
+
     output = pkgdbclient.orphan_packages(pkgs, branches)
-    for msg in output['messages']:
+    for msg in output.get('messages', []):
         print msg
 
     if args.retire is True:
         output = pkgdbclient.retire_packages(pkgs, branches)
-        for msg in output['messages']:
+        for msg in output.get('messages', []):
             print msg
 
 
@@ -503,7 +510,7 @@ def do_unorphan(args):
     log.info("user    : {0}".format(args.username))
     log.info("package : {0}".format(args.package))
     log.info("branch  : {0}".format(args.branch))
-    log.info("poc     : {0}".format(args.owner))
+    log.info("poc     : {0}".format(args.poc))
     if args.all is True:
         pkgs = _get_user_packages(args.username)
     else:
@@ -513,8 +520,13 @@ def do_unorphan(args):
     else:
         branches = [args.branch]
 
-    output = pkgdbclient.unorphan_packages(pkgs, branches)
-    for msg in output['messages']:
+    __do_login(args.username)
+
+    username = args.poc or args.username or pkgdbclient.username
+    log.info("new poc : {0}".format(username))
+
+    output = pkgdbclient.unorphan_packages(pkgs, branches, username)
+    for msg in output.get('messages', []):
         print msg
 
 
@@ -524,9 +536,9 @@ def do_request(args):
     log.info("branch  : {0}".format(args.branch))
     log.info("acl     : {0}".format(args.action))
     log.info("cancel  : {0}".format(args.cancel))
-    actions = args.action
-    if actions == 'all':
-        actions = actionlist
+    action = args.action
+    if action == 'all':
+        action = actionlist
     elif action not in actionlist:
         raise ActionError(
             'Action "{0}" is not in the list: {1},all'.format(
@@ -540,8 +552,18 @@ def do_request(args):
     if args.cancel:
         status = 'Obsolete'
 
-    update_acl(args.package, branches=branch, acls=actions, status=status,
-               user=args.username)
+    __do_login(args.username)
+    log.info("user    : {0}".format(pkgdbclient.username))
+
+    output = pkgdbclient.update_acl(
+        args.package,
+        branches=branch,
+        acls=action,
+        status=status,
+        user=pkgdbclient.username)
+
+    for msg in output.get('messages', []):
+        print msg
 
 
 def do_update(args):
@@ -577,9 +599,8 @@ def do_update(args):
         acls=action,
         status=status,
         user=args.user)
-    if output['output'] == 'ok':
-        for message in output['messages']:
-            print message
+    for msg in output.get('messages', []):
+        print msg
 
 
 def do_branch(args):
@@ -619,15 +640,19 @@ if __name__ == '__main__':
         print "\nError: {0}".format(e)
         sys.exit(2)
     except ServerError, e:
+        log.debug('ServerError')
         print '{0}'.format(e)
         sys.exit(3)
     except ActionError, e:
+        log.debug('ActionError')
         print '{0}'.format(e.message)
         sys.exit(7)
     except AppError, e:
+        log.debug('AppError')
         print '{0}: {1}'.format(e.name, e.message)
         sys.exit(4)
     except PkgDBException, e:
+        log.debug('PkgDBException')
         print '{0}'.format(e)
         sys.exit(8)
     except ValueError, e:
