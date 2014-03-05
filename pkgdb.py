@@ -188,7 +188,8 @@ class PkgDB(object):
 
         return output
 
-    def get_packages(self, pattern='*', branch=None, poc=None, orphan=None):
+    def get_packages(self, pattern='*', branches=None, poc=None, status=None,
+            orphaned=False, acls=False, count=False):
         ''' Return the list of packages matching the provided criterias.
 
         :kwarg pattern:
@@ -197,22 +198,41 @@ class PkgDB(object):
         :kwarg orphan:
 
         '''
-        args = {
-            'pattern': pattern,
-            'branches': branch,
-            'poc': poc,
-            'orphan': orphan,
-        }
+        def _get_pages(page):
+            args = {
+                'pattern': pattern,
+                'branches': branches,
+                'poc': poc,
+                'status': status,
+                'page': page,
+            }
+            if count is True:
+                args['count'] = count
+            if acls is True:
+                args['acls'] = acls
+            if orphaned is True:
+                args['orphaned'] = orphaned
 
-        req = self.session.get(
-            '{0}/api/packages/'.format(self.url), params=args
-        )
+            req = self.session.get(
+                '{0}/api/packages/'.format(self.url), params=args
+            )
 
-        output = req.json()
+            output = req.json()
 
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
+            if req.status_code != 200:
+                LOG.debug('full output %s', output)
+                raise PkgDBException(output['error'])
+
+            return output
+
+
+        output = _get_pages(1)
+
+        page = output['page']
+        total = output['pages_total']
+        for i in range(2, total + 1):
+            data = _get_pages(i)
+            output['packages'].extend(output['packages'])
 
         return output
 
