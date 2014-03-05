@@ -257,7 +257,7 @@ def setup_parser():
         default=False, dest='eol',
         help="List all orphaned and eol'd packages")
     parser_list.add_argument(
-        '--user', dest='user', default=False,
+        '--user', dest='user', default=None,
         help="List all the packages of the user <user>")
     parser_list.add_argument(
         '--branch', dest='branch', default=None,
@@ -444,7 +444,7 @@ def do_list(args):
     log.info("user     : {0}".format(args.user))
     log.info("name only: {0}".format(args.name_only))
     log.info("branch   : {0}".format(args.branch))
-    log.info(args)
+
     pattern = args.pattern
     if not pattern or args.all:
         pattern = '*'
@@ -456,9 +456,9 @@ def do_list(args):
 
     output = pkgdbclient.get_packages(
         pattern=pattern,
-        branch=args.branch,
+        branches=args.branch,
         poc=args.user,
-        orphan=args.orphaned
+        orphaned=args.orphaned
     )
     cnt = 0
     for pkg in sorted(output['packages'], key = lambda pkg: (pkg['name'])):
