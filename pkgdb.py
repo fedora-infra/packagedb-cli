@@ -104,7 +104,7 @@ class PkgDB(object):
             openid_url, data = _parse_service_form(response)
             if not motif.match(openid_url):
                 raise FedoraServiceError(
-                    'Un-expected openid provider asked: %s'  % openid_url)
+                    'Un-expected openid provider asked: %s' % openid_url)
         else:
             data = {}
             for r in response.history:
@@ -190,7 +190,7 @@ class PkgDB(object):
         return output
 
     def get_packages(self, pattern='*', branches=None, poc=None, status=None,
-            orphaned=False, acls=False, count=False):
+                     orphaned=False, acls=False, count=False):
         ''' Return the list of packages matching the provided criterias.
 
         :kwarg pattern:
@@ -226,7 +226,6 @@ class PkgDB(object):
                 raise PkgDBException(output['error'])
 
             return output
-
 
         output = _get_pages(1)
 
