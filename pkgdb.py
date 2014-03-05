@@ -49,15 +49,18 @@ class PkgDB(object):
 
     '''
 
-    def __init__(self, url=PKGDB_URL):
+    def __init__(self, url=PKGDB_URL, username=None):
         ''' Constructor fo the PkgDB object used to query the package
         database.
 
         :kwarg url: the basic url to the package DB instance to query
+        :kwarg username: the FAS username of the user performing the
+            actions
 
         '''
         self.url = url
         self.session = requests.session()
+        self.username = username
         self.__logged = False
 
     @property
@@ -84,7 +87,7 @@ class PkgDB(object):
         motif = re.compile(fedora_openid)
 
         # Log into the service
-        response = self.session.get(PKGDB_URL + '/login/')
+        response = self.session.get(self.url + '/login/')
 
         if '<title>OpenID transaction in progress</title>' \
                 in response.text:
@@ -115,12 +118,12 @@ class PkgDB(object):
             verify=not openid_insecure)
         output = response.json()
 
+        if not output['success']:
+            raise PkgDBException(output['message'])
+
         response = self.session.post(
             output['response']['openid.return_to'],
             data=output['response'])
-
-        if not output['success']:
-            raise AuthError(output['message'])
 
         self.__logged = True
 
@@ -337,8 +340,8 @@ class PkgDB(object):
 
         args = {
             'pkg_name': package,
-            'pkg_branch': ','.join(branches),
-            'pkg_acl': ','.join(acls),
+            'pkg_branch': branches,
+            'pkg_acl': acls,
             'acl_status': status,
             'pkg_user': user,
         }
