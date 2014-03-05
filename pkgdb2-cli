@@ -41,9 +41,11 @@ reset = "\033[0;0m"
 
 # Initial simple logging stuff
 logging.basicConfig()
-log = logging.getLogger("pkgdb")
+pkgdblog = logging.getLogger("pkgdb")
+log = logging.getLogger("pkgdb-cli")
 if '--debug' in sys.argv:
     log.setLevel(logging.DEBUG)
+    pkgdblog.setLevel(logging.DEBUG)
     #pkgdbclient.debug = True
 elif '--verbose' in sys.argv:
     log.setLevel(logging.INFO)
