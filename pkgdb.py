@@ -36,7 +36,11 @@ class PkgDBException(Exception):
 
 
 def _parse_service_form(response):
-    """ Retrieve the attributes from the html form. """
+    """ Retrieve the attributes from the html login form.
+
+    Basically this extracts all the field of the form so that we can
+    forward them to the OpenID API.
+    """
     import bs4
 
     parsed = bs4.BeautifulSoup(response.text)
