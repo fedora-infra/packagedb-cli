@@ -30,6 +30,18 @@ class PkgDBException(Exception):
     '''
     pass
 
+def _parse_service_form(response):
+    """ Retrieve the attributes from the html form. """
+    import bs4
+
+    parsed = bs4.BeautifulSoup(response.text)
+    inputs = {}
+    for child in parsed.form.find_all(name='input'):
+        if child.attrs['type'] == 'submit':
+            continue
+        inputs[child.attrs['name']] = child.attrs['value']
+    return (parsed.form.attrs['action'], inputs)
+
 
 class PkgDB(object):
     ''' PkgDB class used to interact with the Package DB instance via its
@@ -45,6 +57,75 @@ class PkgDB(object):
 
         '''
         self.url = url
+        self.session = requests.session()
+        self.__logged = False
+
+    @property
+    def logged(self):
+        ''' Return whether the user if logged in or not. '''
+        return self.__logged
+
+    def login(self, username, password, openid_insecure=False):
+        ''' Login the user on pkgdb2.
+
+        :arg username: the FAS username of the user.
+        :arg password: the FAS password of the user.
+        :kwarg openid_insecure: If True, do not check the openid server
+            certificates against their CA's.  This means that man-in-the
+            middle attacks are possible against the `BaseClient`. You might
+            turn this option on for testing against a local version of a
+            server with a self-signed certificate but it should be off in
+            production.
+        '''
+        import re
+
+        fedora_openid_api = 'https://id.fedoraproject.org/api/v1/'
+        fedora_openid = '^http(s)?:\/\/(|stg.|dev.)?id\.fedoraproject\.org(/)?'
+        motif = re.compile(fedora_openid)
+
+        # Log into the service
+        response = self.session.get(PKGDB_URL + '/login/')
+
+        if '<title>OpenID transaction in progress</title>' \
+                in response.text:
+            # requests.session should hold onto this for us....
+            openid_url, data = _parse_service_form(response)
+            if not motif.match(openid_url):
+                raise FedoraServiceError(
+                    'Un-expected openid provider asked: %s'  % openid_url)
+        else:
+            data = {}
+            for r in response.history:
+                if motif.match(r.url):
+                    parsed = parse_qs(urlparse(r.url).query)
+                    for key, value in parsed.items():
+                        data[key] = value[0]
+                    break
+            else:
+                raise FedoraServiceError(
+                    'Unable to determine openid parameters from login: %r' %
+                    openid_url)
+
+        # Contact openid provider
+        data['username'] = username
+        data['password'] = password
+        response = self.session.post(
+            fedora_openid_api,
+            data,
+            verify=not openid_insecure)
+        output = response.json()
+
+        response = self.session.post(
+            output['response']['openid.return_to'],
+            data=output['response'])
+
+        if not output['success']:
+            raise AuthError(output['message'])
+
+        self.__logged = True
+
+        return output
+
 
     def get_collections(self, pattern='*', status=None):
         ''' Return the list of collections matching the provided criterias.
@@ -58,11 +139,11 @@ class PkgDB(object):
             'status': status,
         }
 
-        req = requests.get(
+        req = self.session.get(
             '{0}/api/collections/'.format(self.url), params=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -82,11 +163,11 @@ class PkgDB(object):
             'pkg_clt': branch,
         }
 
-        req = requests.get(
+        req = self.session.get(
             '{0}/api/package/'.format(self.url), params=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -105,15 +186,15 @@ class PkgDB(object):
         args = {
             'pattern': pattern,
             'branches': branch,
-            'owner': poc,
+            'poc': poc,
             'orphan': orphan,
         }
 
-        req = requests.get(
+        req = self.session.get(
             '{0}/api/packages/'.format(self.url), params=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -138,11 +219,11 @@ class PkgDB(object):
             'clt_name': ','.join(branches),
         }
 
-        req = requests.post(
+        req = self.session.post(
             '{0}/api/package/orphan/'.format(self.url), data=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -167,11 +248,11 @@ class PkgDB(object):
             'clt_name': ','.join(branches),
         }
 
-        req = requests.post(
+        req = self.session.post(
             '{0}/api/package/retire/'.format(self.url), data=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -198,11 +279,11 @@ class PkgDB(object):
             'pkg_poc': poc,
         }
 
-        req = requests.post(
+        req = self.session.post(
             '{0}/api/package/unorphan/'.format(self.url), data=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -227,11 +308,11 @@ class PkgDB(object):
             'clt_name': ','.join(branches),
         }
 
-        req = requests.post(
+        req = self.session.post(
             '{0}/api/package/unretire/'.format(self.url), data=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
@@ -262,11 +343,11 @@ class PkgDB(object):
             'pkg_user': user,
         }
 
-        req = requests.post(
+        req = self.session.post(
             '{0}/api/package/acl/'.format(self.url), data=args
         )
 
-        output = json.loads(req.text)
+        output = req.json()
 
         if req.status_code != 200:
             raise PkgDBException(output['error'])
