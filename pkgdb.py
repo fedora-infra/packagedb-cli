@@ -138,7 +138,6 @@ class PkgDB(object):
 
         return output
 
-
     def get_collections(self, pattern='*', status=None):
         ''' Return the list of collections matching the provided criterias.
 
@@ -154,6 +153,7 @@ class PkgDB(object):
         req = self.session.get(
             '{0}/api/collections/'.format(self.url), params=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
@@ -179,6 +179,7 @@ class PkgDB(object):
         req = self.session.get(
             '{0}/api/package/'.format(self.url), params=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
@@ -216,6 +217,7 @@ class PkgDB(object):
             req = self.session.get(
                 '{0}/api/packages/'.format(self.url), params=args
             )
+            LOG.debug('Called: %s with arg %s', req.url, args)
 
             output = req.json()
 
@@ -257,6 +259,7 @@ class PkgDB(object):
         req = self.session.post(
             '{0}/api/package/orphan/'.format(self.url), data=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
@@ -287,6 +290,7 @@ class PkgDB(object):
         req = self.session.post(
             '{0}/api/package/retire/'.format(self.url), data=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
@@ -319,6 +323,7 @@ class PkgDB(object):
         req = self.session.post(
             '{0}/api/package/unorphan/'.format(self.url), data=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
@@ -349,6 +354,7 @@ class PkgDB(object):
         req = self.session.post(
             '{0}/api/package/unretire/'.format(self.url), data=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
@@ -385,6 +391,7 @@ class PkgDB(object):
         req = self.session.post(
             '{0}/api/package/acl/'.format(self.url), data=args
         )
+        LOG.debug('Called: %s with arg %s', req.url, args)
 
         output = req.json()
 
