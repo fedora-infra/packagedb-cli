@@ -67,6 +67,28 @@ class ActionError(Exception):
     pass
 
 
+def __do_login(username=None, password=None):
+    """ Returned a BaseClient with authentification
+
+    If the username is None, tries to retrieve it from fedora_cert.
+
+    :arg pkgdbclient a PackageDB object to which username and password
+    are added
+    :karg username FAS username, if None it is asked to the user
+    :karg password FAS password, if None it is asked to the user
+    """
+    if pkgdbclient.logged:
+        return
+    else:
+        if username is None:
+            try:
+                username = fedora_cert.read_user_cert()
+            except:
+                log.debug('Could not read Fedora cert, using login name')
+                username = raw_input('FAS username: ')
+        password = getpass.getpass('FAS password: ')
+        pkgdbclient.login(username, password)
+
 def _get_acls_info(acls):
     ''' Re-order the ACLs as provided by the PkgDB API in a way that can be
     easily printed.
@@ -547,8 +569,17 @@ def do_update(args):
     if args.approve:
         status = "Approved"
 
-    update_acl(args.package, branches=branch, acls=action, status=status,
-               user=args.username)
+    __do_login(args.username)
+
+    output = pkgdbclient.update_acl(
+        args.package,
+        branches=branch,
+        acls=action,
+        status=status,
+        user=args.user)
+    if output['output'] == 'ok':
+        for message in output['messages']:
+            print message
 
 
 def do_branch(args):
