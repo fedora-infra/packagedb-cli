@@ -159,19 +159,26 @@ class PkgDB(object):
             clt_disttag, clt_git_branch_name, clt_kojiname):
         ''' Create a new collection.
 
-        :arg clt_name:
+        :arg clt_name: The name of the collection, for example ``Fedora``
+            or ``Fedora EPEL``
         :type clt_name: str
-        :arg clt_version:
+        :arg clt_version: The version of the collection, for example 21 or
+            8
         :type clt_version: str
-        :arg clt_status:
+        :arg clt_status: The status of the collection, options are: ``EOL``,
+            ``Active``, ``Under Development``
         :type clt_status: str
-        :arg clt_branchname:
+        :arg clt_branchname: The branch name of the collection, for example
+            ``f21`` or ``epel8``
         :type clt_branchname: str
-        :arg clt_disttag:
+        :arg clt_disttag: The dist tag of the collection, for example
+            ``fc21`` or ``.el8``
         :type clt_disttag: str
-        :arg clt_git_branch_name:
+        :arg clt_git_branch_name: The branch name in git for this collection
+            for example ``f21`` or ``epel7``
         :type clt_git_branch_name: str
-        :arg clt_kojiname:
+        :arg clt_kojiname: The koji name for this collection, for example
+            ``f21`` or ``epel7``
         :type clt_kojiname: str
         :return: the json object returned by the API
         :rtype: dict
@@ -211,26 +218,32 @@ class PkgDB(object):
             pkg_upstream_url, pkg_critpath=False):
         ''' Create a new package.
 
-        :arg pkg_name:
+        :arg pkg_name: The name of the package
         :type pkg_name: str
-        :arg pkg_summary:
+        :arg pkg_summary: The summary of the package as provided in the
+            spec file
         :type pkg_summary: str
-        :arg pkg_description:
+        :arg pkg_description: The description of the package as provided in
+            the spec file
         :type pkg_description: str
-        :arg pkg_review_url:
+        :arg pkg_review_url: The URL to the package review where the
+            package was approved
         :type pkg_review_url: str
-        :arg pkg_status:
+        :arg pkg_status: The status of the package, options are:
+            ``Approved``, ``Orphaned``, ``Removed``, ``Retired``
         :type pkg_status: str
         :arg pkg_shouldopen:
-        :type pkg_shouldopen: str
-        :arg pkg_collection:
+        :type pkg_shouldopen: bool
+        :arg pkg_collection: The collection in which to add this package
         :type pkg_collection: str
-        :arg pkg_poc:
+        :arg pkg_poc: The point of contact of the package in the provided
+            collection
         :type pkg_poc: str
-        :arg pkg_upstream_url:
+        :arg pkg_upstream_url: The URL to the project upstream
         :type pkg_upstream_url: str
-        :kwarg pkg_critpath:
-        :type pkg_critpath: str
+        :kwarg pkg_critpath: A boolean specifying whether to add this
+            package to the critpath
+        :type pkg_critpath: bool
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -270,9 +283,11 @@ class PkgDB(object):
     def get_collections(self, pattern='*', status=None):
         ''' Return the list of collections matching the provided criterias.
 
-        :kward pattern:
+        :kward pattern: The pattern to match against the branch name of the
+            collections. Defaults to ``*``
         :type pattern: str
-        :kward status:
+        :kward status: The status of the collections to retrieve, options
+            are: ``EOL``, ``Active``, ``Under Development``
         :type status: str
         :return: the json object returned by the API
         :rtype: dict
@@ -302,9 +317,9 @@ class PkgDB(object):
         ''' Return the information of a package matching the provided
         criterias.
 
-        :arg pkg_name:
+        :arg pkg_name: The package name to retrieve information for
         :type pkg_name: str
-        :kwarg branch:
+        :kwarg branch: The branch to retrieve information for
         :type branch: str
         :return: the json object returned by the API
         :rtype: dict
@@ -334,13 +349,16 @@ class PkgDB(object):
             self, username, page=1, iterate=True, count=False):
         ''' Return the list of packagers matching the provided criterias.
 
-        :arg username:
+        :arg username: The FAS username of the package to retrieve the ACLs
+            for
         :type username: str
-        :kwarg page:
+        :kwarg page: The page number to retrieve, defaults to 1
         :type page: int
-        :kwarg iterate:
+        :kwarg iterate: A boolean specifying whether to iterate over the
+            multiple pages, if any, to retrieve all the results
         :type iterate: bool
-        :kwarg count:
+        :kwarg count: A boolean to retrieve the count of ACLs the user has
+            instead of the details
         :type count: bool
         :return: the json object returned by the API
         :rtype: dict
@@ -388,7 +406,8 @@ class PkgDB(object):
         ''' Return for the specified user, the number of packages on each
         active branch for which he/she is the point of contact.
 
-        :arg username:
+        :arg username: The FAS username of the user for which to retrieve
+            the statistics
         :type username: str
         :return: the json object returned by the API
         :rtype: dict
@@ -416,7 +435,7 @@ class PkgDB(object):
     def get_packagers(self, pattern='*'):
         ''' Return the list of packagers matching the provided criterias.
 
-        :kwarg pattern:
+        :kwarg pattern: The pattern to query the usernames of the packager
         :type pattern: str
         :return: the json object returned by the API
         :rtype: dict
@@ -446,23 +465,32 @@ class PkgDB(object):
                      count=False):
         ''' Return the list of packages matching the provided criterias.
 
-        :kwarg pattern:
+        :kwarg pattern: The pattern to match against the name of the
+            packages
         :type pattern: str
-        :kwarg branches:
-        :type branches: str or None
-        :kwarg poc:
+        :kwarg branches: One or more branches to restrict the packages
+            returned
+        :type branches: str or list or None
+        :kwarg poc: The point of contact of the packages to filter the
+            packages returned
         :type poc: str or None
-        :kwarg status:
+        :kwarg status: The status of the package to filter the packages
+            returned, options are: ``Approved``, ``Orphaned``, ``Removed``,
+            ``Retired``
         :type status: str or None
-        :kwarg orphaned:
+        :kwarg orphaned: A boolean to returned only orphaned packages
         :type orphaned: bool
-        :kwarg acls:
+        :kwarg acls: A boolean to return the package ACLs in the output.
+            Beware, this may slow down you call considerably, maybe even
+            leading to a timeout
         :type acls: bool
-        :kwarg page:
+        :kwarg page: The page number to retrieve, defaults to 1
         :type page: int
-        :kwarg iterate:
+        :kwarg iterate: A boolean specifying whether to iterate over the
+            multiple pages, if any, to retrieve all the results
         :type iterate: bool
-        :kwarg count:
+        :kwarg count: A boolean to retrieve the count of ACLs the user has
+            instead of the details
         :type count: bool
         :return: the json object returned by the API
         :rtype: dict
@@ -517,9 +545,10 @@ class PkgDB(object):
         ''' Orphans the provided list of packages on the provided list of
         branches.
 
-        :arg packages:
+        :arg packages: One or more package name of the packages to orphan
         :type packages: str or list
-        :arg branches:
+        :arg branches: One or more branch names for the collections in
+            which to orphan the packages
         :type branches: str or list
         :return: the json object returned by the API
         :rtype: dict
@@ -559,9 +588,10 @@ class PkgDB(object):
         ''' Retires the provided list of packages on the provided list of
         branches.
 
-        :arg packages:
+        :arg packages: One or more package name of the packages to retire
         :type packages: str or list
-        :arg branches:
+        :arg branches: One or more branch names for the collections in
+            which to retire the packages
         :type branches: str or list
         :return: the json object returned by the API
         :rtype: dict
@@ -601,9 +631,10 @@ class PkgDB(object):
         ''' Un orphan the provided list of packages on the provided list of
         branches.
 
-        :arg packages:
+        :arg packages: One or more package name of the packages to unorphan
         :type packages: str or list
-        :arg branches:
+        :arg branches: One or more branch names for the collections in
+            which to unorphan the packages
         :type branches: str or list
         :arg poc:
         :type poc: str
@@ -646,9 +677,10 @@ class PkgDB(object):
         ''' Un retires the provided list of packages on the provided list of
         branches.
 
-        :arg packages:
+        :arg packages: One or more package name of the packages to unretire
         :type packages: str or list
-        :arg branches:
+        :arg branches: One or more branch names for the collections in
+            which to unretire the packages
         :type branches: str or list
         :return: the json object returned by the API
         :rtype: dict
@@ -688,15 +720,19 @@ class PkgDB(object):
         ''' Update the specified ACLs, on the specified Branches of the
         specified package
 
-        :arg package:
+        :arg package: The package name of the package whom ACLs to update
         :type package: str
-        :arg branches:
+        :arg branches: One or more branch for which to update their ACLs
         :type branches: str or list
-        :arg acls:
+        :arg acls: The ACL to update, options are: ``watchcommits``,
+            ``watchbugzilla``, ``approveacls``, ``commit``
         :type acls: str or list
-        :arg status:
+        :arg status: The status of the ACL to update, options are:
+            ``Approved``, ``Awaiting Review``, ``Denied``, ``Obsolete``,
+            ``Removed``
         :type status: str
-        :arg user:
+        :arg user: The user for which to update the ACL (the person
+            requesting new ACLs or for which to approve/deny the ACLs)
         :type user: str
         :return: the json object returned by the API
         :rtype: dict
@@ -738,9 +774,11 @@ class PkgDB(object):
     def update_collection_status(self, clt_branchname, clt_status):
         ''' Update the status of the specified collection.
 
-        :arg clt_branchname:
+        :arg clt_branchname: The branch name of the collection for which to
+            update the status
         :type clt_branchname: str
-        :arg clt_status:
+        :arg clt_status: The new status of the collection, options are:
+            ``EOL``, ``Active``, ``Under Development``
         :type clt_status: str
         :return: the json object returned by the API
         :rtype: dict
@@ -777,9 +815,11 @@ class PkgDB(object):
         ''' Update the point of contact of the specified packages on the
         specified branches.
 
-        :arg packages:
+        :arg packages: One or more package names of package for which to
+            change the point of contact
         :type packages: str or list
-        :arg branches:
+        :arg branches: One or more branch names for the collections for
+            which to update the point of contact
         :type branches: str or list
         :arg pkg_poc:
         :type pkg_poc: str
