@@ -35,6 +35,14 @@ class PkgDBException(Exception):
     pass
 
 
+class PkgDBAuthException(Exception):
+    ''' Authentication exception raised when trying to call a method that
+    requires authentication while not being authenticated.
+
+    '''
+    pass
+
+
 def _parse_service_form(response):
     """ Retrieve the attributes from the html login form.
 
@@ -245,6 +253,9 @@ class PkgDB(object):
         :arg branches:
 
         '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
         if isinstance(packages, basestring):
             packages = [packages]
         if isinstance(branches, basestring):
@@ -276,6 +287,9 @@ class PkgDB(object):
         :arg branches:
 
         '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
         if isinstance(packages, basestring):
             packages = [packages]
         if isinstance(branches, basestring):
@@ -308,6 +322,9 @@ class PkgDB(object):
         :arg poc:
 
         '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
         if isinstance(packages, basestring):
             packages = [packages]
         if isinstance(branches, basestring):
@@ -340,6 +357,9 @@ class PkgDB(object):
         :arg branches:
 
         '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
         if isinstance(packages, basestring):
             packages = [packages]
         if isinstance(branches, basestring):
@@ -374,6 +394,9 @@ class PkgDB(object):
         :arg user:
 
         '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
         if isinstance(branches, basestring):
             branches = [branches]
         if isinstance(acls, basestring):
