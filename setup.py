@@ -22,5 +22,5 @@ setup(
             "pkgdb-cli=pkgdb2_cli:main",
         ]
     },
-    install_requires = ['requests', 'python-bugzilla', 'python-fedora']
+    install_requires=['requests', 'python-bugzilla', 'python-fedora']
 )

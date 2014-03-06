@@ -72,6 +72,7 @@ def __do_login(username=None, password=None):
         pkgdbclient.username = username
         pkgdbclient.login(username, password)
 
+
 def _get_acls_info(acls):
     ''' Re-order the ACLs as provided by the PkgDB API in a way that can be
     easily printed.
