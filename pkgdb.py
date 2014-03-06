@@ -540,3 +540,40 @@ class PkgDB(object):
             raise PkgDBException(output['error'])
 
         return output
+
+    def update_package_poc(self, packages, branches, new_poc):
+        ''' Update the point of contact of the specified packages on the
+        specified branches.
+
+        :arg packages:
+        :arg branches:
+        :arg new_poc:
+
+        '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
+        if isinstance(branches, basestring):
+            branches = [branches]
+        if isinstance(packages, basestring):
+            packages = [packages]
+
+        args = {
+            'packages': ','.join(packages),
+            'branches': ','.join(branches),
+            'user_target': new_poc,
+        }
+
+        req = self.session.post(
+            '{0}/api/package/acl/reassign/'.format(self.url),
+            data=args
+        )
+        LOG.debug('Called: %s with arg %s', req.url, args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
