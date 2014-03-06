@@ -161,6 +161,8 @@ class PkgDB(object):
         :arg clt_distTag:
         :arg clt_git_branch_name:
         :arg clt_kojiname:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -205,6 +207,8 @@ class PkgDB(object):
         :arg pkg_poc:
         :arg pkg_upstream_url:
         :kwarg pkg_critpath:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -242,6 +246,8 @@ class PkgDB(object):
 
         :kward pattern:
         :kward status:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         args = {
@@ -268,6 +274,8 @@ class PkgDB(object):
 
         :arg pkg_name:
         :kwarg branch:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         args = {
@@ -292,6 +300,8 @@ class PkgDB(object):
         ''' Return the list of packagers matching the provided criterias.
 
         :arg username:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         def _get_pages(page):
@@ -331,6 +341,8 @@ class PkgDB(object):
         active branch for which he/she is the point of contact.
 
         :arg username:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         args = {
@@ -354,6 +366,8 @@ class PkgDB(object):
         ''' Return the list of packagers matching the provided criterias.
 
         :kwarg pattern:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         args = {
@@ -381,6 +395,8 @@ class PkgDB(object):
         :kwarg branch:
         :kwarg poc:
         :kwarg orphan:
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         def _get_pages(page):
@@ -427,6 +443,10 @@ class PkgDB(object):
 
         :arg packages:
         :arg branches:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -461,6 +481,10 @@ class PkgDB(object):
 
         :arg packages:
         :arg branches:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -496,6 +520,10 @@ class PkgDB(object):
         :arg packages:
         :arg branches:
         :arg poc:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -531,6 +559,10 @@ class PkgDB(object):
 
         :arg packages:
         :arg branches:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -568,6 +600,10 @@ class PkgDB(object):
         :arg acls:
         :arg status:
         :arg user:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -604,6 +640,10 @@ class PkgDB(object):
 
         :arg clt_branchname:
         :arg clt_status:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
@@ -636,6 +676,10 @@ class PkgDB(object):
         :arg packages:
         :arg branches:
         :arg new_poc:
+        :raise PkgDBAuthException: if this method is called while the
+            client is not authenticated.
+        :raise PkgDBException: if the API call does not return a http code
+            200.
 
         '''
         if not self.logged:
