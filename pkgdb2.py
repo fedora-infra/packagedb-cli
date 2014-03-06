@@ -65,7 +65,7 @@ class PkgDB(object):
 
     '''
 
-    def __init__(self, url=PKGDB_URL, username=None):
+    def __init__(self, url=PKGDB_URL, username=None, insecure=False):
         ''' Constructor fo the PkgDB object used to query the package
         database.
 
@@ -74,11 +74,18 @@ class PkgDB(object):
         :kwarg username: the FAS username of the user performing the
             actions
         :type username: str or None
+        :kwarg insecure: If :data:`True` then the connection to the server
+            is not checked to be sure that any SSL certificate information
+            is valid.  That means that a remote host can lie about who it
+            is.  Useful for development but should not be used in
+            production code.
+        :type insecure: bool
 
         '''
         self.url = url
         self.session = requests.session()
         self.username = username
+        self.insecure=insecure
         self.__logged = False
 
     @property
@@ -200,7 +207,9 @@ class PkgDB(object):
         }
 
         req = self.session.post(
-            '{0}/api/collection/new/'.format(self.url), data=args
+            '{0}/api/collection/new/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -268,7 +277,9 @@ class PkgDB(object):
             args['pkg_critpath'] = pkg_critpath
 
         req = self.session.post(
-            '{0}/api/package/new/'.format(self.url), data=args
+            '{0}/api/package/new/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -301,7 +312,9 @@ class PkgDB(object):
         }
 
         req = self.session.get(
-            '{0}/api/collections/'.format(self.url), params=args
+            '{0}/api/collections/'.format(self.url),
+            params=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -333,7 +346,9 @@ class PkgDB(object):
         }
 
         req = self.session.get(
-            '{0}/api/package/'.format(self.url), params=args
+            '{0}/api/package/'.format(self.url),
+            params=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -380,7 +395,9 @@ class PkgDB(object):
                 args['count'] = count
 
             req = self.session.get(
-                '{0}/api/packager/acl/'.format(self.url), params=args
+                '{0}/api/packager/acl/'.format(self.url),
+                params=args,
+                verify=not self.insecure,
             )
             LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -420,7 +437,9 @@ class PkgDB(object):
         }
 
         req = self.session.get(
-            '{0}/api/packager/stats/'.format(self.url), params=args
+            '{0}/api/packager/stats/'.format(self.url),
+            params=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -448,7 +467,9 @@ class PkgDB(object):
         }
 
         req = self.session.get(
-            '{0}/api/packagers/'.format(self.url), params=args
+            '{0}/api/packagers/'.format(self.url),
+            params=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -519,7 +540,9 @@ class PkgDB(object):
                 args['orphaned'] = orphaned
 
             req = self.session.get(
-                '{0}/api/packages/'.format(self.url), params=args
+                '{0}/api/packages/'.format(self.url),
+                params=args,
+                verify=not self.insecure,
             )
             LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -572,7 +595,9 @@ class PkgDB(object):
         }
 
         req = self.session.post(
-            '{0}/api/package/orphan/'.format(self.url), data=args
+            '{0}/api/package/orphan/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -615,7 +640,9 @@ class PkgDB(object):
         }
 
         req = self.session.post(
-            '{0}/api/package/retire/'.format(self.url), data=args
+            '{0}/api/package/retire/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -661,7 +688,9 @@ class PkgDB(object):
         }
 
         req = self.session.post(
-            '{0}/api/package/unorphan/'.format(self.url), data=args
+            '{0}/api/package/unorphan/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -704,7 +733,9 @@ class PkgDB(object):
         }
 
         req = self.session.post(
-            '{0}/api/package/unretire/'.format(self.url), data=args
+            '{0}/api/package/unretire/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -759,7 +790,9 @@ class PkgDB(object):
         }
 
         req = self.session.post(
-            '{0}/api/package/acl/'.format(self.url), data=args
+            '{0}/api/package/acl/'.format(self.url),
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -799,7 +832,8 @@ class PkgDB(object):
         req = self.session.post(
             '{0}/api/collection/{1}/status/'.format(
                 self.url, clt_branchname),
-            data=args
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -847,7 +881,8 @@ class PkgDB(object):
 
         req = self.session.post(
             '{0}/api/package/acl/reassign/'.format(self.url),
-            data=args
+            data=args,
+            verify=not self.insecure,
         )
         LOG.debug('Called: %s with arg %s', req.url, args)
 
