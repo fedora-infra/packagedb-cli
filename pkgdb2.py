@@ -16,7 +16,6 @@
 # license.
 """
 
-import json
 import logging
 
 import requests
@@ -25,7 +24,7 @@ logging.basicConfig()
 LOG = logging.getLogger("pkgdb")
 
 
-PKGDB_URL = 'http://209.132.184.188'
+PKGDB_URL = r'http://209.132.184.188'
 
 
 class PkgDBException(Exception):
@@ -99,9 +98,10 @@ class PkgDB(object):
             production.
         '''
         import re
+        from urlparse import urlparse, parse_qs
 
-        fedora_openid_api = 'https://id.fedoraproject.org/api/v1/'
-        fedora_openid = '^http(s)?:\/\/(|stg.|dev.)?id\.fedoraproject\.org(/)?'
+        fedora_openid_api = r'https://id.fedoraproject.org/api/v1/'
+        fedora_openid = r'^http(s)?:\/\/(|stg.|dev.)?id\.fedoraproject\.org(/)?'
         motif = re.compile(fedora_openid)
 
         # Log into the service
@@ -112,18 +112,18 @@ class PkgDB(object):
             # requests.session should hold onto this for us....
             openid_url, data = _parse_service_form(response)
             if not motif.match(openid_url):
-                raise FedoraServiceError(
+                raise PkgDBException(
                     'Un-expected openid provider asked: %s' % openid_url)
         else:
             data = {}
-            for r in response.history:
-                if motif.match(r.url):
-                    parsed = parse_qs(urlparse(r.url).query)
+            for resp in response.history:
+                if motif.match(resp.url):
+                    parsed = parse_qs(urlparse(resp.url).query)
                     for key, value in parsed.items():
                         data[key] = value[0]
                     break
             else:
-                raise FedoraServiceError(
+                raise PkgDBException(
                     'Unable to determine openid parameters from login: %r' %
                     openid_url)
 
@@ -151,14 +151,14 @@ class PkgDB(object):
 
     def create_collection(
             self, clt_name, clt_version, clt_status, clt_branchname,
-            clt_distTag, clt_git_branch_name, clt_kojiname):
+            clt_disttag, clt_git_branch_name, clt_kojiname):
         ''' Create a new collection.
 
         :arg clt_name:
         :arg clt_version:
         :arg clt_status:
         :arg clt_branchname:
-        :arg clt_distTag:
+        :arg clt_disttag:
         :arg clt_git_branch_name:
         :arg clt_kojiname:
         :return: the json object returned by the API
@@ -175,7 +175,7 @@ class PkgDB(object):
             'collection_version': clt_version,
             'collection_status': clt_status,
             'collection_branchname': clt_branchname,
-            'collection_distTag': clt_distTag,
+            'collection_distTag': clt_disttag,
             'collection_git_branch_name': clt_git_branch_name,
             'collection_kojiname': clt_kojiname,
         }
@@ -315,6 +315,11 @@ class PkgDB(object):
 
         '''
         def _get_pages(page):
+            ''' Retrieve a specified page of a packager's ACLs list.
+
+            :arg page: the page number to retrieve
+
+            '''
             args = {
                 'username': username,
                 'page': page,
@@ -336,13 +341,12 @@ class PkgDB(object):
 
             return output
 
-        output = _get_pages(1)
+        output = _get_pages(page)
 
-        page = output['page']
         total = output['page_total']
         for i in range(2, total + 1):
             data = _get_pages(i)
-            output['packages'].extend(output['packages'])
+            output['packages'].extend(data['packages'])
 
         return output
 
@@ -416,6 +420,11 @@ class PkgDB(object):
 
         '''
         def _get_pages(page):
+            ''' Retrieve a specified page of the packages list.
+
+            :arg page: the page number to retrieve
+
+            '''
             args = {
                 'pattern': pattern,
                 'branches': branches,
@@ -445,11 +454,10 @@ class PkgDB(object):
 
         output = _get_pages(1)
 
-        page = output['page']
         total = output['page_total']
         for i in range(2, total + 1):
             data = _get_pages(i)
-            output['packages'].extend(output['packages'])
+            output['packages'].extend(data['packages'])
 
         return output
 
