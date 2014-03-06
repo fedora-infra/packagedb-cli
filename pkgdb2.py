@@ -304,10 +304,14 @@ class PkgDB(object):
 
         return output
 
-    def get_packager_acls(self, username, page=1, count=False):
+    def get_packager_acls(
+            self, username, page=1, iterate=True, count=False):
         ''' Return the list of packagers matching the provided criterias.
 
         :arg username:
+        :kwarg page:
+        :kwarg iterate:
+        :kwarg count:
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -342,10 +346,11 @@ class PkgDB(object):
 
         output = _get_pages(page)
 
-        total = output['page_total']
-        for i in range(2, total + 1):
-            data = _get_pages(i)
-            output['packages'].extend(data['packages'])
+        if iterate:
+            total = output['page_total']
+            for i in range(2, total + 1):
+                data = _get_pages(i)
+                output['packages'].extend(data['packages'])
 
         return output
 
@@ -405,13 +410,19 @@ class PkgDB(object):
         return output
 
     def get_packages(self, pattern='*', branches=None, poc=None, status=None,
-                     orphaned=False, acls=False, count=False):
+                     orphaned=False, acls=False, page=1, iterate=True,
+                     count=False):
         ''' Return the list of packages matching the provided criterias.
 
         :kwarg pattern:
         :kwarg branch:
         :kwarg poc:
-        :kwarg orphan:
+        :kwarg status:
+        :kwarg orphaned:
+        :kwarg acls:
+        :kwarg page:
+        :kwarg iterate:
+        :kwarg count:
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -451,12 +462,13 @@ class PkgDB(object):
 
             return output
 
-        output = _get_pages(1)
+        output = _get_pages(page)
 
-        total = output['page_total']
-        for i in range(2, total + 1):
-            data = _get_pages(i)
-            output['packages'].extend(data['packages'])
+        if iterate:
+            total = output['page_total']
+            for i in range(2, total + 1):
+                data = _get_pages(i)
+                output['packages'].extend(data['packages'])
 
         return output
 
