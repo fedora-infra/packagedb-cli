@@ -70,8 +70,10 @@ class PkgDB(object):
         database.
 
         :kwarg url: the basic url to the package DB instance to query
+        :type url: str
         :kwarg username: the FAS username of the user performing the
             actions
+        :type username: str or None
 
         '''
         self.url = url
@@ -88,13 +90,16 @@ class PkgDB(object):
         ''' Login the user on pkgdb2.
 
         :arg username: the FAS username of the user.
+        :type username: str
         :arg password: the FAS password of the user.
+        :type password: str
         :kwarg openid_insecure: If True, do not check the openid server
             certificates against their CA's.  This means that man-in-the
             middle attacks are possible against the `BaseClient`. You might
             turn this option on for testing against a local version of a
             server with a self-signed certificate but it should be off in
             production.
+        :type openid_insecure: bool
         '''
         import re
         from urlparse import urlparse, parse_qs
@@ -155,12 +160,19 @@ class PkgDB(object):
         ''' Create a new collection.
 
         :arg clt_name:
+        :type clt_name: str
         :arg clt_version:
+        :type clt_version: str
         :arg clt_status:
+        :type clt_status: str
         :arg clt_branchname:
+        :type clt_branchname: str
         :arg clt_disttag:
+        :type clt_disttag: str
         :arg clt_git_branch_name:
+        :type clt_git_branch_name: str
         :arg clt_kojiname:
+        :type clt_kojiname: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -200,15 +212,25 @@ class PkgDB(object):
         ''' Create a new package.
 
         :arg pkg_name:
+        :type pkg_name: str
         :arg pkg_summary:
+        :type pkg_summary: str
         :arg pkg_description:
+        :type pkg_description: str
         :arg pkg_review_url:
+        :type pkg_review_url: str
         :arg pkg_status:
+        :type pkg_status: str
         :arg pkg_shouldopen:
+        :type pkg_shouldopen: str
         :arg pkg_collection:
+        :type pkg_collection: str
         :arg pkg_poc:
+        :type pkg_poc: str
         :arg pkg_upstream_url:
+        :type pkg_upstream_url: str
         :kwarg pkg_critpath:
+        :type pkg_critpath: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -249,7 +271,9 @@ class PkgDB(object):
         ''' Return the list of collections matching the provided criterias.
 
         :kward pattern:
+        :type pattern: str
         :kward status:
+        :type status: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -279,7 +303,9 @@ class PkgDB(object):
         criterias.
 
         :arg pkg_name:
+        :type pkg_name: str
         :kwarg branch:
+        :type branch: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -309,9 +335,13 @@ class PkgDB(object):
         ''' Return the list of packagers matching the provided criterias.
 
         :arg username:
+        :type username: str
         :kwarg page:
+        :type page: int
         :kwarg iterate:
+        :type iterate: bool
         :kwarg count:
+        :type count: bool
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -359,6 +389,7 @@ class PkgDB(object):
         active branch for which he/she is the point of contact.
 
         :arg username:
+        :type username: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -386,6 +417,7 @@ class PkgDB(object):
         ''' Return the list of packagers matching the provided criterias.
 
         :kwarg pattern:
+        :type pattern: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -415,14 +447,23 @@ class PkgDB(object):
         ''' Return the list of packages matching the provided criterias.
 
         :kwarg pattern:
-        :kwarg branch:
+        :type pattern: str
+        :kwarg branches:
+        :type branches: str or None
         :kwarg poc:
+        :type poc: str or None
         :kwarg status:
+        :type status: str or None
         :kwarg orphaned:
+        :type orphaned: bool
         :kwarg acls:
+        :type acls: bool
         :kwarg page:
+        :type page: int
         :kwarg iterate:
+        :type iterate: bool
         :kwarg count:
+        :type count: bool
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -477,7 +518,9 @@ class PkgDB(object):
         branches.
 
         :arg packages:
+        :type packages: str or list
         :arg branches:
+        :type branches: str or list
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -517,7 +560,9 @@ class PkgDB(object):
         branches.
 
         :arg packages:
+        :type packages: str or list
         :arg branches:
+        :type branches: str or list
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -557,8 +602,11 @@ class PkgDB(object):
         branches.
 
         :arg packages:
+        :type packages: str or list
         :arg branches:
+        :type branches: str or list
         :arg poc:
+        :type poc: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -599,7 +647,9 @@ class PkgDB(object):
         branches.
 
         :arg packages:
+        :type packages: str or list
         :arg branches:
+        :type branches: str or list
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -639,10 +689,15 @@ class PkgDB(object):
         specified package
 
         :arg package:
+        :type package: str
         :arg branches:
+        :type branches: str or list
         :arg acls:
+        :type acls: str or list
         :arg status:
+        :type status: str
         :arg user:
+        :type user: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -684,7 +739,9 @@ class PkgDB(object):
         ''' Update the status of the specified collection.
 
         :arg clt_branchname:
+        :type clt_branchname: str
         :arg clt_status:
+        :type clt_status: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -716,13 +773,16 @@ class PkgDB(object):
 
         return output
 
-    def update_package_poc(self, packages, branches, new_poc):
+    def update_package_poc(self, packages, branches, pkg_poc):
         ''' Update the point of contact of the specified packages on the
         specified branches.
 
         :arg packages:
+        :type packages: str or list
         :arg branches:
-        :arg new_poc:
+        :type branches: str or list
+        :arg pkg_poc:
+        :type pkg_poc: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -742,7 +802,7 @@ class PkgDB(object):
         args = {
             'packages': ','.join(packages),
             'branches': ','.join(branches),
-            'user_target': new_poc,
+            'user_target': pkg_poc,
         }
 
         req = self.session.post(
