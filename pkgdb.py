@@ -80,6 +80,46 @@ class PkgDB(object):
         self.username = username
         self.__logged = False
 
+    def create_collection(
+            self, clt_name, clt_version, clt_status, clt_branchname,
+            clt_distTag, clt_git_branch_name, clt_kojiname):
+        ''' Create a new collection.
+
+        :arg clt_name:
+        :arg clt_version:
+        :arg clt_status:
+        :arg clt_branchname:
+        :arg clt_distTag:
+        :arg clt_git_branch_name:
+        :arg clt_kojiname:
+
+        '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
+        args = {
+            'collection_name': clt_name,
+            'collection_version': clt_version,
+            'collection_status': clt_status,
+            'collection_branchname': clt_branchname,
+            'collection_distTag': clt_distTag,
+            'collection_git_branch_name': clt_git_branch_name,
+            'collection_kojiname': clt_kojiname,
+        }
+
+        req = self.session.post(
+            '{0}/api/collection/new/'.format(self.url), data=args
+        )
+        LOG.debug('Called: %s with arg %s', req.url, args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
+
     def create_package(
             self, pkg_name, pkg_summary, pkg_description, pkg_review_url,
             pkg_status, pkg_shouldopen, pkg_collection, pkg_poc,
