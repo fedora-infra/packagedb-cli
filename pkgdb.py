@@ -80,6 +80,54 @@ class PkgDB(object):
         self.username = username
         self.__logged = False
 
+    def create_package(
+            self, pkg_name, pkg_summary, pkg_description, pkg_review_url,
+            pkg_status, pkg_shouldopen, pkg_collection, pkg_poc,
+            pkg_upstream_url, pkg_critpath=False):
+        ''' Create a new package.
+
+        :arg pkg_name:
+        :arg pkg_summary:
+        :arg pkg_description:
+        :arg pkg_review_url:
+        :arg pkg_status:
+        :arg pkg_shouldopen:
+        :arg pkg_collection:
+        :arg pkg_poc:
+        :arg pkg_upstream_url:
+        :kwarg pkg_critpath:
+
+        '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
+        args = {
+            'pkg_name': pkg_name,
+            'pkg_summary': pkg_summary,
+            'pkg_description': pkg_description,
+            'pkg_review_url': pkg_review_url,
+            'pkg_status': pkg_status,
+            'pkg_shouldopen': pkg_shouldopen,
+            'pkg_collection': pkg_collection,
+            'pkg_poc': pkg_poc,
+            'pkg_upstream_url': pkg_upstream_url,
+        }
+        if pkg_critpath:
+            args['pkg_critpath'] = pkg_critpath
+
+        req = self.session.post(
+            '{0}/api/package/new/'.format(self.url), data=args
+        )
+        LOG.debug('Called: %s with arg %s', req.url, args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
+
     @property
     def logged(self):
         ''' Return whether the user if logged in or not. '''
