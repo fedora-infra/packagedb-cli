@@ -304,7 +304,7 @@ class PkgDB(object):
 
         return output
 
-    def get_packager_acls(self, username, page=1, limit=250, count=False):
+    def get_packager_acls(self, username, page=1, count=False):
         ''' Return the list of packagers matching the provided criterias.
 
         :arg username:
@@ -323,7 +323,6 @@ class PkgDB(object):
             args = {
                 'username': username,
                 'page': page,
-                'limit': limit,
             }
             if count is True:
                 args['count'] = count
