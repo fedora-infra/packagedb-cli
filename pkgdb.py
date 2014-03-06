@@ -333,6 +333,29 @@ class PkgDB(object):
 
         return output
 
+    def get_packagers(self, pattern='*'):
+        ''' Return the list of packagers matching the provided criterias.
+
+        :kwarg pattern:
+
+        '''
+        args = {
+            'pattern': pattern,
+        }
+
+        req = self.session.get(
+            '{0}/api/packagers/'.format(self.url), params=args
+        )
+        LOG.debug('Called: %s with arg %s', req.url, args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
+
     def orphan_packages(self, packages, branches):
         ''' Orphans the provided list of packages on the provided list of
         branches.
