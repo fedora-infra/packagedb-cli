@@ -80,6 +80,74 @@ class PkgDB(object):
         self.username = username
         self.__logged = False
 
+    @property
+    def logged(self):
+        ''' Return whether the user if logged in or not. '''
+        return self.__logged
+
+    def login(self, username, password, openid_insecure=False):
+        ''' Login the user on pkgdb2.
+
+        :arg username: the FAS username of the user.
+        :arg password: the FAS password of the user.
+        :kwarg openid_insecure: If True, do not check the openid server
+            certificates against their CA's.  This means that man-in-the
+            middle attacks are possible against the `BaseClient`. You might
+            turn this option on for testing against a local version of a
+            server with a self-signed certificate but it should be off in
+            production.
+        '''
+        import re
+
+        fedora_openid_api = 'https://id.fedoraproject.org/api/v1/'
+        fedora_openid = '^http(s)?:\/\/(|stg.|dev.)?id\.fedoraproject\.org(/)?'
+        motif = re.compile(fedora_openid)
+
+        # Log into the service
+        response = self.session.get(self.url + '/login/')
+
+        if '<title>OpenID transaction in progress</title>' \
+                in response.text:
+            # requests.session should hold onto this for us....
+            openid_url, data = _parse_service_form(response)
+            if not motif.match(openid_url):
+                raise FedoraServiceError(
+                    'Un-expected openid provider asked: %s' % openid_url)
+        else:
+            data = {}
+            for r in response.history:
+                if motif.match(r.url):
+                    parsed = parse_qs(urlparse(r.url).query)
+                    for key, value in parsed.items():
+                        data[key] = value[0]
+                    break
+            else:
+                raise FedoraServiceError(
+                    'Unable to determine openid parameters from login: %r' %
+                    openid_url)
+
+        # Contact openid provider
+        data['username'] = username
+        data['password'] = password
+        response = self.session.post(
+            fedora_openid_api,
+            data,
+            verify=not openid_insecure)
+        output = response.json()
+
+        if not output['success']:
+            raise PkgDBException(output['message'])
+
+        response = self.session.post(
+            output['response']['openid.return_to'],
+            data=output['response'])
+
+        self.__logged = True
+
+        return output
+
+    ## Actual API calls
+
     def create_collection(
             self, clt_name, clt_version, clt_status, clt_branchname,
             clt_distTag, clt_git_branch_name, clt_kojiname):
@@ -165,72 +233,6 @@ class PkgDB(object):
         if req.status_code != 200:
             LOG.debug('full output %s', output)
             raise PkgDBException(output['error'])
-
-        return output
-
-    @property
-    def logged(self):
-        ''' Return whether the user if logged in or not. '''
-        return self.__logged
-
-    def login(self, username, password, openid_insecure=False):
-        ''' Login the user on pkgdb2.
-
-        :arg username: the FAS username of the user.
-        :arg password: the FAS password of the user.
-        :kwarg openid_insecure: If True, do not check the openid server
-            certificates against their CA's.  This means that man-in-the
-            middle attacks are possible against the `BaseClient`. You might
-            turn this option on for testing against a local version of a
-            server with a self-signed certificate but it should be off in
-            production.
-        '''
-        import re
-
-        fedora_openid_api = 'https://id.fedoraproject.org/api/v1/'
-        fedora_openid = '^http(s)?:\/\/(|stg.|dev.)?id\.fedoraproject\.org(/)?'
-        motif = re.compile(fedora_openid)
-
-        # Log into the service
-        response = self.session.get(self.url + '/login/')
-
-        if '<title>OpenID transaction in progress</title>' \
-                in response.text:
-            # requests.session should hold onto this for us....
-            openid_url, data = _parse_service_form(response)
-            if not motif.match(openid_url):
-                raise FedoraServiceError(
-                    'Un-expected openid provider asked: %s' % openid_url)
-        else:
-            data = {}
-            for r in response.history:
-                if motif.match(r.url):
-                    parsed = parse_qs(urlparse(r.url).query)
-                    for key, value in parsed.items():
-                        data[key] = value[0]
-                    break
-            else:
-                raise FedoraServiceError(
-                    'Unable to determine openid parameters from login: %r' %
-                    openid_url)
-
-        # Contact openid provider
-        data['username'] = username
-        data['password'] = password
-        response = self.session.post(
-            fedora_openid_api,
-            data,
-            verify=not openid_insecure)
-        output = response.json()
-
-        if not output['success']:
-            raise PkgDBException(output['message'])
-
-        response = self.session.post(
-            output['response']['openid.return_to'],
-            data=output['response'])
-
-        self.__logged = True
 
         return output
 
