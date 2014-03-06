@@ -326,7 +326,7 @@ class PkgDB(object):
         output = _get_pages(1)
 
         page = output['page']
-        total = output['pages_total']
+        total = output['page_total']
         for i in range(2, total + 1):
             data = _get_pages(i)
             output['packages'].extend(output['packages'])
