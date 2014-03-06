@@ -164,7 +164,7 @@ class PkgDB(object):
         :type clt_name: str
         :arg clt_version: The version of the collection, for example 21 or
             8
-        :type clt_version: str
+        :type clt_version: int or str
         :arg clt_status: The status of the collection, options are: ``EOL``,
             ``Active``, ``Under Development``
         :type clt_status: str
