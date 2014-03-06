@@ -804,15 +804,15 @@ class PkgDB(object):
 
         return output
 
-    def update_collection_status(self, clt_branchname, clt_status):
+    def update_collection_status(self, branchname, status):
         ''' Update the status of the specified collection.
 
-        :arg clt_branchname: The branch name of the collection for which to
+        :arg branchname: The branch name of the collection for which to
             update the status
-        :type clt_branchname: str
-        :arg clt_status: The new status of the collection, options are:
-            ``EOL``, ``Active``, ``Under Development``
-        :type clt_status: str
+        :type branchname: str
+        :arg status: The new status of the collection, options are: ``EOL``,
+            ``Active``, ``Under Development``
+        :type _status: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -825,13 +825,13 @@ class PkgDB(object):
             raise PkgDBAuthException('Authentication required')
 
         args = {
-            'collection_branchname': clt_branchname,
-            'collection_status': clt_status,
+            'collection_branchname': branchname,
+            'collection_status': status,
         }
 
         req = self.session.post(
             '{0}/api/collection/{1}/status/'.format(
-                self.url, clt_branchname),
+                self.url, branchname),
             data=args,
             verify=not self.insecure,
         )
