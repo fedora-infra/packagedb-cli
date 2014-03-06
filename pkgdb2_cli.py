@@ -44,13 +44,13 @@ ACTIONLIST = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
 class ActionError(Exception):
-    """ This class is raised when an ACL action is requested but not in
-    the list of allowed action. """
+    ''' This class is raised when an ACL action is requested but not in
+    the list of allowed action. '''
     pass
 
 
 def __do_login(username=None, password=None):
-    """ Returned a BaseClient with authentification
+    ''' Returned a BaseClient with authentification
 
     If the username is None, tries to retrieve it from fedora_cert.
 
@@ -58,7 +58,7 @@ def __do_login(username=None, password=None):
     are added
     :karg username FAS username, if None it is asked to the user
     :karg password FAS password, if None it is asked to the user
-    """
+    '''
     if pkgdbclient.logged:
         return
     else:
@@ -120,7 +120,7 @@ def _get_user_packages(username):
 
 
 def _get_last_build(packagename, tag):
-    """
+    '''
     Print information about the last build of a package for a given koji
     tag.
 
@@ -129,7 +129,7 @@ def _get_last_build(packagename, tag):
     :arg tag: the tag used in koji. See `koji list-tags` for the complete
         list of available tag.
 
-    """
+    '''
     LOG.debug("Search last build for {0} in {1}".format(packagename, tag))
     kojiclient = koji.ClientSession(KOJI_HUB, {})
 
@@ -152,7 +152,7 @@ def _get_last_build(packagename, tag):
 
 
 def get_last_build(packagename, tag):
-    """
+    '''
     Retrieve from koji the latest build for a given package and a given
     tag.
 
@@ -166,7 +166,7 @@ def get_last_build(packagename, tag):
     :arg tag the name of the branch for which to retrieve the
         information. This name can be 'rawhide' or f-14...
 
-    """
+    '''
     LOG.debug("Retrieve the last for {0} in {1}".format(packagename, tag))
     # Add build information from koji
     # for updates and updates-testing
@@ -191,9 +191,9 @@ def get_last_build(packagename, tag):
 
 
 def setup_parser():
-    """
+    '''
     Set the main arguments.
-    """
+    '''
     parser = argparse.ArgumentParser(prog="pkgdb-cli")
     # General connection options
     parser.add_argument('--user', dest="username",
@@ -364,9 +364,9 @@ def setup_parser():
 
 
 def do_acl(args):
-    """ Retrieves the ACLs of a package from pkgdb.
+    ''' Retrieves the ACLs of a package from pkgdb.
 
-    """
+    '''
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
     #LOG.info("approve : {0}".format(args.approve))
@@ -434,9 +434,9 @@ def do_acl(args):
 
 
 def do_list(args):
-    """ Retrieve the list of packages matching a pattern from pkgdb.
+    ''' Retrieve the list of packages matching a pattern from pkgdb.
 
-    """
+    '''
     LOG.info("pattern  : {0}".format(args.pattern))
     LOG.info("all      : {0}".format(args.all))
     LOG.info("orphaned : {0}".format(args.orphaned))
@@ -473,9 +473,9 @@ def do_list(args):
 
 
 def do_orphan(args):
-    """ Orphan a package in pkgdb.
+    ''' Orphan a package in pkgdb.
 
-    """
+    '''
     LOG.info("user    : {0}".format(args.username))
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
@@ -504,9 +504,9 @@ def do_orphan(args):
 
 
 def do_unorphan(args):
-    """ Unorphan a package in pkgdb.
+    ''' Unorphan a package in pkgdb.
 
-    """
+    '''
     LOG.info("user    : {0}".format(args.username))
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
@@ -531,9 +531,9 @@ def do_unorphan(args):
 
 
 def do_request(args):
-    """ Request some ACLs in pkgdb.
+    ''' Request some ACLs in pkgdb.
 
-    """
+    '''
     LOG.info("user    : {0}".format(args.username))
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
@@ -570,9 +570,9 @@ def do_request(args):
 
 
 def do_update(args):
-    """ Update (approve/deny) some ACLs request on pkgdb.
+    ''' Update (approve/deny) some ACLs request on pkgdb.
 
-    """
+    '''
     LOG.info("user      : {0}".format(args.username))
     LOG.info("package   : {0}".format(args.package))
     LOG.info("acl       : {0}".format(args.action))
@@ -610,9 +610,9 @@ def do_update(args):
 
 
 def do_branch(args):
-    """ List all the active branches in pkgdb.
+    ''' List all the active branches in pkgdb.
 
-    """
+    '''
     LOG.info("all      : {0}".format(args.all))
     LOG.info("List all active branches")
     if args.all:
