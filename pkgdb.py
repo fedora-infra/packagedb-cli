@@ -285,33 +285,23 @@ class PkgDB(object):
 
         return output
 
-    def get_packages(self, pattern='*', branches=None, poc=None, status=None,
-                     orphaned=False, acls=False, count=False):
-        ''' Return the list of packages matching the provided criterias.
+    def get_packager_acls(self, username, page=1, limit=250, count=False):
+        ''' Return the list of packagers matching the provided criterias.
 
-        :kwarg pattern:
-        :kwarg branch:
-        :kwarg poc:
-        :kwarg orphan:
+        :arg username:
 
         '''
         def _get_pages(page):
             args = {
-                'pattern': pattern,
-                'branches': branches,
-                'poc': poc,
-                'status': status,
+                'username': username,
                 'page': page,
+                'limit': limit,
             }
             if count is True:
                 args['count'] = count
-            if acls is True:
-                args['acls'] = acls
-            if orphaned is True:
-                args['orphaned'] = orphaned
 
             req = self.session.get(
-                '{0}/api/packages/'.format(self.url), params=args
+                '{0}/api/packager/acl/'.format(self.url), params=args
             )
             LOG.debug('Called: %s with arg %s', req.url, args)
 
@@ -356,23 +346,33 @@ class PkgDB(object):
 
         return output
 
-    def get_packager_acls(self, username, page=1, limit=250, count=False):
-        ''' Return the list of packagers matching the provided criterias.
+    def get_packages(self, pattern='*', branches=None, poc=None, status=None,
+                     orphaned=False, acls=False, count=False):
+        ''' Return the list of packages matching the provided criterias.
 
-        :arg username:
+        :kwarg pattern:
+        :kwarg branch:
+        :kwarg poc:
+        :kwarg orphan:
 
         '''
         def _get_pages(page):
             args = {
-                'username': username,
+                'pattern': pattern,
+                'branches': branches,
+                'poc': poc,
+                'status': status,
                 'page': page,
-                'limit': limit,
             }
             if count is True:
                 args['count'] = count
+            if acls is True:
+                args['acls'] = acls
+            if orphaned is True:
+                args['orphaned'] = orphaned
 
             req = self.session.get(
-                '{0}/api/packager/acl/'.format(self.url), params=args
+                '{0}/api/packages/'.format(self.url), params=args
             )
             LOG.debug('Called: %s with arg %s', req.url, args)
 
