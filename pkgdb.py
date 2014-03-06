@@ -161,6 +161,8 @@ class PkgDB(object):
         :arg clt_distTag:
         :arg clt_git_branch_name:
         :arg clt_kojiname:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -207,6 +209,8 @@ class PkgDB(object):
         :arg pkg_poc:
         :arg pkg_upstream_url:
         :kwarg pkg_critpath:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -246,6 +250,8 @@ class PkgDB(object):
 
         :kward pattern:
         :kward status:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -274,6 +280,8 @@ class PkgDB(object):
 
         :arg pkg_name:
         :kwarg branch:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -300,6 +308,8 @@ class PkgDB(object):
         ''' Return the list of packagers matching the provided criterias.
 
         :arg username:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -341,6 +351,8 @@ class PkgDB(object):
         active branch for which he/she is the point of contact.
 
         :arg username:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -366,6 +378,8 @@ class PkgDB(object):
         ''' Return the list of packagers matching the provided criterias.
 
         :kwarg pattern:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -395,6 +409,8 @@ class PkgDB(object):
         :kwarg branch:
         :kwarg poc:
         :kwarg orphan:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
@@ -443,6 +459,8 @@ class PkgDB(object):
 
         :arg packages:
         :arg branches:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
@@ -481,6 +499,8 @@ class PkgDB(object):
 
         :arg packages:
         :arg branches:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
@@ -520,6 +540,8 @@ class PkgDB(object):
         :arg packages:
         :arg branches:
         :arg poc:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
@@ -559,6 +581,8 @@ class PkgDB(object):
 
         :arg packages:
         :arg branches:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
@@ -600,6 +624,8 @@ class PkgDB(object):
         :arg acls:
         :arg status:
         :arg user:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
@@ -640,6 +666,8 @@ class PkgDB(object):
 
         :arg clt_branchname:
         :arg clt_status:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
@@ -676,6 +704,8 @@ class PkgDB(object):
         :arg packages:
         :arg branches:
         :arg new_poc:
+        :return: the json object returned by the API
+        :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
             client is not authenticated.
         :raise PkgDBException: if the API call does not return a http code
