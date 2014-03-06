@@ -18,7 +18,7 @@
 from fedora.client import (AccountSystem, AppError, AuthError,
                            ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb import PkgDB, PkgDBException
+from pkgdb2 import PkgDB, PkgDBException
 import argparse
 import logging
 import getpass
