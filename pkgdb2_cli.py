@@ -107,6 +107,9 @@ def _get_active_branch(packagename=None):
 def _get_user_packages(username):
     ''' Return a list of package whose point of contact is the username
     provided.
+
+    :arg username: the FAS username of the user of interest
+
     '''
     pkgs = []
     output = pkgdbclient.get_packages(poc=username)
@@ -120,10 +123,11 @@ def _get_last_build(packagename, tag):
     Print information about the last build of a package for a given koji
     tag.
 
-    :arg packagename the name of the package for which we are looking for
-    the last build.
-    :arg tag the tag used in koji. See `koji list-tags` for the complete
-    list of available tag.
+    :arg packagename: the name of the package for which we are looking for
+        the last build.
+    :arg tag: the tag used in koji. See `koji list-tags` for the complete
+        list of available tag.
+
     """
     LOG.debug("Search last build for {0} in {1}".format(packagename, tag))
     kojiclient = koji.ClientSession(KOJI_HUB, {})
@@ -157,9 +161,10 @@ def get_last_build(packagename, tag):
     updates-testing build when they exists.
 
     :arg packagename the *exact* name of the package for which to
-    retrieve the last build information.
+        retrieve the last build information.
     :arg tag the name of the branch for which to retrieve the
-    information. This name can be 'rawhide' or f-14...
+        information. This name can be 'rawhide' or f-14...
+
     """
     LOG.debug("Retrieve the last for {0} in {1}".format(packagename, tag))
     # Add build information from koji
@@ -359,6 +364,7 @@ def setup_parser():
 
 def do_acl(args):
     """ Retrieves the ACLs of a package from pkgdb.
+
     """
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
@@ -428,6 +434,7 @@ def do_acl(args):
 
 def do_list(args):
     """ Retrieve the list of packages matching a pattern from pkgdb.
+
     """
     LOG.info("pattern  : {0}".format(args.pattern))
     LOG.info("all      : {0}".format(args.all))
@@ -466,6 +473,7 @@ def do_list(args):
 
 def do_orphan(args):
     """ Orphan a package in pkgdb.
+
     """
     LOG.info("user    : {0}".format(args.username))
     LOG.info("package : {0}".format(args.package))
@@ -496,6 +504,7 @@ def do_orphan(args):
 
 def do_unorphan(args):
     """ Unorphan a package in pkgdb.
+
     """
     LOG.info("user    : {0}".format(args.username))
     LOG.info("package : {0}".format(args.package))
@@ -522,6 +531,7 @@ def do_unorphan(args):
 
 def do_request(args):
     """ Request some ACLs in pkgdb.
+
     """
     LOG.info("user    : {0}".format(args.username))
     LOG.info("package : {0}".format(args.package))
@@ -560,6 +570,7 @@ def do_request(args):
 
 def do_update(args):
     """ Update (approve/deny) some ACLs request on pkgdb.
+
     """
     LOG.info("user      : {0}".format(args.username))
     LOG.info("package   : {0}".format(args.package))
@@ -599,6 +610,7 @@ def do_update(args):
 
 def do_branch(args):
     """ List all the active branches in pkgdb.
+
     """
     LOG.info("all      : {0}".format(args.all))
     LOG.info("List all active branches")
