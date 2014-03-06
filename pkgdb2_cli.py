@@ -17,7 +17,7 @@
 
 from fedora.client import (AccountSystem, AppError, ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb2 import PkgDB, PkgDBException
+from pkgdb2 import PkgDB, PkgDBException, __version__
 import argparse
 import logging
 import getpass
@@ -25,7 +25,6 @@ import koji
 import fedora_cert
 
 
-__version__ = '2.0'
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 

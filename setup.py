@@ -5,7 +5,7 @@ Setup script
 
 from setuptools import setup
 
-from pkgdb2_cli import __version__
+from pkgdb2 import __version__
 
 setup(
     name='packagedb-cli',
