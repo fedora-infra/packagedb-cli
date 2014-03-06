@@ -9,14 +9,13 @@ import imp
 pkgdb = imp.load_source('pkgdb', 'pkgdb-cli')
 
 
-
 class testPkgdDBCli(unittest.TestCase):
     def setUp(self):
         """ set up data used in the tests.
         setUp is called before each test function execution.
         """
-        pkgdb.pkgdbclient = PackageDB('https://admin.stg.fedoraproject.org/pkgdb',
-                        insecure=True)
+        pkgdb.pkgdbclient = PackageDB(
+            'https://admin.stg.fedoraproject.org/pkgdb', insecure=True)
         pkgdb.log.setLevel(logging.DEBUG)
         print pkgdb.pkgdbclient.base_url
 
@@ -31,29 +30,22 @@ class testPkgdDBCli(unittest.TestCase):
         pkgdb.get_packages('R-*', branch='devel')
 
     def testGetOrphanedPackages(self):
-        pkgdb.get_orphaned_packages('perl-*', eol=False,
-                                    name_only=False,
-                                    branch='all')
-        pkgdb.get_orphaned_packages('perl-*', eol=True,
-                                    name_only=True,
-                                    branch='all')
-        pkgdb.get_orphaned_packages('perl-*', eol=True,
-                                    name_only=True,
-                                    branch='devel')
+        pkgdb.get_orphaned_packages(
+            'perl-*', eol=False, name_only=False, branch='all')
+        pkgdb.get_orphaned_packages(
+            'perl-*', eol=True, name_only=True, branch='all')
+        pkgdb.get_orphaned_packages(
+            'perl-*', eol=True, name_only=True, branch='devel')
 
     def testGetPackagerInfo(self):
-        pkgdb.get_packager_info('pingou', motif=None,
-                                    name_only=False,
-                                    branch='all')
-        pkgdb.get_packager_info('pingou', motif=None,
-                                    name_only=True,
-                                    branch='all')
-        pkgdb.get_packager_info('pingou', motif='R-*',
-                                    name_only=False,
-                                    branch='all')
-        pkgdb.get_packager_info('pingou', motif='R-*',
-                                    name_only=False,
-                                    branch='devel')
+        pkgdb.get_packager_info(
+            'pingou', motif=None, name_only=False, branch='all')
+        pkgdb.get_packager_info(
+            'pingou', motif=None, name_only=True, branch='all')
+        pkgdb.get_packager_info(
+            'pingou', motif='R-*', name_only=False, branch='all')
+        pkgdb.get_packager_info(
+            'pingou', motif='R-*', name_only=False, branch='devel')
 
     def testOrphanPackage(self):
         pkgdb.orphan_package('R-ROC', 'devel', False, None, None)
