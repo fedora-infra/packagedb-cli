@@ -323,6 +323,30 @@ class PkgDB(object):
 
         return output
 
+    def get_packager_stats(self, username):
+        ''' Return for the specified user, the number of packages on each
+        active branch for which he/she is the point of contact.
+
+        :arg username:
+
+        '''
+        args = {
+            'packagername': username,
+        }
+
+        req = self.session.get(
+            '{0}/api/packager/stats/'.format(self.url), params=args
+        )
+        LOG.debug('Called: %s with arg %s', req.url, args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
+
     def get_packagers(self, pattern='*'):
         ''' Return the list of packagers matching the provided criterias.
 
