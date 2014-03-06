@@ -85,7 +85,7 @@ class PkgDB(object):
         self.url = url
         self.session = requests.session()
         self.username = username
-        self.insecure=insecure
+        self.insecure = insecure
         self.__logged = False
 
     @property
