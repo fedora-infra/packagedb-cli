@@ -22,7 +22,6 @@ import argparse
 import logging
 import getpass
 import koji
-import sys
 import fedora_cert
 
 
@@ -40,11 +39,6 @@ RESET = "\033[0;0m"
 logging.basicConfig()
 PKGDBLOG = logging.getLogger("pkgdb")
 LOG = logging.getLogger("pkgdb-cli")
-
-if '--test' in sys.argv:
-    print "Testing environment"
-    fasclient = AccountSystem(
-        'https://admin.stg.fedoraproject.org/accounts', insecure=True)
 
 ACTIONLIST = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
@@ -645,6 +639,13 @@ def main():
         PKGDBLOG.setLevel(logging.DEBUG)
     elif arg.verbose:
         LOG.setLevel(logging.INFO)
+
+    if arg.test:
+        global fasclient
+        print "Testing environment"
+        fasclient = AccountSystem(
+            'https://admin.stg.fedoraproject.org/accounts',
+            insecure=True)
 
     try:
         arg.func(arg)
