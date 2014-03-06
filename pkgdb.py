@@ -510,3 +510,33 @@ class PkgDB(object):
             raise PkgDBException(output['error'])
 
         return output
+
+    def update_collection_status(self, clt_branchname, clt_status):
+        ''' Update the status of the specified collection.
+
+        :arg clt_branchname:
+        :arg clt_status:
+
+        '''
+        if not self.logged:
+            raise PkgDBAuthException('Authentication required')
+
+        args = {
+            'collection_branchname': clt_branchname,
+            'collection_status': clt_status,
+        }
+
+        req = self.session.post(
+            '{0}/api/collection/{1}/status/'.format(
+                self.url, clt_branchname),
+            data=args
+        )
+        LOG.debug('Called: %s with arg %s', req.url, args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
