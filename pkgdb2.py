@@ -388,7 +388,7 @@ class PkgDB(object):
 
             '''
             args = {
-                'username': username,
+                'packagername': username,
                 'page': page,
             }
             if count is True:
@@ -415,7 +415,7 @@ class PkgDB(object):
             total = output['page_total']
             for i in range(2, total + 1):
                 data = _get_pages(i)
-                output['packages'].extend(data['packages'])
+                output['acls'].extend(data['acls'])
 
         return output
 
