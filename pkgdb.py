@@ -356,6 +356,44 @@ class PkgDB(object):
 
         return output
 
+    def get_packager_acls(self, username, page=1, limit=250, count=False):
+        ''' Return the list of packagers matching the provided criterias.
+
+        :arg username:
+
+        '''
+        def _get_pages(page):
+            args = {
+                'username': username,
+                'page': page,
+                'limit': limit,
+            }
+            if count is True:
+                args['count'] = count
+
+            req = self.session.get(
+                '{0}/api/packager/acl/'.format(self.url), params=args
+            )
+            LOG.debug('Called: %s with arg %s', req.url, args)
+
+            output = req.json()
+
+            if req.status_code != 200:
+                LOG.debug('full output %s', output)
+                raise PkgDBException(output['error'])
+
+            return output
+
+        output = _get_pages(1)
+
+        page = output['page']
+        total = output['page_total']
+        for i in range(2, total + 1):
+            data = _get_pages(i)
+            output['packages'].extend(output['packages'])
+
+        return output
+
     def orphan_packages(self, packages, branches):
         ''' Orphans the provided list of packages on the provided list of
         branches.
