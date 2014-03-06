@@ -4,7 +4,7 @@
 """
 # pkgdb2 - a python module to query the Fedora package database v2
 #
-# Copyright (C) 2013 Pierre-Yves Chibon
+# Copyright (C) 2013-2014 Pierre-Yves Chibon
 # Author: Pierre-Yves Chibon <pingou@pingoured.fr>
 #
 # This program is free software; you can redistribute it and/or modify
