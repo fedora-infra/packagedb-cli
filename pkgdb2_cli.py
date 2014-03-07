@@ -97,7 +97,8 @@ def _get_active_branch(packagename=None):
             if pkg['collection']['status'] != 'EOL':
                 branches.append(pkg['collection']['branchname'])
     else:
-        output = pkgdbclient.get_collections(status='EOL,Under Development')
+        output = pkgdbclient.get_collections(
+            clt_status=['EOL', 'Under Development'])
         for collect in output['collections']:
             if collect['status'] == 'EOL':
                 continue
