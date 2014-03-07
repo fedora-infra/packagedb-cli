@@ -1,15 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from pkgdb2 import PkgDB
-import unittest
+import datetime
+import getpass
 import logging
+import time
+import unittest
+import uuid
+
+import fedora_cert
+
+from pkgdb2 import PkgDB, PkgDBException
 
 
 PKGDB_URL = 'http://127.0.0.1:5000'
 
+try:
+    USERNAME = fedora_cert.read_user_cert()
+except:
+    USERNAME = raw_input('FAS username: ')
+PASSWORD = getpass.getpass('FAS password: ')
+
+COL_NAME = str(uuid.uuid1())[:30]
+PKG_NAME = str(uuid.uuid1())[:30]
+VERSION = time.mktime(datetime.datetime.utcnow().timetuple())
+
 
 class TestPkgdDB(unittest.TestCase):
+    ''' Un-authenticated pkgdb2 tests. '''
+
     def setUp(self):
         """ set up data used in the tests.
         setUp is called before each test function execution.
@@ -31,7 +49,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['collections', 'output'])
 
-        out = self.pkgdb.get_collections(status='EOL')
+        out = self.pkgdb.get_collections(clt_status='EOL')
         self.assertEqual(
             sorted(out.keys()),
             ['collections', 'output'])
@@ -219,9 +237,218 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['page_total'], 1)
 
 
+class TestPkgdDBAuth(unittest.TestCase):
+    ''' Authenticated pkgdb2 tests. '''
+
+    def setUp(self):
+        """ set up data used in the tests.
+        setUp is called before each test function execution.
+        """
+        self.pkgdb = PkgDB(PKGDB_URL, insecure=True)
+        self.pkgdb.login(USERNAME, PASSWORD)
+
+    def test_1_create_collection(self):
+        ''' Test the create_collection function. '''
+        out = self.pkgdb.create_collection(
+            clt_name='Test',
+            version=VERSION,
+            clt_status='Active',
+            branchname=COL_NAME,
+            dist_tag='.tst' + COL_NAME[:20],
+            git_branch_name='test',
+            kojiname='test',
+        )
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['Collection "%s" created' % COL_NAME])
+
+        self.assertRaises(
+            PkgDBException,
+            self.pkgdb.create_collection,
+            clt_name='Test',
+            version=VERSION,
+            clt_status='Active',
+            branchname=COL_NAME,
+            dist_tag='.tst' + COL_NAME[:20],
+            git_branch_name='test',
+            kojiname='test',
+        )
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['Collection "%s" created' % COL_NAME])
+
+
+    def test_2_create_package(self):
+        ''' Test the create_package function. '''
+
+        out = self.pkgdb.create_package(
+            pkgname=PKG_NAME,
+            summary='Test package',
+            description='Test package desc',
+            review_url='https://bz.com',
+            status='Approved',
+            shouldopen=False,
+            branches=COL_NAME,
+            poc='pingou',
+            upstream_url='http://guake.org',
+            critpath=False)
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['Package created'])
+
+    def test_3_orphan_packages(self):
+        ''' Test the orphan_packages function. '''
+
+        out = self.pkgdb.orphan_packages('guake', ['devel', 'EL-6'])
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['user: pingou changed poc of package: guake from: pingou '
+             'to: orphan on branch: devel',
+             'user: pingou changed poc of package: guake from: pingou '
+             'to: orphan on branch: EL-6'])
+
+    def test_4_unorphan_packages(self):
+        ''' Test the unorphan_packages function. '''
+
+        out = self.pkgdb.unorphan_packages(
+            'guake', ['devel', 'EL-6'], 'pingou')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['Package guake has been unorphaned on devel by pingou',
+             'Package guake has been unorphaned on EL-6 by pingou'])
+
+    def test_5_retire_packages(self):
+        ''' Test the retire_packages function. '''
+
+        out = self.pkgdb.retire_packages('guake', 'devel')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['user: pingou updated package: guake status from: Approved to '
+             'Retired on branch: devel'])
+
+    def test_6_unretire_packages(self):
+        ''' Test the unretire_packages function. '''
+
+        out = self.pkgdb.unretire_packages('guake', 'devel')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['user: pingou updated package: guake status from: Retired to '
+             'Approved on branch: devel'])
+
+    def test_7_update_acl(self):
+        ''' Test the update_acl function. '''
+
+
+        out = self.pkgdb.update_acl(
+            'guake', ['devel', 'EL-6'], 'commit', 'Awaiting Review',
+            'Ralph')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['user: pingou set acl: commit of package: guake from: '
+             'Awaiting Review to: Awaiting Review on branch: devel',
+             'user: pingou set acl: commit of package: guake from: '
+             'Awaiting Review to: Awaiting Review on branch: EL-6'])
+
+    def test_8_update_collection_status(self):
+        ''' Test the update_collection_status function. '''
+
+        out = self.pkgdb.update_collection_status(COL_NAME, 'EOL')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['Collection updated from "Active" to "EOL"'])
+
+    def test_9_update_package_poc(self):
+        ''' Test the update_package_poc function. '''
+
+        out = self.pkgdb.update_package_poc(
+            'guake', ['devel', 'EL-6'], 'ralph')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['user: pingou changed poc of package: guake from: orphan to: '
+             'ralph on branch: devel',
+             'user: pingou changed poc of package: guake from: pingou to: '
+             'ralph on branch: EL-6'])
+
+        out = self.pkgdb.update_package_poc(
+            'guake', ['devel', 'EL-6'], 'pingou')
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['user: pingou changed poc of package: guake from: ralph to: '
+             'pingou on branch: devel',
+             'user: pingou changed poc of package: guake from: ralph to: '
+             'pingou on branch: EL-6'])
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestPkgdDB))
+    suite.addTest(unittest.makeSuite(TestPkgdDBAuth))
     return suite
 
 
