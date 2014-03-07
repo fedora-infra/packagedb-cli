@@ -161,32 +161,31 @@ class PkgDB(object):
 
     ## Actual API calls
 
-    def create_collection(
-            self, clt_name, clt_version, clt_status, clt_branchname,
-            clt_disttag, clt_git_branch_name, clt_kojiname):
+    def create_collection(self, clt_name, version, clt_status, branchname,
+                          dist_tag, git_branch_name, kojiname):
         ''' Create a new collection.
 
         :arg clt_name: The name of the collection, for example ``Fedora``
             or ``Fedora EPEL``
         :type clt_name: str
-        :arg clt_version: The version of the collection, for example 21 or
+        :arg version: The version of the collection, for example 21 or
             8
-        :type clt_version: int or str
+        :type version: int or str
         :arg clt_status: The status of the collection, options are: ``EOL``,
             ``Active``, ``Under Development``
         :type clt_status: str
-        :arg clt_branchname: The branch name of the collection, for example
+        :arg branchname: The branch name of the collection, for example
             ``f21`` or ``epel8``
-        :type clt_branchname: str
-        :arg clt_disttag: The dist tag of the collection, for example
+        :type branchname: str
+        :arg dist_tag: The dist tag of the collection, for example
             ``fc21`` or ``.el8``
-        :type clt_disttag: str
-        :arg clt_git_branch_name: The branch name in git for this collection
+        :type dist_tag: str
+        :arg git_branch_name: The branch name in git for this collection
             for example ``f21`` or ``epel7``
-        :type clt_git_branch_name: str
-        :arg clt_kojiname: The koji name for this collection, for example
+        :type git_branch_name: str
+        :arg kojiname: The koji name for this collection, for example
             ``f21`` or ``epel7``
-        :type clt_kojiname: str
+        :type kojiname: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -197,13 +196,13 @@ class PkgDB(object):
             raise PkgDBAuthException('Authentication required')
 
         args = {
-            'collection_name': clt_name,
-            'collection_version': clt_version,
-            'collection_status': clt_status,
-            'collection_branchname': clt_branchname,
-            'collection_distTag': clt_disttag,
-            'collection_git_branch_name': clt_git_branch_name,
-            'collection_kojiname': clt_kojiname,
+            'clt_name': clt_name,
+            'version': version,
+            'clt_status': clt_status,
+            'branchname': branchname,
+            'dist_tag': dist_tag,
+            'git_branch_name': git_branch_name,
+            'kojiname': kojiname,
         }
 
         req = self.session.post(
@@ -222,37 +221,36 @@ class PkgDB(object):
         return output
 
     def create_package(
-            self, pkg_name, pkg_summary, pkg_description, pkg_review_url,
-            pkg_status, pkg_shouldopen, pkg_collection, pkg_poc,
-            pkg_upstream_url, pkg_critpath=False):
+            self, pkgname, summary, description, review_url, status,
+            shouldopen, branches, poc, upstream_url, critpath=False):
         ''' Create a new package.
 
-        :arg pkg_name: The name of the package
-        :type pkg_name: str
-        :arg pkg_summary: The summary of the package as provided in the
+        :arg pkgname: The name of the package
+        :type pkgname: str
+        :arg summary: The summary of the package as provided in the
             spec file
-        :type pkg_summary: str
-        :arg pkg_description: The description of the package as provided in
+        :type summary: str
+        :arg description: The description of the package as provided in
             the spec file
-        :type pkg_description: str
-        :arg pkg_review_url: The URL to the package review where the
+        :type description: str
+        :arg review_url: The URL to the package review where the
             package was approved
-        :type pkg_review_url: str
-        :arg pkg_status: The status of the package, options are:
+        :type review_url: str
+        :arg status: The status of the package, options are:
             ``Approved``, ``Orphaned``, ``Removed``, ``Retired``
-        :type pkg_status: str
-        :arg pkg_shouldopen:
-        :type pkg_shouldopen: bool
-        :arg pkg_collection: The collection in which to add this package
-        :type pkg_collection: str
-        :arg pkg_poc: The point of contact of the package in the provided
+        :type status: str
+        :arg shouldopen:
+        :type shouldopen: bool
+        :arg branches: The collection in which to add this package
+        :type branches: str or list
+        :arg poc: The point of contact of the package in the provided
             collection
-        :type pkg_poc: str
-        :arg pkg_upstream_url: The URL to the project upstream
-        :type pkg_upstream_url: str
-        :kwarg pkg_critpath: A boolean specifying whether to add this
+        :type poc: str
+        :arg upstream_url: The URL to the project upstream
+        :type upstream_url: str
+        :kwarg critpath: A boolean specifying whether to add this
             package to the critpath
-        :type pkg_critpath: bool
+        :type critpath: bool
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -263,18 +261,18 @@ class PkgDB(object):
             raise PkgDBAuthException('Authentication required')
 
         args = {
-            'pkg_name': pkg_name,
-            'pkg_summary': pkg_summary,
-            'pkg_description': pkg_description,
-            'pkg_review_url': pkg_review_url,
-            'pkg_status': pkg_status,
-            'pkg_shouldopen': pkg_shouldopen,
-            'pkg_collection': pkg_collection,
-            'pkg_poc': pkg_poc,
-            'pkg_upstream_url': pkg_upstream_url,
+            'pkgname': pkgname,
+            'summary': summary,
+            'description': description,
+            'review_url': review_url,
+            'status': status,
+            'shouldopen': shouldopen,
+            'branches': branches,
+            'poc': poc,
+            'upstream_url': upstream_url,
         }
-        if pkg_critpath:
-            args['pkg_critpath'] = pkg_critpath
+        if critpath:
+            args['critpath'] = critpath
 
         req = self.session.post(
             '{0}/api/package/new/'.format(self.url),
@@ -291,14 +289,14 @@ class PkgDB(object):
 
         return output
 
-    def get_collections(self, pattern='*', status=None):
+    def get_collections(self, pattern='*', clt_status=None):
         ''' Return the list of collections matching the provided criterias.
 
         :kward pattern: The pattern to match against the branch name of the
             collections. Defaults to ``*``
         :type pattern: str
-        :kward status: The status of the collections to retrieve, options
-            are: ``EOL``, ``Active``, ``Under Development``
+        :kward clt_status: The status of the collections to retrieve,
+            options are: ``EOL``, ``Active``, ``Under Development``
         :type status: str
         :return: the json object returned by the API
         :rtype: dict
@@ -308,7 +306,7 @@ class PkgDB(object):
         '''
         args = {
             'pattern': pattern,
-            'status': status,
+            'clt_status': clt_status,
         }
 
         req = self.session.get(
@@ -326,12 +324,12 @@ class PkgDB(object):
 
         return output
 
-    def get_package(self, pkg_name, branch=None):
+    def get_package(self, pkgname, branch=None):
         ''' Return the information of a package matching the provided
         criterias.
 
-        :arg pkg_name: The package name to retrieve information for
-        :type pkg_name: str
+        :arg pkgname: The package name to retrieve information for
+        :type pkgname: str
         :kwarg branch: The branch to retrieve information for
         :type branch: str
         :return: the json object returned by the API
@@ -341,8 +339,8 @@ class PkgDB(object):
 
         '''
         args = {
-            'pkg_name': pkg_name,
-            'pkg_clt': branch,
+            'pkgname': pkgname,
+            'branch': branch,
         }
 
         req = self.session.get(
@@ -361,12 +359,12 @@ class PkgDB(object):
         return output
 
     def get_packager_acls(
-            self, username, page=1, iterate=True, count=False):
+            self, packagername, page=1, iterate=True, count=False):
         ''' Return the list of packagers matching the provided criterias.
 
-        :arg username: The FAS username of the package to retrieve the ACLs
-            for
-        :type username: str
+        :arg packagername: The FAS username of the package to retrieve the
+            ACLs for
+        :type packagername: str
         :kwarg page: The page number to retrieve, defaults to 1
         :type page: int
         :kwarg iterate: A boolean specifying whether to iterate over the
@@ -388,7 +386,7 @@ class PkgDB(object):
 
             '''
             args = {
-                'packagername': username,
+                'packagername': packagername,
                 'page': page,
             }
             if count is True:
@@ -419,12 +417,12 @@ class PkgDB(object):
 
         return output
 
-    def get_packager_stats(self, username):
+    def get_packager_stats(self, packagername):
         ''' Return for the specified user, the number of packages on each
         active branch for which he/she is the point of contact.
 
-        :arg username: The FAS username of the user for which to retrieve
-            the statistics
+        :arg packagername: The FAS username of the user for which to
+            retrieve the statistics
         :type username: str
         :return: the json object returned by the API
         :rtype: dict
@@ -433,7 +431,7 @@ class PkgDB(object):
 
         '''
         args = {
-            'packagername': username,
+            'packagername': packagername,
         }
 
         req = self.session.get(
@@ -481,9 +479,9 @@ class PkgDB(object):
 
         return output
 
-    def get_packages(self, pattern='*', branches=None, poc=None, status=None,
-                     orphaned=False, acls=False, page=1, iterate=True,
-                     count=False):
+    def get_packages(
+            self, pattern='*', branches=None, poc=None, status=None,
+            orphaned=False, acls=False, page=1, iterate=True, count=False):
         ''' Return the list of packages matching the provided criterias.
 
         :kwarg pattern: The pattern to match against the name of the
@@ -564,12 +562,12 @@ class PkgDB(object):
 
         return output
 
-    def orphan_packages(self, packages, branches):
+    def orphan_packages(self, pkgnames, branches):
         ''' Orphans the provided list of packages on the provided list of
         branches.
 
-        :arg packages: One or more package name of the packages to orphan
-        :type packages: str or list
+        :arg pkgnames: One or more package name of the packages to orphan
+        :type pkgnames: str or list
         :arg branches: One or more branch names for the collections in
             which to orphan the packages
         :type branches: str or list
@@ -584,14 +582,9 @@ class PkgDB(object):
         if not self.logged:
             raise PkgDBAuthException('Authentication required')
 
-        if isinstance(packages, basestring):
-            packages = [packages]
-        if isinstance(branches, basestring):
-            branches = [branches]
-
         args = {
-            'pkg_name': ','.join(packages),
-            'clt_name': ','.join(branches),
+            'pkgnames': pkgnames,
+            'branches': branches,
         }
 
         req = self.session.post(
@@ -609,12 +602,12 @@ class PkgDB(object):
 
         return output
 
-    def retire_packages(self, packages, branches):
+    def retire_packages(self, pkgnames, branches):
         ''' Retires the provided list of packages on the provided list of
         branches.
 
-        :arg packages: One or more package name of the packages to retire
-        :type packages: str or list
+        :arg pkgnames: One or more package name of the packages to retire
+        :type pkgnames: str or list
         :arg branches: One or more branch names for the collections in
             which to retire the packages
         :type branches: str or list
@@ -629,14 +622,9 @@ class PkgDB(object):
         if not self.logged:
             raise PkgDBAuthException('Authentication required')
 
-        if isinstance(packages, basestring):
-            packages = [packages]
-        if isinstance(branches, basestring):
-            branches = [branches]
-
         args = {
-            'pkg_name': ','.join(packages),
-            'clt_name': ','.join(branches),
+            'pkgnames': pkgnames,
+            'branches': branches,
         }
 
         req = self.session.post(
@@ -654,12 +642,12 @@ class PkgDB(object):
 
         return output
 
-    def unorphan_packages(self, packages, branches, poc):
+    def unorphan_packages(self, pkgnames, branches, poc):
         ''' Un orphan the provided list of packages on the provided list of
         branches.
 
-        :arg packages: One or more package name of the packages to unorphan
-        :type packages: str or list
+        :arg pkgname: One or more package name of the packages to unorphan
+        :type pkgname: str or list
         :arg branches: One or more branch names for the collections in
             which to unorphan the packages
         :type branches: str or list
@@ -676,15 +664,10 @@ class PkgDB(object):
         if not self.logged:
             raise PkgDBAuthException('Authentication required')
 
-        if isinstance(packages, basestring):
-            packages = [packages]
-        if isinstance(branches, basestring):
-            branches = [branches]
-
         args = {
-            'pkg_name': ','.join(packages),
-            'clt_name': ','.join(branches),
-            'pkg_poc': poc,
+            'pkgnames': pkgnames,
+            'branches': branches,
+            'poc': poc,
         }
 
         req = self.session.post(
@@ -702,12 +685,12 @@ class PkgDB(object):
 
         return output
 
-    def unretire_packages(self, packages, branches):
+    def unretire_packages(self, pkgnames, branches):
         ''' Un retires the provided list of packages on the provided list of
         branches.
 
-        :arg packages: One or more package name of the packages to unretire
-        :type packages: str or list
+        :arg pkgnames: One or more package name of the packages to unretire
+        :type pkgnames: str or list
         :arg branches: One or more branch names for the collections in
             which to unretire the packages
         :type branches: str or list
@@ -722,14 +705,9 @@ class PkgDB(object):
         if not self.logged:
             raise PkgDBAuthException('Authentication required')
 
-        if isinstance(packages, basestring):
-            packages = [packages]
-        if isinstance(branches, basestring):
-            branches = [branches]
-
         args = {
-            'pkg_name': ','.join(packages),
-            'clt_name': ','.join(branches),
+            'pkgnames': pkgnames,
+            'branches': branches,
         }
 
         req = self.session.post(
@@ -747,12 +725,12 @@ class PkgDB(object):
 
         return output
 
-    def update_acl(self, package, branches, acls, status, user):
+    def update_acl(self, pkgname, branches, acls, status, user):
         ''' Update the specified ACLs, on the specified Branches of the
         specified package
 
-        :arg package: The package name of the package whom ACLs to update
-        :type package: str
+        :arg pkgname: The package name of the package whom ACLs to update
+        :type pkgname: str
         :arg branches: One or more branch for which to update their ACLs
         :type branches: str or list
         :arg acls: The ACL to update, options are: ``watchcommits``,
@@ -776,17 +754,12 @@ class PkgDB(object):
         if not self.logged:
             raise PkgDBAuthException('Authentication required')
 
-        if isinstance(branches, basestring):
-            branches = [branches]
-        if isinstance(acls, basestring):
-            acls = [acls]
-
         args = {
-            'pkg_name': package,
-            'pkg_branch': branches,
-            'pkg_acl': acls,
+            'pkgname': pkgname,
+            'branches': branches,
+            'acl': acls,
             'acl_status': status,
-            'pkg_user': user,
+            'user': user,
         }
 
         req = self.session.post(
@@ -804,15 +777,15 @@ class PkgDB(object):
 
         return output
 
-    def update_collection_status(self, branchname, status):
+    def update_collection_status(self, branch, clt_status):
         ''' Update the status of the specified collection.
 
-        :arg branchname: The branch name of the collection for which to
+        :arg branch: The branch name of the collection for which to
             update the status
-        :type branchname: str
-        :arg status: The new status of the collection, options are: ``EOL``,
+        :type branch: str
+        :arg clt_status: The new status of the collection, options are: ``EOL``,
             ``Active``, ``Under Development``
-        :type _status: str
+        :type clt_status: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -825,13 +798,13 @@ class PkgDB(object):
             raise PkgDBAuthException('Authentication required')
 
         args = {
-            'collection_branchname': branchname,
-            'collection_status': status,
+            'branch': branch,
+            'clt_status': clt_status,
         }
 
         req = self.session.post(
             '{0}/api/collection/{1}/status/'.format(
-                self.url, branchname),
+                self.url, branch),
             data=args,
             verify=not self.insecure,
         )
@@ -845,18 +818,18 @@ class PkgDB(object):
 
         return output
 
-    def update_package_poc(self, packages, branches, pkg_poc):
+    def update_package_poc(self, pkgnames, branches, poc):
         ''' Update the point of contact of the specified packages on the
         specified branches.
 
-        :arg packages: One or more package names of package for which to
+        :arg pkgnames: One or more package names of package for which to
             change the point of contact
-        :type packages: str or list
+        :type pkgnames: str or list
         :arg branches: One or more branch names for the collections for
             which to update the point of contact
         :type branches: str or list
-        :arg pkg_poc:
-        :type pkg_poc: str
+        :arg poc:
+        :type poc: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -868,15 +841,10 @@ class PkgDB(object):
         if not self.logged:
             raise PkgDBAuthException('Authentication required')
 
-        if isinstance(branches, basestring):
-            branches = [branches]
-        if isinstance(packages, basestring):
-            packages = [packages]
-
         args = {
-            'packages': ','.join(packages),
-            'branches': ','.join(branches),
-            'user_target': pkg_poc,
+            'pkgnames': pkgnames,
+            'branches': branches,
+            'poc': poc,
         }
 
         req = self.session.post(
