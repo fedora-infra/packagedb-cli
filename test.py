@@ -49,11 +49,11 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['collections', 'output'])
 
-        out = self.pkgdb.get_collections(clt_status='EOL')
+        out = self.pkgdb.get_collections(clt_status=['EOL', 'Under Development'])
         self.assertEqual(
             sorted(out.keys()),
             ['collections', 'output'])
-        self.assertTrue(len(out['collections']) >= 24)
+        self.assertTrue(len(out['collections']) == 25)
 
     def test_get_package(self):
         ''' Test the get_package function. '''

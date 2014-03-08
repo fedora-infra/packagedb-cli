@@ -295,9 +295,9 @@ class PkgDB(object):
         :kward pattern: The pattern to match against the branch name of the
             collections. Defaults to ``*``
         :type pattern: str
-        :kward clt_status: The status of the collections to retrieve,
+        :kward clt_status: One or more status of the collections to retrieve,
             options are: ``EOL``, ``Active``, ``Under Development``
-        :type status: str
+        :type status: str or list
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
