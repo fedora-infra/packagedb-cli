@@ -59,7 +59,7 @@ def __do_login(username=None, password=None):
     :karg username FAS username, if None it is asked to the user
     :karg password FAS password, if None it is asked to the user
     '''
-    if pkgdbclient.logged:
+    if pkgdbclient.is_logged_in:
         return
     else:
         if username is None:

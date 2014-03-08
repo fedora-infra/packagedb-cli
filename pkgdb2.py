@@ -86,12 +86,12 @@ class PkgDB(object):
         self.session = requests.session()
         self.username = username
         self.insecure = insecure
-        self.__logged = False
+        self.__logged_in = False
 
     @property
-    def logged(self):
+    def is_logged_in(self):
         ''' Return whether the user if logged in or not. '''
-        return self.__logged
+        return self.__logged_in
 
     def login(self, username, password, openid_insecure=False):
         ''' Login the user on pkgdb2.
@@ -155,7 +155,7 @@ class PkgDB(object):
             output['response']['openid.return_to'],
             data=output['response'])
 
-        self.__logged = True
+        self.__logged_in = True
 
         return output
 
@@ -192,7 +192,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -257,7 +257,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -579,7 +579,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -619,7 +619,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -661,7 +661,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -702,7 +702,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -751,7 +751,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -794,7 +794,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
@@ -838,7 +838,7 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.logged:
+        if not self.is_logged_in:
             raise PkgDBAuthException('Authentication required')
 
         args = {
