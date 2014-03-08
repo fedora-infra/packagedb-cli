@@ -503,7 +503,7 @@ class PkgDB(object):
         :kwarg status: The status of the package to filter the packages
             returned, options are: ``Approved``, ``Orphaned``, ``Removed``,
             ``Retired``
-        :type status: str or None
+        :type status: str or list or None
         :kwarg orphaned: A boolean to returned only orphaned packages
         :type orphaned: bool
         :kwarg acls: A boolean to return the package ACLs in the output.
