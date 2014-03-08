@@ -360,9 +360,10 @@ class PkgDB(object):
 
     def get_packager_acls(
             self, packagername, page=1, iterate=True, count=False):
-        ''' Return the list of packagers matching the provided criterias.
+        ''' Return the list of ACL for the packager matching the provided
+        criterias.
 
-        :arg packagername: The FAS username of the package to retrieve the
+        :arg packagername: The FAS username of the packager to retrieve the
             ACLs for
         :type packagername: str
         :kwarg page: The page number to retrieve, defaults to 1
