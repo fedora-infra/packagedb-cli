@@ -1,7 +1,6 @@
 *.pyc
-\[PATCH\]*
-00*
-dist/
-MANIFEST
+*.patch
 *.egg-info
+dist/
 build/
+MANIFEST
