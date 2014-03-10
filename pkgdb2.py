@@ -24,7 +24,7 @@ logging.basicConfig()
 LOG = logging.getLogger("pkgdb")
 
 __version__ = '2.0'
-PKGDB_URL = r'http://209.132.184.188'
+PKGDB_URL = r'https://admin.stg.fedoraproject.org/pkgdb'
 
 
 class PkgDBException(Exception):
