@@ -200,17 +200,18 @@ def _get_package_id(packagename, branch):
                 packagename, branch))
 
 
-def _get_active_branches(packagename=None, not_statuscode=None):
+def _get_active_branches(packagename=None, not_statuscode=[]):
     """
     Query pkgdb to retrieve all none-EOL branches.
 
     :kwarg packagename, if provided returns only the branches active for
         this package.
-    :kwarg not_statuscode, exclude the branch in which the package has this
+    :kwarg not_statuscode, exclude the branches with this or these
         statuscode.
         For reference:
              1 = 'Active',
              3 = 'Approved'
+             9 = 'EOL',
             10 = 'Denied',
             14 = 'Orphaned',
             18 = 'Under Development',
@@ -219,21 +220,37 @@ def _get_active_branches(packagename=None, not_statuscode=None):
 
     Returns a list containing the names of these branches
     """
+    if not isinstance(not_statuscode, list):
+        not_statuscode = [not_statuscode]
+
     data = pkgdbclient.send_request(
         '/collections/', auth=False, req_params={'eol': None})
     branches = dict((b[0]['branchname'], b[0]) for b in data.collections)
-    branches = branches.keys()
     if packagename:
         pkgdbinfo = pkgdbclient.send_request('/acls/name/{0}'.format(
             packagename), auth=False)
         branchs = []
         if 'packageListings' in pkgdbinfo:
             for collection in pkgdbinfo['packageListings']:
-                if not_statuscode is not None:
-                    if str(collection['statuscode']) == str(not_statuscode):
-                        continue
-                branchs.append(collection['collection']['branchname'])
+                if not_statuscode:
+                    not_statuscode = [str(item) for item in not_statuscode]
+                    if str(collection['collection']['statuscode']) not \
+                            in not_statuscode:
+                        branchs.append(collection['collection']['branchname'])
+                else:
+                    branchs.append(collection['collection']['branchname'])
         branches = list(set(branchs).intersection(set(branches)))
+    else:
+        # branches = branches.keys()
+        if not_statuscode:
+            not_statuscode = [str(item) for item in not_statuscode]
+            branchs = []
+            for branch in branches:
+                if str(branches[branch]['statuscode']) not in not_statuscode:
+                    branchs.append(branches[branch]['branchname'])
+            branches = branchs
+        else:
+            branches = branches.keys()
     return branches
 
 
@@ -1241,7 +1258,7 @@ def do_update(args):
 def do_branch(args):
 
     log.info("List all active branches")
-    branches = _get_active_branches()
+    branches = _get_active_branches(not_statuscode=[9])
     branches.sort()
     branches.reverse()
     print "The active branches are: '{0}'".format("', '".join(branches))
