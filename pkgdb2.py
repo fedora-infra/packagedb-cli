@@ -67,7 +67,7 @@ class PkgDB(object):
     '''
 
     def __init__(self, url=PKGDB_URL, username=None, insecure=False):
-        ''' Constructor fo the PkgDB object used to query the package
+        ''' Constructor for the PkgDB object used to query the package
         database.
 
         :kwarg url: the basic url to the package DB instance to query
@@ -169,8 +169,8 @@ class PkgDB(object):
         :arg clt_name: The name of the collection, for example ``Fedora``
             or ``Fedora EPEL``
         :type clt_name: str
-        :arg version: The version of the collection, for example 21 or
-            8
+        :arg version: The version of the collection, for example ``21`` or
+            ``devel``
         :type version: int or str
         :arg clt_status: The status of the collection, options are: ``EOL``,
             ``Active``, ``Under Development``
@@ -293,10 +293,10 @@ class PkgDB(object):
     def get_collections(self, pattern='*', clt_status=None):
         ''' Return the list of collections matching the provided criterias.
 
-        :kward pattern: The pattern to match against the branch name of the
+        :kwarg pattern: The pattern to match against the branch name of the
             collections. Defaults to ``*``
         :type pattern: str
-        :kward clt_status: One or more status of the collections to retrieve,
+        :kwarg clt_status: One or more status of the collections to retrieve,
             options are: ``EOL``, ``Active``, ``Under Development``
         :type status: str or list
         :return: the json object returned by the API
