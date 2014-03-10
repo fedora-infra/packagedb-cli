@@ -1143,9 +1143,9 @@ def setup_parser():
         help="Deny the requested ACL")
     parser_update.set_defaults(func=do_update)
 
-    ## Update
+    ## Branches
     parser_branch = subparsers.add_parser(
-        'branch',
+        'branches',
         help='List the active branches')
     parser_branch.set_defaults(func=do_branch)
 
