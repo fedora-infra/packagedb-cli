@@ -603,8 +603,11 @@ def get_packager_info(
                     out = "   " + pkg['name']
                 branches = []
                 for info in pkg['listings']:
-                    if status_map[str(info['statuscode'])] != "Orphaned" and \
-                            str(info['collectionid']) in collectn_map.keys():
+                    if status_map[str(info['statuscode'])] != "Orphaned" \
+                            and status_map[str(info['statuscode'])] != \
+                            "Deprecated" \
+                            and str(info['collectionid']) in \
+                            collectn_map.keys():
                         branches.append(collectn_map[
                             str(info['collectionid'])])
                 if branch == 'all' or branch in branches:
