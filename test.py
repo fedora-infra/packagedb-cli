@@ -53,7 +53,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['collections', 'output'])
-        self.assertTrue(len(out['collections']) == 25)
+        self.assertTrue(len(out['collections']) >= 25)
 
     def test_get_package(self):
         ''' Test the get_package function. '''
@@ -103,10 +103,10 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
-        self.assertEqual(len(out['acls']), 3000)
+        self.assertEqual(len(out['acls']), 250)
         self.assertEqual(out['page_total'], 12)
 
-        out = self.pkgdb.get_packager_acls('pingou', page=3, iterate=False)
+        out = self.pkgdb.get_packager_acls('pingou', page=3)
         self.assertEqual(
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
@@ -139,12 +139,12 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
         self.assertEqual(len(out['packages']), 10)
-        self.assertEqual(out['packages'][0]['name'], 'guacamole')
+        self.assertEqual(out['packages'][0]['name'], 'guacamole-client')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
             ['creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
-        self.assertEqual(out['packages'][1]['name'], 'guacamole-client')
+        self.assertEqual(out['packages'][1]['name'], 'guacamole-common')
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
 
@@ -180,7 +180,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
         self.assertEqual(len(out['packages']), 5)
-        self.assertEqual(out['packages'][0]['name'], 'guacamole')
+        self.assertEqual(out['packages'][0]['name'], 'guacd')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
             ['creation_date', 'description', 'name', 'review_url',
@@ -193,12 +193,12 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
         self.assertEqual(len(out['packages']), 44)
-        self.assertEqual(out['packages'][0]['name'], 'gbirthday')
+        self.assertEqual(out['packages'][0]['name'], 'ghex')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
             ['creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
-        self.assertEqual(out['packages'][1]['name'], 'gconf-cleaner')
+        self.assertEqual(out['packages'][1]['name'], 'glom')
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
 
@@ -215,12 +215,12 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
 
-        out = self.pkgdb.get_packages('g*', page=2, iterate=False)
+        out = self.pkgdb.get_packages('g*', page=2)
         self.assertEqual(
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
         self.assertEqual(len(out['packages']), 250)
-        self.assertEqual(out['packages'][0]['name'], 'ghasher')
+        self.assertEqual(out['packages'][0]['name'], 'ghex')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
             ['creation_date', 'description', 'name', 'review_url',
@@ -288,7 +288,6 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['Collection "%s" created' % COL_NAME])
-
 
     def test_2_create_package(self):
         ''' Test the create_package function. '''
