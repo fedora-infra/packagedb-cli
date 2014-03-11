@@ -89,6 +89,27 @@ class PkgDB(object):
         self.insecure = insecure
         self.__logged_in = False
 
+    def __send_request(self, url, method, params=None, data=None):
+        ''' Send a http request to the provided URL with the provided
+        method.
+
+        :arg url: the url to query
+        :arg method: the http method to use when querying the url
+        :kwarg params: the arguments to use in the query
+        :kwarg data: the data
+
+        '''
+        req = self.session.request(
+            method=method,
+            url=url,
+            params=params,
+            data=data,
+            verify=not self.insecure,
+        )
+        LOG.debug(
+            'Called: %s with arg: %s and data: %s', req.url, params, data)
+        return req
+
     @property
     def is_logged_in(self):
         ''' Return whether the user if logged in or not. '''
@@ -143,17 +164,19 @@ class PkgDB(object):
         # Contact openid provider
         data['username'] = username
         data['password'] = password
-        response = self.session.post(
-            fedora_openid_api,
-            data,
-            verify=not openid_insecure)
+
+        response = self.__send_request(
+            url=fedora_openid_api,
+            method='POST',
+            data=data)
         output = response.json()
 
         if not output['success']:
             raise PkgDBException(output['message'])
 
-        response = self.session.post(
-            output['response']['openid.return_to'],
+        response = self.__send_request(
+            url=output['response']['openid.return_to'],
+            method='POST',
             data=output['response'])
 
         self.__logged_in = True
@@ -206,12 +229,10 @@ class PkgDB(object):
             'kojiname': kojiname,
         }
 
-        req = self.session.post(
-            '{0}/api/collection/new/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/collection/new/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -275,12 +296,10 @@ class PkgDB(object):
         if critpath:
             args['critpath'] = critpath
 
-        req = self.session.post(
-            '{0}/api/package/new/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/new/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -310,12 +329,10 @@ class PkgDB(object):
             'clt_status': clt_status,
         }
 
-        req = self.session.get(
-            '{0}/api/collections/'.format(self.url),
-            params=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/collections/'.format(self.url),
+            method='GET',
+            params=args)
 
         output = req.json()
 
@@ -344,12 +361,10 @@ class PkgDB(object):
             'branches': branches,
         }
 
-        req = self.session.get(
-            '{0}/api/package/'.format(self.url),
-            params=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/'.format(self.url),
+            method='GET',
+            params=args)
 
         output = req.json()
 
@@ -393,12 +408,10 @@ class PkgDB(object):
             if count is True:
                 args['count'] = count
 
-            req = self.session.get(
-                '{0}/api/packager/acl/'.format(self.url),
-                params=args,
-                verify=not self.insecure,
-            )
-            LOG.debug('Called: %s with arg %s', req.url, args)
+            req = self.__send_request(
+                url='{0}/api/packager/acl/'.format(self.url),
+                method='GET',
+                params=args)
 
             output = req.json()
 
@@ -442,12 +455,10 @@ class PkgDB(object):
             'packagername': packagername,
         }
 
-        req = self.session.get(
-            '{0}/api/packager/stats/'.format(self.url),
-            params=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/packager/stats/'.format(self.url),
+            method='GET',
+            params=args)
 
         output = req.json()
 
@@ -472,12 +483,10 @@ class PkgDB(object):
             'pattern': pattern,
         }
 
-        req = self.session.get(
-            '{0}/api/packagers/'.format(self.url),
-            params=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/packagers/'.format(self.url),
+            method='GET',
+            params=args)
 
         output = req.json()
 
@@ -544,12 +553,10 @@ class PkgDB(object):
             if orphaned is True:
                 args['orphaned'] = orphaned
 
-            req = self.session.get(
-                '{0}/api/packages/'.format(self.url),
-                params=args,
-                verify=not self.insecure,
-            )
-            LOG.debug('Called: %s with arg %s', req.url, args)
+            req = self.__send_request(
+                url='{0}/api/packages/'.format(self.url),
+                method='GET',
+                params=args)
 
             output = req.json()
 
@@ -601,12 +608,10 @@ class PkgDB(object):
             'branches': branches,
         }
 
-        req = self.session.post(
-            '{0}/api/package/orphan/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/orphan/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -641,12 +646,10 @@ class PkgDB(object):
             'branches': branches,
         }
 
-        req = self.session.post(
-            '{0}/api/package/retire/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/retire/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -684,12 +687,10 @@ class PkgDB(object):
             'poc': poc,
         }
 
-        req = self.session.post(
-            '{0}/api/package/unorphan/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/unorphan/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -724,12 +725,10 @@ class PkgDB(object):
             'branches': branches,
         }
 
-        req = self.session.post(
-            '{0}/api/package/unretire/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/unretire/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -776,12 +775,10 @@ class PkgDB(object):
             'user': user,
         }
 
-        req = self.session.post(
-            '{0}/api/package/acl/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/acl/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -816,13 +813,10 @@ class PkgDB(object):
             'clt_status': clt_status,
         }
 
-        req = self.session.post(
-            '{0}/api/collection/{1}/status/'.format(
-                self.url, branch),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/collection/{1}/status/'.format(self.url, branch),
+            method='POST',
+            data=args)
 
         output = req.json()
 
@@ -861,12 +855,10 @@ class PkgDB(object):
             'poc': poc,
         }
 
-        req = self.session.post(
-            '{0}/api/package/acl/reassign/'.format(self.url),
-            data=args,
-            verify=not self.insecure,
-        )
-        LOG.debug('Called: %s with arg %s', req.url, args)
+        req = self.__send_request(
+            url='{0}/api/package/acl/reassign/'.format(self.url),
+            method='POST',
+            data=args)
 
         output = req.json()
 
