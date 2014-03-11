@@ -192,7 +192,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
-        self.assertEqual(len(out['packages']), 44)
+        self.assertTrue(len(out['packages']) >= 44)
         self.assertEqual(out['packages'][0]['name'], 'ghex')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
@@ -232,7 +232,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
-        self.assertEqual(out['packages'], 1351)
+        self.assertTrue(out['packages'] >= 1351)
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
 
