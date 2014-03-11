@@ -17,7 +17,7 @@
 
 import logging
 
-import fedora.client.AuthError
+from fedora.client import AuthError
 import requests
 
 logging.basicConfig()
@@ -35,7 +35,7 @@ class PkgDBException(Exception):
     pass
 
 
-class PkgDBAuthException(PkgDBException, fedora.client.AuthError):
+class PkgDBAuthException(PkgDBException, AuthError):
     ''' Authentication exception raised when trying to call a method that
     requires authentication while not being authenticated.
 
