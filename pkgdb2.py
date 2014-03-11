@@ -794,8 +794,8 @@ class PkgDB(object):
         :arg branch: The branch name of the collection for which to
             update the status
         :type branch: str
-        :arg clt_status: The new status of the collection, options are: ``EOL``,
-            ``Active``, ``Under Development``
+        :arg clt_status: The new status of the collection, options are:
+            ``EOL``, ``Active``, ``Under Development``
         :type clt_status: str
         :return: the json object returned by the API
         :rtype: dict
