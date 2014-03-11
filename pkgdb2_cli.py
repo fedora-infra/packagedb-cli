@@ -374,7 +374,7 @@ def do_acl(args):
 
     if args.branch == 'all':
         args.branch = None
-    output = pkgdbclient.get_package(args.package, branch=args.branch)
+    output = pkgdbclient.get_package(args.package, branches=args.branch)
 
     print 'Fedora Package Database -- {0}'.format(args.package)
     if output['packages']:
