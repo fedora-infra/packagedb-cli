@@ -325,14 +325,14 @@ class PkgDB(object):
 
         return output
 
-    def get_package(self, pkgname, branch=None):
+    def get_package(self, pkgname, branches=None):
         ''' Return the information of a package matching the provided
         criterias.
 
         :arg pkgname: The package name to retrieve information for
         :type pkgname: str
-        :kwarg branch: The branch to retrieve information for
-        :type branch: str
+        :kwarg branches: The branches to retrieve information for
+        :type branch: str or list
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -341,7 +341,7 @@ class PkgDB(object):
         '''
         args = {
             'pkgname': pkgname,
-            'branch': branch,
+            'branches': branches,
         }
 
         req = self.session.get(
