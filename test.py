@@ -106,6 +106,13 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(len(out['acls']), 250)
         self.assertEqual(out['page_total'], 12)
 
+        out = self.pkgdb.get_packager_acls('pingou', acls=['approveacls'])
+        self.assertEqual(
+            sorted(out.keys()),
+            ['acls', 'output', 'page', 'page_total'])
+        self.assertEqual(len(out['acls']), 250)
+        self.assertEqual(out['page_total'], 2)
+
         out = self.pkgdb.get_packager_acls('pingou', page=3)
         self.assertEqual(
             sorted(out.keys()),
