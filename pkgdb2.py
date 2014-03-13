@@ -476,6 +476,11 @@ class PkgDB(object):
     def get_packagers(self, pattern='*'):
         ''' Return the list of packagers matching the provided criterias.
 
+        Only packagers having at least commit right on one package are
+        returned (on the contrary to querying
+        `FAS <https://admin.fedorapoject.org/accounts>`_ for the members of
+        the packager group).
+
         :kwarg pattern: The pattern to query the usernames of the packager
         :type pattern: str
         :return: the json object returned by the API
