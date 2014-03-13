@@ -383,8 +383,8 @@ class PkgDB(object):
             ACLs for
         :type packagername: str
         :kwarg acls: One or more ACL to filter/restrict the ACLs retrieved.
-            Options are: ``Approved``, ``Awaiting Review``, ``Denied``,
-            ``Obsolete``, ``Removed``.
+            Options are: ``approveacls``, ``commit``, ``watchbugzilla``,
+            ``watchcommits``.
         :type acls: str or list or None
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 0.
