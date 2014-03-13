@@ -375,13 +375,17 @@ class PkgDB(object):
         return output
 
     def get_packager_acls(
-            self, packagername, page=1, count=False):
+            self, packagername, acls=None, page=1, count=False):
         ''' Return the list of ACL for the packager matching the provided
         criterias.
 
         :arg packagername: The FAS username of the packager to retrieve the
             ACLs for
         :type packagername: str
+        :kwarg acls: One or more ACL to filter/restrict the ACLs retrieved.
+            Options are: ``Approved``, ``Awaiting Review``, ``Denied``,
+            ``Obsolete``, ``Removed``.
+        :type acls: str or list or None
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 0.
         :type page: int or ``all``
@@ -403,6 +407,7 @@ class PkgDB(object):
             '''
             args = {
                 'packagername': packagername,
+                'acls': acls,
                 'page': page,
             }
             if count is True:
