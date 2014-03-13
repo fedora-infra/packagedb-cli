@@ -449,7 +449,7 @@ class PkgDB(object):
 
         :arg packagername: The FAS username of the user for which to
             retrieve the statistics
-        :type username: str
+        :type packagername: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
