@@ -342,7 +342,7 @@ class PkgDB(object):
 
         return output
 
-    def get_package(self, pkgname, branches=None):
+    def get_package(self, pkgname, branches=None, eol=False):
         ''' Return the information of a package matching the provided
         criterias.
 
@@ -350,6 +350,12 @@ class PkgDB(object):
         :type pkgname: str
         :kwarg branches: The branches to retrieve information for
         :type branch: str or list
+        :kwarg eol: a boolean to specify whether to include results for
+            EOL collections or not. Defaults to ``False``.
+            If True, it will return results for all collections (including
+            EOL).
+            If False, it will return results only for non-EOL collections.
+        :type page: boolean
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -360,6 +366,8 @@ class PkgDB(object):
             'pkgname': pkgname,
             'branches': branches,
         }
+        if eol is True:
+            args['eol'] = eol
 
         req = self.__send_request(
             url='{0}/api/package/'.format(self.url),
@@ -375,9 +383,12 @@ class PkgDB(object):
         return output
 
     def get_packager_acls(
-            self, packagername, acls=None, page=1, count=False):
+            self, packagername, acls=None, eol=False, page=1, count=False):
         ''' Return the list of ACL for the packager matching the provided
         criterias.
+
+        To get information about what packages a user is poc on, you also
+        want to call ``get_packages``.
 
         :arg packagername: The FAS username of the packager to retrieve the
             ACLs for
@@ -386,6 +397,12 @@ class PkgDB(object):
             Options are: ``approveacls``, ``commit``, ``watchbugzilla``,
             ``watchcommits``.
         :type acls: str or list or None
+        :kwarg eol: a boolean to specify whether to include results for
+            EOL collections or not. Defaults to ``False``.
+            If True, it will return results for all collections (including
+            EOL).
+            If False, it will return results only for non-EOL collections.
+        :type page: boolean
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 0.
         :type page: int or ``all``
@@ -412,6 +429,8 @@ class PkgDB(object):
             }
             if count is True:
                 args['count'] = count
+            if eol is True:
+                args['eol'] = eol
 
             req = self.__send_request(
                 url='{0}/api/packager/acl/'.format(self.url),
@@ -508,8 +527,11 @@ class PkgDB(object):
 
     def get_packages(
             self, pattern='*', branches=None, poc=None, status=None,
-            orphaned=False, acls=False, page=1, count=False):
+            orphaned=False, acls=False, eol=False, page=1, count=False):
         ''' Return the list of packages matching the provided criterias.
+
+        To get information about what packages a person has acls on, you
+        also need to call ``get_packager_acls``.
 
         :kwarg pattern: The pattern to match against the name of the
             packages
@@ -530,6 +552,12 @@ class PkgDB(object):
             Beware, this may slow down you call considerably, maybe even
             leading to a timeout
         :type acls: bool
+        :kwarg eol: a boolean to specify whether to include results for
+            EOL collections or not. Defaults to ``False``.
+            If True, it will return results for all collections (including
+            EOL).
+            If False, it will return results only for non-EOL collections.
+        :type page: boolean
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 0.
         :type page: int or ``all``
@@ -562,6 +590,8 @@ class PkgDB(object):
                 args['acls'] = acls
             if orphaned is True:
                 args['orphaned'] = orphaned
+            if eol is True:
+                args['eol'] = eol
 
             req = self.__send_request(
                 url='{0}/api/packages/'.format(self.url),
