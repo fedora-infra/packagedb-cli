@@ -780,7 +780,11 @@ class PkgDB(object):
 
     def update_acl(self, pkgname, branches, acls, status, user):
         ''' Update the specified ACLs, on the specified Branches of the
-        specified package
+        specified package.
+
+        This method can also be used to request or set new ACLs on a
+        package. For example if you want to requrest ACLs on a package or
+        if you want to grant ACLs to someone.
 
         :arg pkgname: The package name of the package whom ACLs to update
         :type pkgname: str
