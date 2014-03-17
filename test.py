@@ -49,7 +49,8 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['collections', 'output'])
 
-        out = self.pkgdb.get_collections(clt_status=['EOL', 'Under Development'])
+        out = self.pkgdb.get_collections(
+            clt_status=['EOL', 'Under Development'])
         self.assertEqual(
             sorted(out.keys()),
             ['collections', 'output'])
@@ -385,7 +386,6 @@ class TestPkgdDBAuth(unittest.TestCase):
 
     def test_7_update_acl(self):
         ''' Test the update_acl function. '''
-
 
         out = self.pkgdb.update_acl(
             'guake', ['devel', 'EL-6'], 'commit', 'Awaiting Review',
