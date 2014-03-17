@@ -383,7 +383,8 @@ class PkgDB(object):
         return output
 
     def get_packager_acls(
-            self, packagername, acls=None, eol=False, page=1, count=False):
+            self, packagername, acls=None, eol=False, poc=None,
+            page=1, count=False):
         ''' Return the list of ACL for the packager matching the provided
         criterias.
 
@@ -403,6 +404,16 @@ class PkgDB(object):
             EOL).
             If False, it will return results only for non-EOL collections.
         :type page: boolean
+        :kwarg poc: a boolean specifying whether the results should be
+            restricted to ACL for which the provided packager is the point
+            of contact or not. Defaults to None.
+            If ``None`` it will not filter the ACLs returned based on the
+            point of contact of the package (thus every packages is returned).
+            If ``True`` it will only return ACLs for packages on which the
+            provided packager is point of contact.
+            If ``False`` it will only return ACLs for packages on which the
+            provided packager is not the point of contact.
+        :type poc: boolean or None
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 0.
         :type page: int or ``all``
@@ -431,6 +442,8 @@ class PkgDB(object):
                 args['count'] = count
             if eol is True:
                 args['eol'] = eol
+            if poc is not None:
+                args['poc'] = poc
 
             req = self.__send_request(
                 url='{0}/api/packager/acl/'.format(self.url),
