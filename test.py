@@ -63,7 +63,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['output', 'packages'])
         self.assertEqual(out['output'], 'ok')
-        self.assertEqual(len(out['packages']), 15)
+        self.assertEqual(len(out['packages']), 4)
         self.assertEqual(
             out['packages'][0]['collection']['branchname'], 'devel')
         self.assertEqual(
@@ -105,21 +105,42 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
         self.assertEqual(len(out['acls']), 250)
-        self.assertEqual(out['page_total'], 12)
+        self.assertEqual(out['page_total'], 5)
 
         out = self.pkgdb.get_packager_acls('pingou', acls=['approveacls'])
         self.assertEqual(
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
-        self.assertEqual(len(out['acls']), 250)
-        self.assertEqual(out['page_total'], 2)
+        self.assertEqual(len(out['acls']), 237)
+        self.assertEqual(out['page_total'], 1)
 
         out = self.pkgdb.get_packager_acls('pingou', page=3)
         self.assertEqual(
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
         self.assertEqual(len(out['acls']), 250)
-        self.assertEqual(out['page_total'], 12)
+        self.assertEqual(out['page_total'], 5)
+
+        out = self.pkgdb.get_packager_acls('pingou', count=True)
+        self.assertEqual(
+            sorted(out.keys()),
+            ['acls_count', 'output', 'page', 'page_total'])
+        self.assertEqual(out['acls_count'], 1035)
+        self.assertEqual(out['page_total'], 1)
+
+        out = self.pkgdb.get_packager_acls('pingou', poc=True, count=True)
+        self.assertEqual(
+            sorted(out.keys()),
+            ['acls_count', 'output', 'page', 'page_total'])
+        self.assertEqual(out['acls_count'], 800)
+        self.assertEqual(out['page_total'], 1)
+
+        out = self.pkgdb.get_packager_acls('pingou', poc=False, count=True)
+        self.assertEqual(
+            sorted(out.keys()),
+            ['acls_count', 'output', 'page', 'page_total'])
+        self.assertEqual(out['acls_count'], 235)
+        self.assertEqual(out['page_total'], 1)
 
     def test_get_packager_stats(self):
         ''' Test the get_packager_stats function. '''
