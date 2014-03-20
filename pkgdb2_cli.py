@@ -353,7 +353,7 @@ def setup_parser():
 
     ## Collections
     parser_branch = subparsers.add_parser(
-        'branch',
+        'branches',
         help='List the active branches')
     parser_branch.add_argument(
         '--all', action="store_true", default=False,
