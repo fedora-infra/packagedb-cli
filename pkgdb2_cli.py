@@ -619,7 +619,7 @@ def do_branch(args):
         branches = pkgdbclient.get_collections()
     else:
         branches = pkgdbclient.get_collections(
-            status='Active,Under Development')
+            clt_status=['Active', 'Under Development'])
     cnt = 0
     for pkg in branches['collections']:
         name = '{0} {1}'.format(pkg['name'], pkg['version'])
