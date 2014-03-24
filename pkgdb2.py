@@ -66,15 +66,12 @@ class PkgDB(object):
 
     '''
 
-    def __init__(self, url=PKGDB_URL, username=None, insecure=False):
+    def __init__(self, url=PKGDB_URL, insecure=False):
         ''' Constructor for the PkgDB object used to query the package
         database.
 
         :kwarg url: the basic url to the package DB instance to query
         :type url: str
-        :kwarg username: the FAS username of the user performing the
-            actions
-        :type username: str or None
         :kwarg insecure: If :data:`True` then the connection to the server
             is not checked to be sure that any SSL certificate information
             is valid.  That means that a remote host can lie about who it
@@ -85,7 +82,6 @@ class PkgDB(object):
         '''
         self.url = url
         self.session = requests.session()
-        self.username = username
         self.insecure = insecure
         self.__logged_in = False
 
