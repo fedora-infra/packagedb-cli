@@ -3,16 +3,24 @@
 Setup script
 """
 
-from distutils.core import setup
+from setuptools import setup
+
+from pkgdb2 import __version__
 
 setup(
-    name = 'packagedb-cli',
-    description = 'A command line tool to access the Fedora Package Database.',
-    version = '1.7.0',
-    license = 'GPLv2+',
-    download_url = 'https://fedorahosted.org/releases/p/a/packagedb-cli/',
-    url = 'https://fedorahosted.org/packagedb-cli/',
-    scripts=['pkgdb-cli'],
+    name='packagedb-cli',
+    description='A command line tool to access the Fedora Package Database.',
+    version=__version__,
+    license='GPLv2+',
+    download_url='https://fedorahosted.org/releases/p/a/packagedb-cli/',
+    url='https://fedorahosted.org/packagedb-cli/',
     author='Pierre-Yves Chibon',
     author_email='pingou@pingoured.fr',
-    )
+    py_modules=['pkgdb2', 'pkgdb2_cli'],
+    entry_points={
+        'console_scripts': [
+            "pkgdb-cli=pkgdb2_cli:main",
+        ]
+    },
+    install_requires=['requests', 'python-bugzilla', 'python-fedora']
+)

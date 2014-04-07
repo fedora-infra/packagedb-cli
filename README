@@ -4,8 +4,8 @@ Fedora PackageDB-cli
 
 :Author: Pierre-Yves Chibon
 :Contact: pingou@fedoraproject.org
-:Date: Thu Sep 05, 2013
-:Version: 1.6.0
+:Date: Thu Mar 06, 2014
+:Version: 2.0
 
 The `PackageDB-cli` is a commande line interface to the PackageDB of Fedora.
 
@@ -21,6 +21,11 @@ interface web free interface.
 
 .. _`PackageDB-cli`: https://fedorahosted.org/packagedb-cli
 
+As of 2014, this project has been ported to
+`pkgdb2 <https://github.com/fedora-infra/pkgdb2>`_. At this occasion, it is
+has been re-written to propose a python module to query pkgdb2 API as well
+as a pkgdb2_cli module in case someone ever wants to re-use it.
+
 ------------
 Installation
 ------------
@@ -31,10 +36,11 @@ Install Prerequisites
 ::
   yum install python-fedora
 
+
 Get and Run the Source
 ~~~~~~~~~~~~~~~~~~~~~~~~
 ::
   git clone http://git.fedorahosted.org/git/packagedb-cli.git
   cd packagedb-cli
-  python pkgdb.py
+  python pkgdb2_cli.py
 
