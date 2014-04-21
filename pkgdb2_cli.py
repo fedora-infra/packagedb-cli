@@ -17,7 +17,7 @@
 
 from fedora.client import (AccountSystem, AppError, ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb2 import PkgDB, PkgDBException, __version__
+from pkgdb2client import PkgDB, PkgDBException, __version__
 import argparse
 import logging
 import getpass
@@ -36,7 +36,7 @@ RESET = "\033[0;0m"
 
 # Initial simple logging stuff
 logging.basicConfig()
-PKGDBLOG = logging.getLogger("pkgdb")
+PKGDBLOG = logging.getLogger("pkgdb2client")
 LOG = logging.getLogger("pkgdb-cli")
 
 ACTIONLIST = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
