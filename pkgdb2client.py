@@ -160,6 +160,8 @@ class PkgDB(object):
         # Contact openid provider
         data['username'] = username
         data['password'] = password
+        # Let's precise to FedOAuth that we want to authenticate with FAS
+        data['auth_module'] = 'fedoauth.auth.fas.Auth_FAS'
 
         response = self.__send_request(
             url=fedora_openid_api,
