@@ -343,52 +343,15 @@ class PkgDB(object):
             200.
 
         '''
-        def _get_pages(page):
-            ''' Retrieve a specified page of the packages list.
-
-            :arg page: the page number to retrieve
-
-            '''
-            args = {
-                'pattern': pattern,
-                'branches': branches,
-                'status': 'Approved',
-                'page': page,
-            }
-            if count is True:
-                args['count'] = count
-            if acls is True:
-                args['acls'] = acls
-
-            req = self.__send_request(
-                url='{0}/api/packages/'.format(self.url),
-                method='GET',
-                params=args)
-
-            output = req.json()
-
-            if req.status_code != 200:
-                LOG.debug('full output %s', output)
-                raise PkgDBException(output['error'])
-
-            return output
-
-        if page == 'all':
-            page = 0
-
-        if count:
-            page = 1
-
-        if page < 1:
-            output = _get_pages(1)
-            total = output['page_total']
-            for i in range(2, total + 1):
-                data = _get_pages(i)
-                output['packages'].extend(data['packages'])
-        else:
-            output = _get_pages(page)
-
-        return output
+        return self.get_packages(
+            pattern=pattern,
+            branches=branches,
+            critpath=True,
+            status=status,
+            acls=acls,
+            page=page,
+            count=count,
+        )
 
     def get_collections(self, pattern='*', clt_status=None):
         ''' Return the list of collections matching the provided criterias.
