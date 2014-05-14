@@ -307,6 +307,89 @@ class PkgDB(object):
 
         return output
 
+    def get_critpath_packages(
+            self, pattern='*', branches=None, status='Approved', acls=False,
+            page=1, count=False):
+        ''' Return the list of packages matching the provided criterias
+        in the critical path.
+
+        To get information about what packages a person has acls on, you
+        also need to call ``get_packager_acls``.
+
+        :kwarg pattern: The pattern to match against the name of the
+            packages
+        :type pattern: str
+        :kwarg branches: One or more branches to restrict the packages
+            returned
+        :type branches: str or list or None
+        :kwarg status: The status of the package to filter the packages
+            returned, options are: ``Approved``, ``Orphaned``, ``Removed``,
+            ``Retired``. Defaults to ``Approved``.
+        :type status: str or list or None
+        :kwarg acls: A boolean to return the package ACLs in the output.
+            Beware, this may slow down you call considerably, maybe even
+            leading to a timeout
+        :type acls: bool
+        :kwarg page: The page number to retrieve. If page is 0 or lower or
+            equal to ``all`` then all pages are returned. Defaults to 0.
+        :type page: int or ``all``
+        :kwarg count: A boolean to retrieve the count of ACLs the user has
+            instead of the details. If count is True the page argument will
+            be ignored
+        :type count: bool
+        :return: the json object returned by the API
+        :rtype: dict
+        :raise PkgDBException: if the API call does not return a http code
+            200.
+
+        '''
+        def _get_pages(page):
+            ''' Retrieve a specified page of the packages list.
+
+            :arg page: the page number to retrieve
+
+            '''
+            args = {
+                'pattern': pattern,
+                'branches': branches,
+                'status': 'Approved',
+                'page': page,
+            }
+            if count is True:
+                args['count'] = count
+            if acls is True:
+                args['acls'] = acls
+
+            req = self.__send_request(
+                url='{0}/api/packages/'.format(self.url),
+                method='GET',
+                params=args)
+
+            output = req.json()
+
+            if req.status_code != 200:
+                LOG.debug('full output %s', output)
+                raise PkgDBException(output['error'])
+
+            return output
+
+        if page == 'all':
+            page = 0
+
+        if count:
+            page = 1
+
+        if page < 1:
+            output = _get_pages(1)
+            total = output['page_total']
+            for i in range(2, total + 1):
+                data = _get_pages(i)
+                output['packages'].extend(data['packages'])
+        else:
+            output = _get_pages(page)
+
+        return output
+
     def get_collections(self, pattern='*', clt_status=None):
         ''' Return the list of collections matching the provided criterias.
 
