@@ -28,7 +28,7 @@ import fedora_cert
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
-pkgdbclient = PkgDB('https://admins.fedoraproject.org/pkgdb')
+pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb')
 fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 BOLD = "\033[1m"
 RED = "\033[0;31m"
