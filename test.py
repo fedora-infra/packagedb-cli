@@ -9,7 +9,7 @@ import uuid
 
 import fedora_cert
 
-from pkgdb2 import PkgDB, PkgDBException
+from pkgdb2client import PkgDB, PkgDBException
 
 
 PKGDB_URL = 'http://127.0.0.1:5000'
@@ -65,7 +65,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['output'], 'ok')
         self.assertEqual(len(out['packages']), 4)
         self.assertEqual(
-            out['packages'][0]['collection']['branchname'], 'devel')
+            out['packages'][0]['collection']['branchname'], 'master')
         self.assertEqual(
             out['packages'][0]['package']['name'], 'guake')
         self.assertEqual(
@@ -111,7 +111,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
-        self.assertEqual(len(out['acls']), 237)
+        self.assertEqual(len(out['acls']), 239)
         self.assertEqual(out['page_total'], 1)
 
         out = self.pkgdb.get_packager_acls('pingou', page=3)
@@ -125,21 +125,21 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['acls_count', 'output', 'page', 'page_total'])
-        self.assertEqual(out['acls_count'], 1035)
+        self.assertEqual(out['acls_count'], 1043)
         self.assertEqual(out['page_total'], 1)
 
         out = self.pkgdb.get_packager_acls('pingou', poc=True, count=True)
         self.assertEqual(
             sorted(out.keys()),
             ['acls_count', 'output', 'page', 'page_total'])
-        self.assertEqual(out['acls_count'], 800)
+        self.assertEqual(out['acls_count'], 804)
         self.assertEqual(out['page_total'], 1)
 
         out = self.pkgdb.get_packager_acls('pingou', poc=False, count=True)
         self.assertEqual(
             sorted(out.keys()),
             ['acls_count', 'output', 'page', 'page_total'])
-        self.assertEqual(out['acls_count'], 235)
+        self.assertEqual(out['acls_count'], 239)
         self.assertEqual(out['page_total'], 1)
 
     def test_get_packager_stats(self):
@@ -147,11 +147,11 @@ class TestPkgdDB(unittest.TestCase):
         out = self.pkgdb.get_packager_stats('pingou')
         self.assertEqual(
             sorted(out.keys()),
-            ['EL-5', 'EL-6', 'devel', 'epel7', 'f19', 'f20', 'output'])
+            ['el5', 'el6', 'epel7', 'f19', 'f20', 'master', 'output'])
         self.assertEqual(
-            sorted(out['devel'].keys()),
+            sorted(out['master'].keys()),
             ['co-maintainer', 'point of contact'])
-        self.assertTrue(out['devel']['point of contact'] >= 60)
+        self.assertTrue(out['master']['point of contact'] >= 60)
 
     def test_get_packagers(self):
         ''' Test the get_packagers function. '''
@@ -177,7 +177,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
 
-        out = self.pkgdb.get_packages('gua*', branches='EL-6')
+        out = self.pkgdb.get_packages('gua*', branches='el6')
         self.assertEqual(
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
@@ -249,7 +249,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['output', 'packages', 'page', 'page_total'])
         self.assertEqual(len(out['packages']), 250)
-        self.assertEqual(out['packages'][0]['name'], 'ghex')
+        self.assertEqual(out['packages'][0]['name'], 'ghc-parameterized-data')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
             ['creation_date', 'description', 'name', 'review_url',
@@ -345,7 +345,7 @@ class TestPkgdDBAuth(unittest.TestCase):
     def test_3_orphan_packages(self):
         ''' Test the orphan_packages function. '''
 
-        out = self.pkgdb.orphan_packages('guake', ['devel', 'EL-6'])
+        out = self.pkgdb.orphan_packages('guake', ['master', 'el6'])
 
         self.assertEqual(
             sorted(out.keys()),
@@ -355,15 +355,15 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['user: pingou changed poc of package: guake from: pingou '
-             'to: orphan on branch: devel',
+             'to: orphan on branch: master',
              'user: pingou changed poc of package: guake from: pingou '
-             'to: orphan on branch: EL-6'])
+             'to: orphan on branch: el6'])
 
     def test_4_unorphan_packages(self):
         ''' Test the unorphan_packages function. '''
 
         out = self.pkgdb.unorphan_packages(
-            'guake', ['devel', 'EL-6'], 'pingou')
+            'guake', ['master', 'el6'], 'pingou')
 
         self.assertEqual(
             sorted(out.keys()),
@@ -372,13 +372,13 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(out['output'], 'ok')
         self.assertEqual(
             out['messages'],
-            ['Package guake has been unorphaned on devel by pingou',
-             'Package guake has been unorphaned on EL-6 by pingou'])
+            ['Package guake has been unorphaned on master by pingou',
+             'Package guake has been unorphaned on el6 by pingou'])
 
     def test_5_retire_packages(self):
         ''' Test the retire_packages function. '''
 
-        out = self.pkgdb.retire_packages('guake', 'devel')
+        out = self.pkgdb.retire_packages('guake', 'master')
 
         self.assertEqual(
             sorted(out.keys()),
@@ -388,12 +388,12 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['user: pingou updated package: guake status from: Approved to '
-             'Retired on branch: devel'])
+             'Retired on branch: master'])
 
     def test_6_unretire_packages(self):
         ''' Test the unretire_packages function. '''
 
-        out = self.pkgdb.unretire_packages('guake', 'devel')
+        out = self.pkgdb.unretire_packages('guake', 'master')
 
         self.assertEqual(
             sorted(out.keys()),
@@ -403,14 +403,14 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['user: pingou updated package: guake status from: Retired to '
-             'Approved on branch: devel'])
+             'Approved on branch: master'])
 
     def test_7_update_acl(self):
         ''' Test the update_acl function. '''
 
         out = self.pkgdb.update_acl(
-            'guake', ['devel', 'EL-6'], 'commit', 'Awaiting Review',
-            'Ralph')
+            'guake', ['master', 'el6'], 'commit', 'Awaiting Review',
+            'ralph')
 
         self.assertEqual(
             sorted(out.keys()),
@@ -420,9 +420,9 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['user: pingou set acl: commit of package: guake from: '
-             'Awaiting Review to: Awaiting Review on branch: devel',
+             'Awaiting Review to: Awaiting Review on branch: master',
              'user: pingou set acl: commit of package: guake from: '
-             'Awaiting Review to: Awaiting Review on branch: EL-6'])
+             'Awaiting Review to: Awaiting Review on branch: el6'])
 
     def test_8_update_collection_status(self):
         ''' Test the update_collection_status function. '''
@@ -442,7 +442,7 @@ class TestPkgdDBAuth(unittest.TestCase):
         ''' Test the update_package_poc function. '''
 
         out = self.pkgdb.update_package_poc(
-            'guake', ['devel', 'EL-6'], 'ralph')
+            'guake', ['master', 'el6'], 'ralph')
 
         self.assertEqual(
             sorted(out.keys()),
@@ -452,12 +452,12 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['user: pingou changed poc of package: guake from: orphan to: '
-             'ralph on branch: devel',
+             'ralph on branch: master',
              'user: pingou changed poc of package: guake from: pingou to: '
-             'ralph on branch: EL-6'])
+             'ralph on branch: el6'])
 
         out = self.pkgdb.update_package_poc(
-            'guake', ['devel', 'EL-6'], 'pingou')
+            'guake', ['master', 'el6'], 'pingou')
 
         self.assertEqual(
             sorted(out.keys()),
@@ -467,9 +467,9 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.assertEqual(
             out['messages'],
             ['user: pingou changed poc of package: guake from: ralph to: '
-             'pingou on branch: devel',
+             'pingou on branch: master',
              'user: pingou changed poc of package: guake from: ralph to: '
-             'pingou on branch: EL-6'])
+             'pingou on branch: el6'])
 
 
 def suite():
