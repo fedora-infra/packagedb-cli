@@ -654,10 +654,13 @@ def main():
         LOG.setLevel(logging.INFO)
 
     if arg.test:
-        global fasclient
+        global fasclient, pkgdbclient
         print "Testing environment"
         fasclient = AccountSystem(
             'https://admin.stg.fedoraproject.org/accounts',
+            insecure=True)
+        pkgdbclient = PkgDB(
+            'https://admin.stg.fedoraproject.org/pkgdb',
             insecure=True)
 
     return_code = 0
