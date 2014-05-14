@@ -621,7 +621,8 @@ class PkgDB(object):
 
     def get_packages(
             self, pattern='*', branches=None, poc=None, status=None,
-            orphaned=False, acls=False, eol=False, page=1, count=False):
+            orphaned=False, critpath=None, acls=False, eol=False,
+            page=1, count=False):
         ''' Return the list of packages matching the provided criterias.
 
         To get information about what packages a person has acls on, you
@@ -642,6 +643,10 @@ class PkgDB(object):
         :type status: str or list or None
         :kwarg orphaned: A boolean to returned only orphaned packages
         :type orphaned: bool
+        :kwarg critpath: A boolean to returned only packages in the critical
+            path. Can be ``True``, ``False`` or ``None``.
+            Defaults to ``None``.
+        :type critpath: bool
         :kwarg acls: A boolean to return the package ACLs in the output.
             Beware, this may slow down you call considerably, maybe even
             leading to a timeout
@@ -684,6 +689,10 @@ class PkgDB(object):
                 args['acls'] = acls
             if orphaned is True:
                 args['orphaned'] = orphaned
+            if critpath is True:
+                args['critpath'] = 1
+            elif critpath is False:
+                args['critpath'] = 0
             if eol is True:
                 args['eol'] = eol
 
