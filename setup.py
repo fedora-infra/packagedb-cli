@@ -22,5 +22,15 @@ setup(
             "pkgdb-cli=pkgdb2_cli:main",
         ]
     },
-    install_requires=['requests', 'python-bugzilla', 'python-fedora']
+    install_requires=['requests', 'python-bugzilla', 'python-fedora'],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Software Development :: Libraries',
+    ],
 )
