@@ -170,7 +170,7 @@ def get_last_build(packagename, tag):
     LOG.debug("Retrieve the last for {0} in {1}".format(packagename, tag))
     # Add build information from koji
     # for updates and updates-testing
-    if tag == 'devel':
+    if tag == 'master':
         tag = 'rawhide'
     if "f" in tag:
         tag = tag + "-updates"
@@ -220,8 +220,8 @@ def setup_parser():
         help='Request acl for a given package')
     parser_acl.add_argument('package', help="Name of the package to query")
     parser_acl.add_argument(
-        'branch', default='devel', nargs="?",
-        help="Branch of the package to query (default: 'devel', can be: "
+        'branch', default='master', nargs="?",
+        help="Branch of the package to query (default: 'master', can be: "
         "'all')")
     parser_acl.add_argument(
         '--pending', action="store_true", default=False,
@@ -272,8 +272,8 @@ def setup_parser():
         'package',
         help="Name of the package to orphan or simple pattern")
     parser_orphan.add_argument(
-        'branch', default='devel', nargs="?",
-        help="Branch of the package to orphan (default: 'devel', can be: "
+        'branch', default='master', nargs="?",
+        help="Branch of the package to orphan (default: 'master', can be: "
         "'all')")
     parser_orphan.add_argument(
         '--retire', action="store_true", default=False,
@@ -291,9 +291,9 @@ def setup_parser():
         'package',
         help="Name of the package to unorphan")
     parser_unorphan.add_argument(
-        'branch', default='devel', nargs="?",
+        'branch', default='master', nargs="?",
         help="Branch of the package to unorphan "
-        "(default: 'devel', can be: 'all')")
+        "(default: 'master', can be: 'all')")
     parser_unorphan.add_argument(
         '--all', action="store_true", default=False,
         help="Unorphan all your packages")
@@ -320,9 +320,9 @@ def setup_parser():
         " package (actions are '{0}', 'all')".format(
             "', '".join(ACTIONLIST)))
     parser_request.add_argument(
-        'branch', default='devel', nargs="?",
+        'branch', default='master', nargs="?",
         help="Branch of the package for which the ACL is "
-        "requested (default: 'devel', can be: 'all')")
+        "requested (default: 'master', can be: 'all')")
     parser_request.set_defaults(func=do_request)
 
     ## Update
@@ -340,9 +340,9 @@ def setup_parser():
         help="FAS username of the person who requested ACL "
         "on this package")
     parser_update.add_argument(
-        'branch', default='devel', nargs="?",
+        'branch', default='master', nargs="?",
         help="Branch of the package for which the ACL is "
-        "requested (default: 'devel', can be: 'all')")
+        "requested (default: 'master', can be: 'all')")
     parser_update.add_argument(
         '--approve', action="store_true", default=False,
         help="Approve the requested ACL")
