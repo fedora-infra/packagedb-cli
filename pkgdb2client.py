@@ -95,6 +95,8 @@ class PkgDB(object):
         :kwarg data: the data
 
         '''
+        LOG.debug(
+            'Calling: %s with arg: %s and data: %s', url, params, data)
         req = self.session.request(
             method=method,
             url=url,
@@ -102,8 +104,6 @@ class PkgDB(object):
             data=data,
             verify=not self.insecure,
         )
-        LOG.debug(
-            'Called: %s with arg: %s and data: %s', req.url, params, data)
         return req
 
     @property
