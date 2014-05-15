@@ -423,7 +423,7 @@ def do_acl(args):
                     aclout = acls[user][acl_title]
                     tmp = tmp + aclout + " " * (16 - len(aclout))
                 else:
-                    tmp = tmp + aclout + " " * 8
+                    tmp = tmp + " " * 16
             if tmp is not None and tmp.strip() != "":
                 print tmp
 
