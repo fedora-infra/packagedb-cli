@@ -307,51 +307,53 @@ class PkgDB(object):
 
         return output
 
-    def get_critpath_packages(
-            self, pattern='*', branches=None, status='Approved', acls=False,
-            page=1, count=False):
-        ''' Return the list of packages matching the provided criterias
-        in the critical path.
+    def get_critpath_packages(self, branches=None, **kwargs):
+        ''' Return the list of package names in the critical path.
 
-        To get information about what packages a person has acls on, you
-        also need to call ``get_packager_acls``.
+        To get information about the ACL on the package, you
+        also need to call ``get_package``.
 
-        :kwarg pattern: The pattern to match against the name of the
-            packages
-        :type pattern: str
         :kwarg branches: One or more branches to restrict the packages
             returned
         :type branches: str or list or None
-        :kwarg status: The status of the package to filter the packages
-            returned, options are: ``Approved``, ``Orphaned``, ``Removed``,
-            ``Retired``. Defaults to ``Approved``.
-        :type status: str or list or None
-        :kwarg acls: A boolean to return the package ACLs in the output.
-            Beware, this may slow down you call considerably, maybe even
-            leading to a timeout
-        :type acls: bool
-        :kwarg page: The page number to retrieve. If page is 0 or lower or
-            equal to ``all`` then all pages are returned. Defaults to 0.
-        :type page: int or ``all``
-        :kwarg count: A boolean to retrieve the count of ACLs the user has
-            instead of the details. If count is True the page argument will
-            be ignored
-        :type count: bool
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
             200.
 
+        Example of json returned
+
+        ::
+
+            {
+              "pkgs": {
+                "master": [
+                  "rsyslog",
+                  "pth",
+                  "xorg-x11-server-utils",
+                  "giflib"
+                ]
+              }
+            }
+
         '''
-        return self.get_packages(
-            pattern=pattern,
-            branches=branches,
-            critpath=True,
-            status=status,
-            acls=acls,
-            page=page,
-            count=count,
-        )
+        args = {
+            'branches': branches,
+            'format': 'json',
+        }
+
+        req = self.__send_request(
+            url='{0}/api/critpath/'.format(self.url),
+            method='GET',
+            params=args)
+
+        output = req.json()
+
+        if req.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
 
     def get_collections(self, pattern='*', clt_status=None):
         ''' Return the list of collections matching the provided criterias.
