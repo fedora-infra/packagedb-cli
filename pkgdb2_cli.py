@@ -414,7 +414,10 @@ def do_acl(args):
         print "{0}ACLs:".format(" " * 8)
         acls = _get_acls_info(pkg['acls'])
         for user in acls:
-            tmp = " " * 10 + user
+            if user.startswith('group::'):
+                tmp = " " * 3 + user
+            else:
+                tmp = " " * 10 + user
             tmp = tmp + " " * (24 - len(tmp))
             for acl_title in ["watchbugzilla", "watchcommits",
                               "commit", "approveacls"]:
