@@ -23,7 +23,7 @@ import requests
 logging.basicConfig()
 LOG = logging.getLogger("pkgdb2client")
 
-__version__ = '2.1'
+__version__ = '2.2'
 PKGDB_URL = r'https://admin.fedoraproject.org/pkgdb/'
 
 
