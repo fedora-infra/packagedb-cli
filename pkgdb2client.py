@@ -401,7 +401,7 @@ class PkgDB(object):
             If True, it will return results for all collections (including
             EOL).
             If False, it will return results only for non-EOL collections.
-        :type page: boolean
+        :type eol: boolean
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -449,7 +449,7 @@ class PkgDB(object):
             If True, it will return results for all collections (including
             EOL).
             If False, it will return results only for non-EOL collections.
-        :type page: boolean
+        :type eol: boolean
         :kwarg poc: a boolean specifying whether the results should be
             restricted to ACL for which the provided packager is the point
             of contact or not. Defaults to None.
@@ -621,7 +621,7 @@ class PkgDB(object):
             If True, it will return results for all collections (including
             EOL).
             If False, it will return results only for non-EOL collections.
-        :type page: boolean
+        :type eol: boolean
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 0.
         :type page: int or ``all``
