@@ -387,7 +387,9 @@ def do_acl(args):
                  'component': args.package})
             print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
 
-    for pkg in output['packages']:
+    for pkg in sorted(output['packages'],
+            key=lambda pkg: pkg['collection']['branchname'],
+            reverse=True):
         if pkg['collection']['status'] == 'EOL':
             continue
         owner = pkg['point_of_contact']
