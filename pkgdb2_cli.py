@@ -415,7 +415,8 @@ def do_acl(args):
         # print ACL information
         print "{0}ACLs:".format(" " * 8)
         acls = _get_acls_info(pkg['acls'])
-        for user in acls:
+        users = sorted(acls, key=lambda user: user.replace('group::', ''))
+        for user in users:
             if user.startswith('group::'):
                 tmp = " " * 3 + user
             else:
