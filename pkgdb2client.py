@@ -20,10 +20,12 @@ import logging
 from fedora.client import AuthError
 import requests
 
+import pkgdb2version
+
 logging.basicConfig()
 LOG = logging.getLogger("pkgdb2client")
 
-__version__ = '2.2'
+__version__ = pkgdb2version.__version__
 PKGDB_URL = r'https://admin.fedoraproject.org/pkgdb/'
 
 
