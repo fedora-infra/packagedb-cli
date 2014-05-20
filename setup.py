@@ -5,12 +5,10 @@ Setup script
 
 from setuptools import setup
 
-from pkgdb2version import __version__
-
 setup(
     name='packagedb-cli',
     description='A command line tool to access the Fedora Package Database.',
-    version=__version__,
+    version='2.2',
     license='GPLv2+',
     download_url='https://fedorahosted.org/releases/p/a/packagedb-cli/',
     url='https://fedorahosted.org/packagedb-cli/',

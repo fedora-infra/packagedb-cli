@@ -16,16 +16,16 @@
 """
 
 import logging
+import pkg_resources
 
 from fedora.client import AuthError
 import requests
 
-import pkgdb2version
 
 logging.basicConfig()
 LOG = logging.getLogger("pkgdb2client")
 
-__version__ = pkgdb2version.__version__
+__version__ = pkg_resources.get_distribution('packagedb-cli').version
 PKGDB_URL = r'https://admin.fedoraproject.org/pkgdb/'
 
 
