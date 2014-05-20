@@ -31,11 +31,9 @@ VERSION = time.mktime(datetime.datetime.utcnow().timetuple())
 
 def auth_only(function):
     """ Decorator to skip tests if AUTH is set to False """
-    #global AUTH
     @wraps(function)
     def decorated_function(*args, **kwargs):
         """ Decorated function, actually does the work. """
-        #global AUTH
         if AUTH:
             return function(*args, **kwargs)
         else:
@@ -100,9 +98,6 @@ class TestPkgdDB(unittest.TestCase):
             out['packages'][0]['collection']['branchname'], 'f20')
         self.assertEqual(
             out['packages'][0]['package']['name'], 'guake')
-        #self.assertEqual(
-            #out['packages'][0]['point_of_contact'], 'pingou')
-
         out = self.pkgdb.get_package('guake', ['f20', 'f19'])
         self.assertEqual(
             sorted(out.keys()),
@@ -117,8 +112,6 @@ class TestPkgdDB(unittest.TestCase):
             out['packages'][0]['package']['name'], 'guake')
         self.assertEqual(
             out['packages'][1]['package']['name'], 'guake')
-        #self.assertEqual(
-            #out['packages'][0]['point_of_contact'], 'pingou')
 
     def test_get_packager_acls(self):
         ''' Test the get_packager_acls function. '''
