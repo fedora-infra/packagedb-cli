@@ -7,22 +7,41 @@ import time
 import unittest
 import uuid
 
+from functools import wraps
+
 import fedora_cert
 
 from pkgdb2client import PkgDB, PkgDBException
 
 
 PKGDB_URL = 'http://127.0.0.1:5000'
+AUTH = True
 
-try:
-    USERNAME = fedora_cert.read_user_cert()
-except:
-    USERNAME = raw_input('FAS username: ')
-PASSWORD = getpass.getpass('FAS password: ')
+if AUTH:
+    try:
+        USERNAME = fedora_cert.read_user_cert()
+    except:
+        USERNAME = raw_input('FAS username: ')
+    PASSWORD = getpass.getpass('FAS password: ')
 
 COL_NAME = str(uuid.uuid1())[:30]
 PKG_NAME = str(uuid.uuid1())[:30]
 VERSION = time.mktime(datetime.datetime.utcnow().timetuple())
+
+
+def auth_only(function):
+    """ Decorator to skip tests if AUTH is set to False """
+    #global AUTH
+    @wraps(function)
+    def decorated_function(*args, **kwargs):
+        """ Decorated function, actually does the work. """
+        #global AUTH
+        if AUTH:
+            return function(*args, **kwargs)
+        else:
+            return 'Skipped'
+
+    return decorated_function
 
 
 class TestPkgdDB(unittest.TestCase):
@@ -272,6 +291,7 @@ class TestPkgdDB(unittest.TestCase):
 class TestPkgdDBAuth(unittest.TestCase):
     ''' Authenticated pkgdb2 tests. '''
 
+    @auth_only
     def setUp(self):
         """ set up data used in the tests.
         setUp is called before each test function execution.
@@ -279,6 +299,7 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.pkgdb = PkgDB(PKGDB_URL, insecure=True)
         self.pkgdb.login(USERNAME, PASSWORD)
 
+    @auth_only
     def test_1_create_collection(self):
         ''' Test the create_collection function. '''
         out = self.pkgdb.create_collection(
@@ -321,6 +342,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             out['messages'],
             ['Collection "%s" created' % COL_NAME])
 
+    @auth_only
     def test_2_create_package(self):
         ''' Test the create_package function. '''
 
@@ -345,6 +367,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             out['messages'],
             ['Package created'])
 
+    @auth_only
     def test_3_orphan_packages(self):
         ''' Test the orphan_packages function. '''
 
@@ -362,6 +385,7 @@ class TestPkgdDBAuth(unittest.TestCase):
              'user: pingou changed point of contact of package: guake from: '
              'pingou to: orphan on branch: el6'])
 
+    @auth_only
     def test_4_unorphan_packages(self):
         ''' Test the unorphan_packages function. '''
 
@@ -378,6 +402,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['Package guake has been unorphaned on master by pingou',
              'Package guake has been unorphaned on el6 by pingou'])
 
+    @auth_only
     def test_5_retire_packages(self):
         ''' Test the retire_packages function. '''
 
@@ -393,6 +418,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['user: pingou updated package: guake status from: Approved to '
              'Retired on branch: master'])
 
+    @auth_only
     def test_6_unretire_packages(self):
         ''' Test the unretire_packages function. '''
 
@@ -408,6 +434,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['user: pingou updated package: guake status from: Retired to '
              'Approved on branch: master'])
 
+    @auth_only
     def test_7_update_acl(self):
         ''' Test the update_acl function. '''
 
@@ -425,6 +452,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['Nothing to update on branch: master for acl: commit',
              'Nothing to update on branch: el6 for acl: commit'])
 
+    @auth_only
     def test_8_update_collection_status(self):
         ''' Test the update_collection_status function. '''
 
@@ -439,8 +467,10 @@ class TestPkgdDBAuth(unittest.TestCase):
             out['messages'],
             ['Collection updated from "Active" to "EOL"'])
 
+    @auth_only
     def test_9_update_package_poc(self):
         ''' Test the update_package_poc function. '''
+
 
         out = self.pkgdb.update_package_poc(
             'guake', ['master', 'el6'], 'ralph')
