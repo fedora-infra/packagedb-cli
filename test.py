@@ -464,7 +464,6 @@ class TestPkgdDBAuth(unittest.TestCase):
     def test_9_update_package_poc(self):
         ''' Test the update_package_poc function. '''
 
-
         out = self.pkgdb.update_package_poc(
             'guake', ['master', 'el6'], 'ralph')
 
