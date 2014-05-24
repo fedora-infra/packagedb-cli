@@ -61,14 +61,15 @@ def __do_login(username=None, password=None):
     if pkgdbclient.is_logged_in:
         return
     else:
-        if username is None:
+        if username is None and pkgdbclient.username is None:
             try:
                 username = fedora_cert.read_user_cert()
             except:
                 LOG.debug('Could not read Fedora cert, using login name')
                 username = raw_input('FAS username: ')
-        password = getpass.getpass('FAS password: ')
-        pkgdbclient.username = username
+            pkgdbclient.username = username
+        if password is None and pkgdbclient.password is None:
+            password = getpass.getpass('FAS password: ')
         pkgdbclient.login(username, password)
 
 
@@ -671,6 +672,11 @@ def main():
             insecure=True)
 
     return_code = 0
+
+    if arg.password:
+        pkgdbclient.password = arg.password
+    if arg.username:
+        pkgdbclient.username = arg.username
 
     try:
         arg.func(arg)
