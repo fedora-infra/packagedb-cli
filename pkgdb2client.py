@@ -86,6 +86,8 @@ class PkgDB(object):
         self.session = requests.session()
         self.insecure = insecure
         self.__logged_in = False
+        self.username = None
+        self.password = None
 
     def __send_request(self, url, method, params=None, data=None):
         ''' Send a http request to the provided URL with the provided
@@ -113,7 +115,7 @@ class PkgDB(object):
         ''' Return whether the user if logged in or not. '''
         return self.__logged_in
 
-    def login(self, username, password, openid_insecure=False):
+    def login(self, username=None, password=None, openid_insecure=False):
         ''' Login the user on pkgdb2.
 
         :arg username: the FAS username of the user.
@@ -128,6 +130,14 @@ class PkgDB(object):
             production.
         :type openid_insecure: bool
         '''
+        if not username:
+            username = self.username
+        if not password:
+            password = self.password
+
+        if not username or not password:
+            raise PkgDBAuthException('Username or password missing')
+
         import re
         from urlparse import urlparse, parse_qs
 
