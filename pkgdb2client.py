@@ -635,7 +635,7 @@ class PkgDB(object):
             If False, it will return results only for non-EOL collections.
         :type eol: boolean
         :kwarg page: The page number to retrieve. If page is 0 or lower or
-            equal to ``all`` then all pages are returned. Defaults to 0.
+            equal to ``all`` then all pages are returned. Defaults to 1.
         :type page: int or ``all``
         :kwarg count: A boolean to retrieve the count of ACLs the user has
             instead of the details. If count is True the page argument will
