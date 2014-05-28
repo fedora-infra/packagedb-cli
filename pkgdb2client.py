@@ -15,8 +15,13 @@
 # license.
 """
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import getpass
 import logging
+import os
 import pkg_resources
 
 import fedora_cert
@@ -90,8 +95,9 @@ class PkgDB(object):
 
     '''
 
-    def __init__(self, url=PKGDB_URL, insecure=False, login_callback=None,
-                 login_attempts=3):
+    def __init__(self, url=PKGDB_URL, insecure=False, cookies=None,
+                 login_callback=None, login_attempts=3,
+                 sessionfile="~/.cache/pkgdb-session.pickle"):
         ''' Constructor for the PkgDB object used to query the package
         database.
 
@@ -118,11 +124,17 @@ class PkgDB(object):
         self.url = url
         self.session = requests.session()
         self.insecure = insecure
-        self.__logged_in = False
         self.username = None
         self.password = None
         self.login_callback = login_callback
         self.login_attempts = login_attempts
+        self.sessionfile = os.path.expanduser(sessionfile)
+
+        try:
+            with open(self.sessionfile, "rb") as sessionfo:
+                self.session.cookies = pickle.load(sessionfo)["cookies"]
+        except (IOError, KeyError, TypeError):
+            pass
 
     def __send_request(self, url, method, params=None, data=None):
         ''' Send a http request to the provided URL with the provided
@@ -143,12 +155,29 @@ class PkgDB(object):
             data=data,
             verify=not self.insecure,
         )
+        self._save_cookies()
         return req
+
+    def _save_cookies(self):
+        try:
+            with open(self.sessionfile, 'rb') as sessionfo:
+                data = pickle.load(sessionfo)
+        except:
+            data = {}
+        try:
+            with open(self.sessionfile, 'wb', 0600) as sessionfo:
+                sessionfo.seek(0)
+                data["cookies"] = self.session.cookies
+                pickle.dump(data, sessionfo)
+        except:
+            pass
 
     @property
     def is_logged_in(self):
         ''' Return whether the user if logged in or not. '''
-        return self.__logged_in
+
+        response = self.session.get(self.url + '/login/')
+        return "logged in as" in response.text
 
     def login(self, username=None, password=None, openid_insecure=False,
               response=None):
@@ -228,8 +257,6 @@ class PkgDB(object):
             url=output['response']['openid.return_to'],
             method='POST',
             data=output['response'])
-
-        self.__logged_in = True
 
         return output
 
