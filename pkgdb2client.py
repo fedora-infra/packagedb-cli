@@ -15,9 +15,11 @@
 # license.
 """
 
+import getpass
 import logging
 import pkg_resources
 
+import fedora_cert
 from fedora.client import AuthError
 import requests
 
@@ -62,13 +64,33 @@ def _parse_service_form(response):
     return (parsed.form.attrs['action'], inputs)
 
 
+def ask_password(username=None, bad_password=False):
+    """ Example login_callback to ask username/password from user
+    :kwarg username: Username
+    :type username: str
+    :kwarg bad_password: Whether there was a previous failed login attempt
+    :type bad_password: bool
+    :return: username, password
+    :rtype: tuple
+    """
+    if bad_password:
+        print "Bad password, please retry"
+    if not username:
+        try:
+            username = fedora_cert.read_user_cert()
+        except fedora_cert.fedora_cert_error:
+            username = raw_input("Username: ")
+    password = getpass.getpass("FAS password for user {0}: ".format(username))
+    return username, password
+
+
 class PkgDB(object):
     ''' PkgDB class used to interact with the Package DB instance via its
     API.
 
     '''
 
-    def __init__(self, url=PKGDB_URL, insecure=False):
+    def __init__(self, url=PKGDB_URL, insecure=False, login_callback=None):
         ''' Constructor for the PkgDB object used to query the package
         database.
 
@@ -88,6 +110,9 @@ class PkgDB(object):
         self.__logged_in = False
         self.username = None
         self.password = None
+        # should accept username and bad_password
+        self.login_callback = login_callback
+        self.login_retries = 3
 
     def __send_request(self, url, method, params=None, data=None):
         ''' Send a http request to the provided URL with the provided
@@ -115,7 +140,8 @@ class PkgDB(object):
         ''' Return whether the user if logged in or not. '''
         return self.__logged_in
 
-    def login(self, username=None, password=None, openid_insecure=False):
+    def login(self, username=None, password=None, openid_insecure=False,
+              response=None):
         ''' Login the user on pkgdb2.
 
         :arg username: the FAS username of the user.
@@ -134,6 +160,9 @@ class PkgDB(object):
             username = self.username
         if not password:
             password = self.password
+        if self.login_callback and not password:
+            username, password = self.login_callback(username=username,
+                                                     bad_password=False)
 
         if not username or not password:
             raise PkgDBAuthException('Username or password missing')
@@ -147,7 +176,8 @@ class PkgDB(object):
         motif = re.compile(fedora_openid)
 
         # Log into the service
-        response = self.session.get(self.url + '/login/')
+        if not response:
+            response = self.session.get(self.url + '/login/')
 
         if '<title>OpenID transaction in progress</title>' \
                 in response.text:
@@ -193,6 +223,81 @@ class PkgDB(object):
 
         return output
 
+    def call_api(self, path, params=None, data=None):
+        ''' call the API.
+
+        :arg path: The path to call
+        :type path: str
+        :arg params: URL params for the API call
+        :type params: dict
+        :arg data: POST data for the API call
+        :type data: dict
+        :return: requests response object
+        :rtype: requests.models.Response
+        :raise PkgDBAuthException: If login is required and fails
+        '''
+        if data:
+            method = "POST"
+        else:
+            method = "GET"
+
+        url = self.url + "/api" + path
+        response = self.__send_request(url=url, method=method, data=data,
+                                       params=params)
+        if '<title>OpenID transaction in progress</title>' \
+                in response.text:
+            bad_password = False
+            password = self.password
+            username = self.username
+            success = False
+            for count in xrange(0, self.login_retries):
+                if not username or not password or bad_password:
+                    if self.login_callback:
+                        username, password = self.login_callback(
+                            username=username,
+                            bad_password=bad_password
+                        )
+                    else:
+                        raise PkgDBAuthException('Authentication retired')
+                try:
+                    self.login(username=username, password=password,
+                               response=response)
+                    success = True
+                    break
+                except PkgDBException:
+                    response = None
+                    bad_password = True
+            if not success:
+                raise PkgDBAuthException("Too many failed login attempts")
+        response = self.__send_request(url=url, method=method, data=data,
+                                       params=params)
+        return response
+
+    def handle_api_call(self, path, params=None, data=None):
+        ''' call the API.
+
+        :arg path: The path to call
+        :type path: str
+        :arg params: URL params for the API call
+        :type params: dict
+        :arg data: POST data for the API call
+        :type data: dict
+        :return: the json object returned by the API
+        :rtype: dict
+        :raise PkgDBException: if the API call does not return a http code
+            200.
+
+        '''
+
+        response = self.call_api(path, params, data)
+        output = response.json()
+
+        if response.status_code != 200:
+            LOG.debug('full output %s', output)
+            raise PkgDBException(output['error'])
+
+        return output
+
     ## Actual API calls
 
     def create_collection(self, clt_name, version, clt_status, branchname,
@@ -226,9 +331,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'clt_name': clt_name,
             'version': version,
@@ -239,18 +341,7 @@ class PkgDB(object):
             'kojiname': kojiname,
         }
 
-        req = self.__send_request(
-            url='{0}/api/collection/new/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/collection/new/', data=args)
 
     def create_package(
             self, pkgname, summary, description, review_url, status,
@@ -289,9 +380,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgname': pkgname,
             'summary': summary,
@@ -306,18 +394,7 @@ class PkgDB(object):
         if critpath:
             args['critpath'] = critpath
 
-        req = self.__send_request(
-            url='{0}/api/package/new/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/new/', data=args)
 
     def get_critpath_packages(self, branches=None, **kwargs):
         ''' Return the list of package names in the critical path.
@@ -354,18 +431,7 @@ class PkgDB(object):
             'format': 'json',
         }
 
-        req = self.__send_request(
-            url='{0}/api/critpath/'.format(self.url),
-            method='GET',
-            params=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/critpath/', params=args)
 
     def get_collections(self, pattern='*', clt_status=None):
         ''' Return the list of collections matching the provided criterias.
@@ -387,18 +453,7 @@ class PkgDB(object):
             'clt_status': clt_status,
         }
 
-        req = self.__send_request(
-            url='{0}/api/collections/'.format(self.url),
-            method='GET',
-            params=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/collections/', params=args)
 
     def get_package(self, pkgname, branches=None, eol=False):
         ''' Return the information of a package matching the provided
@@ -427,18 +482,7 @@ class PkgDB(object):
         if eol is True:
             args['eol'] = eol
 
-        req = self.__send_request(
-            url='{0}/api/package/'.format(self.url),
-            method='GET',
-            params=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/', params=args)
 
     def get_packager_acls(
             self, packagername, acls=None, eol=False, poc=None,
@@ -503,18 +547,7 @@ class PkgDB(object):
             if poc is not None:
                 args['poc'] = poc
 
-            req = self.__send_request(
-                url='{0}/api/packager/acl/'.format(self.url),
-                method='GET',
-                params=args)
-
-            output = req.json()
-
-            if req.status_code != 200:
-                LOG.debug('full output %s', output)
-                raise PkgDBException(output['error'])
-
-            return output
+            return self.handle_api_call('/packager/acl/', params=args)
 
         if page == 'all':
             page = 0
@@ -550,18 +583,7 @@ class PkgDB(object):
             'packagername': packagername,
         }
 
-        req = self.__send_request(
-            url='{0}/api/packager/stats/'.format(self.url),
-            method='GET',
-            params=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/packager/stats/', params=args)
 
     def get_packagers(self, pattern='*'):
         ''' Return the list of packagers matching the provided criterias.
@@ -583,18 +605,7 @@ class PkgDB(object):
             'pattern': pattern,
         }
 
-        req = self.__send_request(
-            url='{0}/api/packagers/'.format(self.url),
-            method='GET',
-            params=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/packagers/', params=args)
 
     def get_packages(
             self, pattern='*', branches=None, poc=None, status=None,
@@ -673,18 +684,7 @@ class PkgDB(object):
             if eol is True:
                 args['eol'] = eol
 
-            req = self.__send_request(
-                url='{0}/api/packages/'.format(self.url),
-                method='GET',
-                params=args)
-
-            output = req.json()
-
-            if req.status_code != 200:
-                LOG.debug('full output %s', output)
-                raise PkgDBException(output['error'])
-
-            return output
+            return self.handle_api_call('/packages/', params=args)
 
         if page == 'all':
             page = 0
@@ -720,26 +720,12 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
         }
 
-        req = self.__send_request(
-            url='{0}/api/package/orphan/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/orphan/', data=args)
 
     def retire_packages(self, pkgnames, branches):
         ''' Retires the provided list of packages on the provided list of
@@ -758,26 +744,12 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
         }
 
-        req = self.__send_request(
-            url='{0}/api/package/retire/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/retire/', data=args)
 
     def unorphan_packages(self, pkgnames, branches, poc):
         ''' Un orphan the provided list of packages on the provided list of
@@ -798,27 +770,13 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
             'poc': poc,
         }
 
-        req = self.__send_request(
-            url='{0}/api/package/unorphan/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/unorphan/', data=args)
 
     def unretire_packages(self, pkgnames, branches):
         ''' Un retires the provided list of packages on the provided list of
@@ -837,26 +795,12 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
         }
 
-        req = self.__send_request(
-            url='{0}/api/package/unretire/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/unretire/', data=args)
 
     def update_acl(self, pkgname, branches, acls, status, user):
         ''' Update the specified ACLs, on the specified Branches of the
@@ -888,9 +832,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgname': pkgname,
             'branches': branches,
@@ -899,18 +840,7 @@ class PkgDB(object):
             'user': user,
         }
 
-        req = self.__send_request(
-            url='{0}/api/package/acl/'.format(self.url),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/package/acl/', data=args)
 
     def update_collection_status(self, branch, clt_status):
         ''' Update the status of the specified collection.
@@ -929,26 +859,13 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'branch': branch,
             'clt_status': clt_status,
         }
 
-        req = self.__send_request(
-            url='{0}/api/collection/{1}/status/'.format(self.url, branch),
-            method='POST',
-            data=args)
-
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+        return self.handle_api_call('/collection/{0}/status/'.format(branch),
+                                    data=args)
 
     def update_package_poc(self, pkgnames, branches, poc):
         ''' Update the point of contact of the specified packages on the
@@ -970,24 +887,13 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
             'poc': poc,
         }
+        return self.handle_api_call('/package/acl/reassign/', data=args)
 
-        req = self.__send_request(
-            url='{0}/api/package/acl/reassign/'.format(self.url),
-            method='POST',
-            data=args)
 
-        output = req.json()
-
-        if req.status_code != 200:
-            LOG.debug('full output %s', output)
-            raise PkgDBException(output['error'])
-
-        return output
+if __name__ == "__main__":
+    pkgdb = PkgDB(login_callback=ask_password)
