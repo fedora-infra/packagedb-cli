@@ -15,9 +15,11 @@
 # license.
 """
 
+import getpass
 import logging
 import pkg_resources
 
+import fedora_cert
 from fedora.client import AuthError
 import requests
 
@@ -62,13 +64,33 @@ def _parse_service_form(response):
     return (parsed.form.attrs['action'], inputs)
 
 
+def ask_password(username=None, bad_password=False):
+    """ Example login_callback to ask username/password from user
+    :kwarg username: Username
+    :type username: str
+    :kwarg bad_password: Whether there was a previous failed login attempt
+    :type bad_password: bool
+    :return: username, password
+    :rtype: tuple
+    """
+    if bad_password:
+        print "Bad password, please retry"
+    if not username:
+        try:
+            username = fedora_cert.read_user_cert()
+        except fedora_cert.fedora_cert_error:
+            username = raw_input("Username: ")
+    password = getpass.getpass("FAS password for user {0}: ".format(username))
+    return username, password
+
+
 class PkgDB(object):
     ''' PkgDB class used to interact with the Package DB instance via its
     API.
 
     '''
 
-    def __init__(self, url=PKGDB_URL, insecure=False):
+    def __init__(self, url=PKGDB_URL, insecure=False, login_callback=None):
         ''' Constructor for the PkgDB object used to query the package
         database.
 
@@ -88,6 +110,9 @@ class PkgDB(object):
         self.__logged_in = False
         self.username = None
         self.password = None
+        # should accept username and bad_password
+        self.login_callback = login_callback
+        self.login_retries = 3
 
     def __send_request(self, url, method, params=None, data=None):
         ''' Send a http request to the provided URL with the provided
@@ -115,7 +140,8 @@ class PkgDB(object):
         ''' Return whether the user if logged in or not. '''
         return self.__logged_in
 
-    def login(self, username=None, password=None, openid_insecure=False):
+    def login(self, username=None, password=None, openid_insecure=False,
+              response=None):
         ''' Login the user on pkgdb2.
 
         :arg username: the FAS username of the user.
@@ -134,6 +160,9 @@ class PkgDB(object):
             username = self.username
         if not password:
             password = self.password
+        if self.login_callback and not password:
+            username, password = self.login_callback(username=username,
+                                                     bad_password=False)
 
         if not username or not password:
             raise PkgDBAuthException('Username or password missing')
@@ -147,7 +176,8 @@ class PkgDB(object):
         motif = re.compile(fedora_openid)
 
         # Log into the service
-        response = self.session.get(self.url + '/login/')
+        if not response:
+            response = self.session.get(self.url + '/login/')
 
         if '<title>OpenID transaction in progress</title>' \
                 in response.text:
@@ -203,7 +233,8 @@ class PkgDB(object):
         :arg data: POST data for the API call
         :type data: dict
         :return: requests response object
-        :rtype: requests.Response()
+        :rtype: requests.models.Response
+        :raise PkgDBAuthException: If login is required and fails
         '''
         if data:
             method = "POST"
@@ -211,6 +242,33 @@ class PkgDB(object):
             method = "GET"
 
         url = self.url + "/api" + path
+        response = self.__send_request(url=url, method=method, data=data,
+                                       params=params)
+        if '<title>OpenID transaction in progress</title>' \
+                in response.text:
+            bad_password = False
+            password = self.password
+            username = self.username
+            success = False
+            for count in xrange(0, self.login_retries):
+                if not username or not password or bad_password:
+                    if self.login_callback:
+                        username, password = self.login_callback(
+                            username=username,
+                            bad_password=bad_password
+                        )
+                    else:
+                        raise PkgDBAuthException('Authentication retired')
+                try:
+                    self.login(username=username, password=password,
+                               response=response)
+                    success = True
+                    break
+                except PkgDBException:
+                    response = None
+                    bad_password = True
+            if not success:
+                raise PkgDBAuthException("Too many failed login attempts")
         response = self.__send_request(url=url, method=method, data=data,
                                        params=params)
         return response
@@ -273,9 +331,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'clt_name': clt_name,
             'version': version,
@@ -325,9 +380,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgname': pkgname,
             'summary': summary,
@@ -668,9 +720,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
@@ -695,9 +744,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
@@ -724,9 +770,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
@@ -752,9 +795,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
@@ -792,9 +832,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgname': pkgname,
             'branches': branches,
@@ -822,9 +859,6 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'branch': branch,
             'clt_status': clt_status,
@@ -853,12 +887,13 @@ class PkgDB(object):
             200.
 
         '''
-        if not self.is_logged_in:
-            raise PkgDBAuthException('Authentication required')
-
         args = {
             'pkgnames': pkgnames,
             'branches': branches,
             'poc': poc,
         }
         return self.handle_api_call('/package/acl/reassign/', data=args)
+
+
+if __name__ == "__main__":
+    pkgdb = PkgDB(login_callback=ask_password)
