@@ -894,6 +894,3 @@ class PkgDB(object):
         }
         return self.handle_api_call('/package/acl/reassign/', data=args)
 
-
-if __name__ == "__main__":
-    pkgdb = PkgDB(login_callback=ask_password)
