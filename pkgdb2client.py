@@ -226,6 +226,10 @@ class PkgDB(object):
             if not motif.match(openid_url):
                 raise PkgDBException(
                     'Un-expected openid provider asked: %s' % openid_url)
+        elif 'logged in as' in response.text:
+            # User already logged in via its cookie file by default:
+            # ~/.cache/pkgdb-session.pickle
+            return
         else:
             data = {}
             for resp in response.history:
