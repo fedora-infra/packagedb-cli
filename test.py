@@ -23,6 +23,8 @@ if AUTH:
     except:
         USERNAME = raw_input('FAS username: ')
     PASSWORD = getpass.getpass('FAS password: ')
+    if not PASSWORD:
+        AUTH = False
 
 COL_NAME = str(uuid.uuid1())[:30]
 PKG_NAME = str(uuid.uuid1())[:30]
