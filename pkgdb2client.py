@@ -279,8 +279,8 @@ class PkgDB(object):
                     bad_password = True
             if not success:
                 raise PkgDBAuthException("Too many failed login attempts")
-        response = self.__send_request(url=url, method=method, data=data,
-                                       params=params)
+            response = self.__send_request(url=url, method=method, data=data,
+                                           params=params)
         return response
 
     def handle_api_call(self, path, params=None, data=None):
