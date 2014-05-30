@@ -90,7 +90,8 @@ class PkgDB(object):
 
     '''
 
-    def __init__(self, url=PKGDB_URL, insecure=False, login_callback=None):
+    def __init__(self, url=PKGDB_URL, insecure=False, login_callback=None,
+                 login_attempts=3):
         ''' Constructor for the PkgDB object used to query the package
         database.
 
@@ -102,6 +103,16 @@ class PkgDB(object):
             is.  Useful for development but should not be used in
             production code.
         :type insecure: bool
+        :kwarg login_callback: Function to be called to provide username and/or
+            password, it must accept two keyword arguments, `username` and
+            `bad_password`. Username is the currently known username (can be
+            None) and bad_password is a bool to specifies whether a bad
+            password was supplied earlier. It needs to return a (username,
+            password) tuple. See pkgdb2client.ask_password() for an example.
+        :type login_callback: function
+        :kwarg login_attempts: How often a login might fail after
+            login_callback() was called before a API call fails permanently.
+        :type login_attempts: int
 
         '''
         self.url = url
@@ -110,9 +121,8 @@ class PkgDB(object):
         self.__logged_in = False
         self.username = None
         self.password = None
-        # should accept username and bad_password
         self.login_callback = login_callback
-        self.login_retries = 3
+        self.login_attempts = login_attempts
 
     def __send_request(self, url, method, params=None, data=None):
         ''' Send a http request to the provided URL with the provided
@@ -250,7 +260,7 @@ class PkgDB(object):
             password = self.password
             username = self.username
             success = False
-            for count in xrange(0, self.login_retries):
+            for count in xrange(self.login_attempts):
                 if not username or not password or bad_password:
                     if self.login_callback:
                         username, password = self.login_callback(
@@ -258,7 +268,7 @@ class PkgDB(object):
                             bad_password=bad_password
                         )
                     else:
-                        raise PkgDBAuthException('Authentication retired')
+                        raise PkgDBAuthException('Authentication required')
                 try:
                     self.login(username=username, password=password,
                                response=response)
@@ -893,4 +903,3 @@ class PkgDB(object):
             'poc': poc,
         }
         return self.handle_api_call('/package/acl/reassign/', data=args)
-
