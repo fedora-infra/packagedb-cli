@@ -18,17 +18,17 @@
 from fedora.client import (AccountSystem, AppError, ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
 from pkgdb2client import PkgDB, PkgDBException, __version__
+import pkgdb2client
 import argparse
 import logging
-import getpass
 import koji
-import fedora_cert
 
 
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
-pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb')
+pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
+                    login_callback=pkgdb2client.ask_password)
 fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 BOLD = "\033[1m"
 RED = "\033[0;31m"
@@ -46,31 +46,6 @@ class ActionError(Exception):
     ''' This class is raised when an ACL action is requested but not in
     the list of allowed action. '''
     pass
-
-
-def __do_login(username=None, password=None):
-    ''' Returned a BaseClient with authentification
-
-    If the username is None, tries to retrieve it from fedora_cert.
-
-    :arg pkgdbclient a PackageDB object to which username and password
-    are added
-    :karg username FAS username, if None it is asked to the user
-    :karg password FAS password, if None it is asked to the user
-    '''
-    if pkgdbclient.is_logged_in:
-        return
-    else:
-        if username is None and pkgdbclient.username is None:
-            try:
-                username = fedora_cert.read_user_cert()
-            except:
-                LOG.debug('Could not read Fedora cert, using login name')
-                username = raw_input('FAS username: ')
-            pkgdbclient.username = username
-        if password is None and pkgdbclient.password is None:
-            password = getpass.getpass('FAS password: ')
-        pkgdbclient.login(username, password)
 
 
 def _get_acls_info(acls):
@@ -499,7 +474,7 @@ def do_orphan(args):
     else:
         branches = [args.branch]
 
-    __do_login(args.username)
+    pkgdbclient.username = args.username
 
     output = pkgdbclient.orphan_packages(pkgs, branches)
     for msg in output.get('messages', []):
@@ -528,7 +503,7 @@ def do_unorphan(args):
     else:
         branches = [args.branch]
 
-    __do_login(args.username)
+    pkgdbclient.username = args.username
 
     username = args.poc or args.username or pkgdbclient.username
     LOG.info("new poc : {0}".format(username))
@@ -563,7 +538,7 @@ def do_request(args):
     if args.cancel:
         status = 'Obsolete'
 
-    __do_login(args.username)
+    pkgdbclient.username = args.username
     LOG.info("user    : {0}".format(pkgdbclient.username))
 
     output = pkgdbclient.update_acl(
@@ -605,7 +580,7 @@ def do_update(args):
     if args.approve:
         status = "Approved"
 
-    __do_login(args.username)
+    pkgdbclient.username = args.username
 
     output = pkgdbclient.update_acl(
         args.package,
@@ -669,6 +644,7 @@ def main():
             insecure=True)
         pkgdbclient = PkgDB(
             'https://admin.stg.fedoraproject.org/pkgdb',
+            login_callback=pkgdb2client.ask_password,
             insecure=True)
 
     return_code = 0

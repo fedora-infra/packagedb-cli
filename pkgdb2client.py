@@ -79,6 +79,7 @@ def ask_password(username=None, bad_password=False):
         try:
             username = fedora_cert.read_user_cert()
         except fedora_cert.fedora_cert_error:
+            LOG.debug('Could not read Fedora cert, asking for username')
             username = raw_input("Username: ")
     password = getpass.getpass("FAS password for user {0}: ".format(username))
     return username, password
