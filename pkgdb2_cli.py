@@ -213,11 +213,6 @@ def setup_parser():
         'list',
         help='List package according to the specified criteria')
     parser_list.add_argument(
-        '--all', action="store_true",
-        default=False, dest='all',
-        help="Query all the package in the collection. This may take a "
-        "while.")
-    parser_list.add_argument(
         '--nameonly', action="store_true",
         default=False, dest='name_only',
         help="Returns only the name of the package (without the description)")
@@ -421,17 +416,14 @@ def do_list(args):
 
     '''
     LOG.info("pattern  : {0}".format(args.pattern))
-    LOG.info("all      : {0}".format(args.all))
     LOG.info("orphaned : {0}".format(args.orphaned))
     LOG.info("user     : {0}".format(args.user))
     LOG.info("name only: {0}".format(args.name_only))
     LOG.info("branch   : {0}".format(args.branch))
 
     pattern = args.pattern
-    if not pattern or args.all:
+    if not pattern:
         pattern = '*'
-    elif not pattern and not args.all:
-        raise argparse.ArgumentTypeError("Not enough arguments given")
 
     if not pattern.endswith('*'):
         pattern += '*'
