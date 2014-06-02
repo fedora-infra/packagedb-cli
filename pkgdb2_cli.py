@@ -440,7 +440,8 @@ def do_list(args):
         pattern=pattern,
         branches=args.branch,
         poc=args.user,
-        orphaned=args.orphaned
+        orphaned=args.orphaned,
+        page='all',
     )
     cnt = 0
     for pkg in sorted(output['packages'], key=lambda pkg: (pkg['name'])):
