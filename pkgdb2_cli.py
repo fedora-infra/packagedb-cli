@@ -226,7 +226,12 @@ def setup_parser():
         help="List all orphaned and eol'd packages")
     parser_list.add_argument(
         '--user', dest='user', default=None,
-        help="List all the packages of the user <user>")
+        help="List all the packages of that user <user> has ACLs on")
+    parser_list.add_argument(
+        '--poc', action="store_true",
+        default=False, dest='poc',
+        help="Used in combination with `--user`, restrict the list to the "
+        "packages the user is the point of contact of")
     parser_list.add_argument(
         '--branch', dest='branch', default=None,
         help="Specify a branch (default:'all')")
@@ -416,6 +421,7 @@ def do_list(args):
 
     '''
     LOG.info("pattern  : {0}".format(args.pattern))
+    LOG.info("poc      : {0}".format(args.poc))
     LOG.info("orphaned : {0}".format(args.orphaned))
     LOG.info("user     : {0}".format(args.user))
     LOG.info("name only: {0}".format(args.name_only))
@@ -428,13 +434,26 @@ def do_list(args):
     if not pattern.endswith('*'):
         pattern += '*'
 
-    output = pkgdbclient.get_packages(
-        pattern=pattern,
-        branches=args.branch,
-        poc=args.user,
-        orphaned=args.orphaned,
-        page='all',
-    )
+    if args.user and not args.poc:
+        output = pkgdbclient.get_packager_acls(
+            packagername=args.user,
+            page='all',
+        )
+        output2 = {'packages': []}
+        for item in output['acls']:
+            pkg = item['packagelist']['package']
+            if pkg not in output2['packages']:
+                output2['packages'].append(pkg)
+        output = output2
+    else:
+        output = pkgdbclient.get_packages(
+            pattern=pattern,
+            branches=args.branch,
+            poc=args.user,
+            orphaned=args.orphaned,
+            page='all',
+        )
+
     cnt = 0
     for pkg in sorted(output['packages'], key=lambda pkg: (pkg['name'])):
         out = "   " + pkg['name'] + ' ' * (33 - len(pkg['name'])) + \
