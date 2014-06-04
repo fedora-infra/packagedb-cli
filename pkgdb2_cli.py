@@ -435,16 +435,28 @@ def do_list(args):
         pattern += '*'
 
     if args.user and not args.poc:
-        output = pkgdbclient.get_packager_acls(
-            packagername=args.user,
-            page='all',
-        )
-        output2 = {'packages': []}
-        for item in output['acls']:
-            pkg = item['packagelist']['package']
-            if pkg not in output2['packages']:
-                output2['packages'].append(pkg)
-        output = output2
+        version = pkgdbclient.get_version()
+        if version >= (1, 6):
+            output = pkgdbclient.get_packager_package(args.user)
+            output['packages'] = output['point of contact']
+            for pkg in output['co-maintained']:
+                if pkg not in output['packages']:
+                    output['packages'].append(pkg)
+            for pkg in output['watch']:
+                if pkg not in output['packages']:
+                    output['packages'].append(pkg)
+        else:
+            # This is for backward compat but it's way slower
+            output = pkgdbclient.get_packager_acls(
+                packagername=args.user,
+                page='all',
+            )
+            output2 = {'packages': []}
+            for item in output['acls']:
+                pkg = item['packagelist']['package']
+                if pkg not in output2['packages']:
+                    output2['packages'].append(pkg)
+            output = output2
     else:
         output = pkgdbclient.get_packages(
             pattern=pattern,
