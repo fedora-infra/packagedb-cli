@@ -935,3 +935,33 @@ class PkgDB(object):
             'poc': poc,
         }
         return self.handle_api_call('/package/acl/reassign/', data=args)
+
+    def get_version(self):
+        ''' Return a tuple of the pkgdb API version.
+
+        :return: the pkgdb API version
+        :rtype: tuple
+        :raise PkgDBException: if the API call does not return a http code
+            200.
+
+        Example of data returned
+
+        ::
+
+            (1, 6)
+
+        '''
+        version = self.handle_api_call('/version')
+        if not 'version' in version:
+            raise PkgDBException(
+                'No version information could be retrieved')
+        version = version['version']
+        output = []
+        for el in version.split('.'):
+            try:
+                el = int(el)
+            except ValueError:
+                pass
+            output.append(el)
+
+        return tuple(output)
