@@ -649,6 +649,29 @@ class PkgDB(object):
 
         return self.handle_api_call('/packagers/', params=args)
 
+
+    def get_packager_package(self, packager):
+        ''' Return the list of packages related to the specified packager.
+
+        The list of packages is split into three categories:
+            point of contact, co-maintained, watch
+        These are the same three categories used in the packager's page in
+        the pkgdb2 UI.
+
+        :arg packager: The name the packager to query the packages of
+        :type pattern: str
+        :return: the json object returned by the API
+        :rtype: dict
+        :raise PkgDBException: if the API call does not return a http code
+            200.
+
+        '''
+        args = {
+            'packagername': packager,
+        }
+
+        return self.handle_api_call('/packager/package/', params=args)
+
     def get_packages(
             self, pattern='*', branches=None, poc=None, status=None,
             orphaned=False, critpath=None, acls=False, eol=False,
