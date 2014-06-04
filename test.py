@@ -188,7 +188,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['packages'][0]['name'], 'guacamole-client')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
-            ['creation_date', 'description', 'name', 'review_url',
+            ['acls', 'creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
         self.assertEqual(out['packages'][1]['name'], 'guacamole-common')
         self.assertEqual(out['page'], 1)
@@ -202,7 +202,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['packages'][0]['name'], 'guacamole-common')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
-            ['creation_date', 'description', 'name', 'review_url',
+            ['acls', 'creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
         self.assertEqual(out['packages'][1]['name'], 'guacamole-ext')
         self.assertEqual(out['page'], 1)
@@ -216,7 +216,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['packages'][0]['name'], 'guake')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
-            ['creation_date', 'description', 'name', 'review_url',
+            ['acls', 'creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
@@ -229,7 +229,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['packages'][0]['name'], 'guacd')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
-            ['creation_date', 'description', 'name', 'review_url',
+            ['acls', 'creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
         self.assertEqual(out['page'], 1)
         self.assertEqual(out['page_total'], 1)
@@ -242,7 +242,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['packages'][0]['name'], 'ghex')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
-            ['creation_date', 'description', 'name', 'review_url',
+            ['acls', 'creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
         self.assertEqual(out['packages'][1]['name'], 'glom')
         self.assertEqual(out['page'], 1)
@@ -269,7 +269,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(out['packages'][0]['name'], 'ghc-parameterized-data')
         self.assertEqual(
             sorted(out['packages'][0].keys()),
-            ['creation_date', 'description', 'name', 'review_url',
+            ['acls', 'creation_date', 'description', 'name', 'review_url',
              'status', 'summary', 'upstream_url'])
         self.assertEqual(out['page'], 2)
         self.assertEqual(out['page_total'], 6)
