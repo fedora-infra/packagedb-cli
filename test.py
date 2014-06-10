@@ -129,7 +129,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
         self.assertTrue(len(out['acls']) >= 239)
-        self.assertEqual(out['page_total'], 1)
+        self.assertEqual(out['page_total'], 2)
 
         out = self.pkgdb.get_packager_acls('pingou', page=3)
         self.assertEqual(
@@ -149,7 +149,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out.keys()),
             ['acls_count', 'output', 'page', 'page_total'])
-        self.assertTrue(out['acls_count'] >= 804)
+        self.assertTrue(out['acls_count'] >= 750)
         self.assertEqual(out['page_total'], 1)
 
         out = self.pkgdb.get_packager_acls('pingou', poc=False, count=True)
@@ -168,7 +168,7 @@ class TestPkgdDB(unittest.TestCase):
         self.assertEqual(
             sorted(out['master'].keys()),
             ['co-maintainer', 'point of contact'])
-        self.assertTrue(out['master']['point of contact'] >= 60)
+        self.assertTrue(out['master']['point of contact'] >= 50)
 
     def test_get_packagers(self):
         ''' Test the get_packagers function. '''
