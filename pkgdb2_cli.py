@@ -391,24 +391,27 @@ def do_acl(args):
 
         # print ACL information
         print "{0}ACLs:".format(" " * 8)
-        acls = _get_acls_info(pkg['acls'])
-        users = sorted(acls, key=lambda user: user.replace('group::', ''))
-        for user in users:
-            if user.startswith('group::'):
-                tmp = " " * 3 + user
-            else:
-                tmp = " " * 10 + user
-            tmp = tmp + " " * (24 - len(tmp))
-            for acl_title in ["watchbugzilla", "watchcommits",
-                              "commit", "approveacls"]:
-                #print '\n', acl_title
-                if acl_title in acls[user]:
-                    aclout = acls[user][acl_title]
-                    tmp = tmp + aclout + " " * (16 - len(aclout))
+        if 'acls' in pkg:
+            acls = _get_acls_info(pkg['acls'])
+            users = sorted(acls, key=lambda user: user.replace('group::', ''))
+            for user in users:
+                if user.startswith('group::'):
+                    tmp = " " * 3 + user
                 else:
-                    tmp = tmp + " " * 16
-            if tmp is not None and tmp.strip() != "":
-                print tmp
+                    tmp = " " * 10 + user
+                tmp = tmp + " " * (24 - len(tmp))
+                for acl_title in ["watchbugzilla", "watchcommits",
+                                  "commit", "approveacls"]:
+                    #print '\n', acl_title
+                    if acl_title in acls[user]:
+                        aclout = acls[user][acl_title]
+                        tmp = tmp + aclout + " " * (16 - len(aclout))
+                    else:
+                        tmp = tmp + " " * 16
+                if tmp is not None and tmp.strip() != "":
+                    print tmp
+        else:
+            print '           No ACLs found'
 
         # print the last build
         if args.extra:
