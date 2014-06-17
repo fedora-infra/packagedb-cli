@@ -521,10 +521,12 @@ def do_unorphan(args):
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
     LOG.info("poc     : {0}".format(args.poc))
+
     if args.all is True:
         pkgs = _get_user_packages(args.username)
     else:
         pkgs = [args.package]
+
     if args.branch == 'all':
         branches = _get_active_branch()
     else:
@@ -535,7 +537,7 @@ def do_unorphan(args):
     username = args.poc or args.username or pkgdbclient.username
     LOG.info("new poc : {0}".format(username))
 
-    output = pkgdbclient.unorphan_packages(pkgs, branches, username)
+    output = pkgdbclient.update_package_poc(pkgs, branches, username)
     for msg in output.get('messages', []):
         print msg
 
