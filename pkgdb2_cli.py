@@ -208,6 +208,28 @@ def setup_parser():
         "last build)")
     parser_acl.set_defaults(func=do_acl)
 
+    ## Give
+    parser_give = subparsers.add_parser(
+        'give',
+        help='Give package(s) according to the specified criteria')
+    parser_give.add_argument(
+        'package',
+        help="Name of the package to give")
+    parser_give.add_argument(
+        'branch', default='master', nargs="?",
+        help="Branch of the package to give "
+        "(default: 'master', can be: 'all')")
+    parser_give.add_argument(
+        '--all', action="store_true", default=False,
+        help="Give all your packages")
+    parser_give.add_argument(
+        '--poc', default=None,
+        help="FAS username of the new point of contact of the package "
+        "This allows to give your package or an orphaned "
+        "package to someone else. "
+        "(default: current FAS user)")
+    parser_give.set_defaults(func=do_give)
+
     ## List
     parser_list = subparsers.add_parser(
         'list',
@@ -417,6 +439,35 @@ def do_acl(args):
         if args.extra:
             tag = pkg['collection']['branchname']
             get_last_build(pkg['package']['name'], tag)
+
+
+def do_give(args):
+    ''' Give a package to someone in pkgdb.
+
+    '''
+    LOG.info("user    : {0}".format(args.username))
+    LOG.info("package : {0}".format(args.package))
+    LOG.info("branch  : {0}".format(args.branch))
+    LOG.info("poc     : {0}".format(args.poc))
+
+    if args.all is True:
+        pkgs = _get_user_packages(args.username)
+    else:
+        pkgs = [args.package]
+
+    if args.branch == 'all':
+        branches = _get_active_branch()
+    else:
+        branches = [args.branch]
+
+    pkgdbclient.username = args.username
+
+    username = args.poc or args.username or pkgdbclient.username
+    LOG.info("new poc : {0}".format(username))
+
+    output = pkgdbclient.update_package_poc(pkgs, branches, username)
+    for msg in output.get('messages', []):
+        print msg
 
 
 def do_list(args):
