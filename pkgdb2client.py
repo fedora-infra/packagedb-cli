@@ -211,7 +211,7 @@ class PkgDB(object):
         from urlparse import urlparse, parse_qs
 
         fedora_openid_api = r'https://id.fedoraproject.org/api/v1/'
-        fedora_openid = r'^http(s)?:\/\/(|stg.|dev.)?id\.fedoraproject'\
+        fedora_openid = r'^http(s)?:\/\/id\.(|stg.|dev.)?fedoraproject'\
             '\.org(/)?'
         motif = re.compile(fedora_openid)
 
