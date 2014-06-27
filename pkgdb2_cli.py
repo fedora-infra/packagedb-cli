@@ -65,6 +65,7 @@ def _get_active_branch(packagename=None):
     ''' Return a list of the active branch for a specific package or simply
     all the active branches if no package is specified.
     '''
+    LOG.debug("Retrieving all the active branches")
     branches = []
     if packagename:
         output = pkgdbclient.get_package(packagename)
@@ -88,6 +89,7 @@ def _get_user_packages(username):
     :arg username: the FAS username of the user of interest
 
     '''
+    LOG.debug("Get the packages of user {0}".format(username))
     pkgs = []
     output = pkgdbclient.get_packages(poc=username)
     for pkg in output['packages']:
