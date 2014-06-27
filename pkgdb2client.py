@@ -341,7 +341,7 @@ class PkgDB(object):
             LOG.debug(response.text)
 
         if response.status_code != 200:
-            LOG.debug('full output %s', output)
+            LOG.debug('full output: {0}'.format(output))
             raise PkgDBException(output['error'])
 
         return output
