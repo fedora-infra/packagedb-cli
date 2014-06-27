@@ -269,7 +269,7 @@ def setup_parser():
         'orphan',
         help='Orphan package(s) according to the specified criteria')
     parser_orphan.add_argument(
-        'package',
+        'package', nargs="?",
         help="Name of the package to orphan or simple pattern")
     parser_orphan.add_argument(
         'branch', default='master', nargs="?",
@@ -281,6 +281,11 @@ def setup_parser():
     parser_orphan.add_argument(
         '--all', action="store_true", default=False,
         help="Orphan all your packages")
+    parser_orphan.add_argument(
+        '--poc', default=None,
+        help="When orphaning someone else's package, precise here the FAS "
+        "username of the person whose packages should be orphaned. "
+        "(Admin only)")
     parser_orphan.set_defaults(func=do_orphan)
 
     ## Unorphan
@@ -540,15 +545,17 @@ def do_orphan(args):
 
     '''
     LOG.info("user    : {0}".format(args.username))
+    LOG.info("poc     : {0}".format(args.poc))
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
     LOG.info("all     : {0}".format(args.all))
     LOG.info("retire  : {0}".format(args.retire))
 
     if args.all is True:
-        pkgs = _get_user_packages(args.username)
+        pkgs = _get_user_packages(args.poc or args.username)
     else:
         pkgs = [args.package]
+
     if args.branch == 'all':
         branches = _get_active_branch()
     else:
