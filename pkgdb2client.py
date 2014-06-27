@@ -333,7 +333,12 @@ class PkgDB(object):
         '''
 
         response = self.call_api(path, params, data)
-        output = response.json()
+        output = None
+        try:
+            output = response.json()
+        except Exception, err:
+            LOG.debug('Error while decoding the JSON: {0}'.format(err))
+            LOG.debug(response.text)
 
         if response.status_code != 200:
             LOG.debug('full output %s', output)
