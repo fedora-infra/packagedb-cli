@@ -216,14 +216,11 @@ def setup_parser():
         help='Give package(s) according to the specified criteria')
     parser_give.add_argument(
         'package',
-        help="Name of the package to give")
+        help="Name of the package to give (can be: 'all')")
     parser_give.add_argument(
         'branch', default='master', nargs="?",
         help="Branch of the package to give "
         "(default: 'master', can be: 'all')")
-    parser_give.add_argument(
-        '--all', action="store_true", default=False,
-        help="Give all your packages")
     parser_give.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
@@ -270,7 +267,7 @@ def setup_parser():
         help='Orphan package(s) according to the specified criteria')
     parser_orphan.add_argument(
         'package', nargs="?",
-        help="Name of the package to orphan or simple pattern")
+        help="Name of the package to orphan or simple pattern (can be: 'all')")
     parser_orphan.add_argument(
         'branch', default='master', nargs="?",
         help="Branch of the package to orphan (default: 'master', can be: "
@@ -278,9 +275,6 @@ def setup_parser():
     parser_orphan.add_argument(
         '--retire', action="store_true", default=False,
         help="Retire the given package")
-    parser_orphan.add_argument(
-        '--all', action="store_true", default=False,
-        help="Orphan all your packages")
     parser_orphan.add_argument(
         '--poc', default=None,
         help="When orphaning someone else's package, precise here the FAS "
@@ -299,9 +293,6 @@ def setup_parser():
         'branch', default='master', nargs="?",
         help="Branch of the package to unorphan "
         "(default: 'master', can be: 'all')")
-    parser_unorphan.add_argument(
-        '--all', action="store_true", default=False,
-        help="Unorphan all your packages")
     parser_unorphan.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
@@ -457,7 +448,7 @@ def do_give(args):
     LOG.info("branch  : {0}".format(args.branch))
     LOG.info("poc     : {0}".format(args.poc))
 
-    if args.all is True:
+    if args.package == 'all':
         pkgs = _get_user_packages(args.username)
     else:
         pkgs = [args.package]
@@ -548,10 +539,9 @@ def do_orphan(args):
     LOG.info("poc     : {0}".format(args.poc))
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
-    LOG.info("all     : {0}".format(args.all))
     LOG.info("retire  : {0}".format(args.retire))
 
-    if args.all is True:
+    if args.package == 'all':
         pkgs = _get_user_packages(args.poc or args.username)
     else:
         pkgs = [args.package]
@@ -582,10 +572,7 @@ def do_unorphan(args):
     LOG.info("branch  : {0}".format(args.branch))
     LOG.info("poc     : {0}".format(args.poc))
 
-    if args.all is True:
-        pkgs = _get_user_packages(args.username)
-    else:
-        pkgs = [args.package]
+    pkgs = [args.package]
 
     if args.branch == 'all':
         branches = _get_active_branch()
