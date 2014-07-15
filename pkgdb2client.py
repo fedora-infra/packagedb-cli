@@ -656,7 +656,7 @@ class PkgDB(object):
         return self.handle_api_call('/packagers/', params=args)
 
 
-    def get_packager_package(self, packager):
+    def get_packager_package(self, packager, branches=None):
         ''' Return the list of packages related to the specified packager.
 
         The list of packages is split into three categories:
@@ -675,6 +675,9 @@ class PkgDB(object):
         args = {
             'packagername': packager,
         }
+
+        if branches:
+            args['branches'] = branches
 
         return self.handle_api_call('/packager/package/', params=args)
 
