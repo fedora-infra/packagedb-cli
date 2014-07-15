@@ -489,7 +489,8 @@ def do_list(args):
     if args.user and not args.poc:
         version = pkgdbclient.get_version()
         if version >= (1, 6):
-            output = pkgdbclient.get_packager_package(args.user)
+            output = pkgdbclient.get_packager_package(
+                args.user, branches=args.branch)
             output['packages'] = output['point of contact']
             for pkg in output['co-maintained']:
                 if pkg not in output['packages']:
