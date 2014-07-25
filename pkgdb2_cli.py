@@ -707,6 +707,7 @@ def main():
         BOLD = ""
         RESET = ""
 
+    logging.basicConfig()
     if arg.debug:
         LOG.setLevel(logging.DEBUG)
         PKGDBLOG.setLevel(logging.DEBUG)

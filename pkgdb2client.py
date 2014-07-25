@@ -29,8 +29,18 @@ from fedora.client import AuthError
 import requests
 
 
-logging.basicConfig()
+class NullHandler(logging.Handler):
+    ''' Null logger to avoid spurious messages
+
+    '''
+    def emit(self, record):
+        pass
+
 LOG = logging.getLogger("pkgdb2client")
+
+# Add the null handler to top-level logger used by the library
+h = NullHandler()
+LOG.addHandler(h)
 
 __version__ = pkg_resources.get_distribution('packagedb-cli').version
 PKGDB_URL = r'https://admin.fedoraproject.org/pkgdb/'
