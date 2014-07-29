@@ -317,7 +317,7 @@ class PkgDB(object):
                     success = True
                     break
                 except PkgDBException as err:
-                    log.debug('Exception: {0}'.format(err))
+                    LOG.debug('Exception: {0}'.format(err))
                     response = None
                     bad_password = True
             if not success:
