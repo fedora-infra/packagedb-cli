@@ -1011,7 +1011,7 @@ class PkgDB(object):
 
         '''
         version = self.handle_api_call('/version')
-        if not 'version' in version:
+        if 'version' not in version:
             raise PkgDBException(
                 'No version information could be retrieved')
         version = version['version']
