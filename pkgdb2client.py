@@ -401,20 +401,22 @@ class PkgDB(object):
 
         return self.handle_api_call('/collection/new/', data=args)
 
-    def update_critpath(self, pkgname, branch=None, critpath=False):
+    def update_critpath(self, pkgname, branches, critpath=False):
         ''' Set / Unset critpath status
 
         :arg pkgname: The name of the package
         :type pkgname: str
-        :arg branch: The branch of the package
-        :type branch: str
-        :arg critpath: Whether to set critpath status or not
+        :arg branches: One or more branch names for the collections in
+            which to update the critpath status of the package
+        :type branches: str or list
+        :arg critpath: A boolean corresponding to the critpath status to
+            set
         :type critpath: bool
 
         '''
         args = {
             'pkgnames': pkgname,
-            'branches': branch,
+            'branches': branches,
             'critpath': critpath
         }
         return self.handle_api_call('/package/critpath/', data=args)
