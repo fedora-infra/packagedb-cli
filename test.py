@@ -496,6 +496,104 @@ class TestPkgdDBAuth(unittest.TestCase):
              'user: pingou changed point of contact of package: guake from: '
              'ralph to: pingou on branch: el6'])
 
+    @auth_only
+    def test_10_update_critpath(self):
+        ''' Test the update_critpath function. '''
+
+        # Check before changing the critpath
+        out = self.pkgdb.get_package('guake')
+        self.assertEqual(
+            sorted(out.keys()),
+            ['output', 'packages'])
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(len(out['packages']), 5)
+        critpaths = [el['critpath'] for el in out['packages']]
+        branches = [el['collection']['branchname'] for el in out['packages']]
+        self.assertEqual(
+            critpaths,
+            [False, False, False, False, False]
+        )
+        self.assertEqual(
+            branches,
+            ['master', 'el6', 'f19', 'f20', 'f21']
+        )
+
+        out = self.pkgdb.update_critpath(
+            'guake', ['master', 'el6'], True)
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['guake: critpath updated on master to True',
+             'guake: critpath updated on el6 to True']
+        )
+
+        # Check after changing the critpath
+        out = self.pkgdb.get_package('guake')
+        self.assertEqual(
+            sorted(out.keys()),
+            ['output', 'packages'])
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(len(out['packages']), 5)
+        critpaths = [el['critpath'] for el in out['packages']]
+        branches = [el['collection']['branchname'] for el in out['packages']]
+        self.assertEqual(
+            critpaths,
+            [True, True, False, False, False]
+        )
+        self.assertEqual(
+            branches,
+            ['master', 'el6', 'f19', 'f20', 'f21']
+        )
+
+        out = self.pkgdb.get_package('guake')
+        self.assertEqual(
+            sorted(out.keys()),
+            ['output', 'packages'])
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(len(out['packages']), 5)
+        self.assertEqual(
+            out['packages'][0]['collection']['branchname'], 'master')
+        self.assertEqual(
+            out['packages'][0]['package']['name'], 'guake')
+        self.assertEqual(
+            out['packages'][0]['point_of_contact'], 'pingou')
+
+        out = self.pkgdb.update_critpath(
+            'guake', ['master', 'el6'], False)
+
+        self.assertEqual(
+            sorted(out.keys()),
+            ['messages', 'output'])
+
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(
+            out['messages'],
+            ['guake: critpath updated on master to False',
+             'guake: critpath updated on el6 to False']
+        )
+
+        # Check after reste critpath to False
+        out = self.pkgdb.get_package('guake')
+        self.assertEqual(
+            sorted(out.keys()),
+            ['output', 'packages'])
+        self.assertEqual(out['output'], 'ok')
+        self.assertEqual(len(out['packages']), 5)
+        critpaths = [el['critpath'] for el in out['packages']]
+        branches = [el['collection']['branchname'] for el in out['packages']]
+        self.assertEqual(
+            critpaths,
+            [False, False, False, False, False]
+        )
+        self.assertEqual(
+            branches,
+            ['master', 'el6', 'f19', 'f20', 'f21']
+        )
 
 def suite():
     suite = unittest.TestSuite()
