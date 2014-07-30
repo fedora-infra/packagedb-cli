@@ -14,10 +14,10 @@ setup(
     url='https://fedorahosted.org/packagedb-cli/',
     author='Pierre-Yves Chibon',
     author_email='pingou@pingoured.fr',
-    py_modules=['pkgdb2client', 'pkgdb2_cli', 'pkgdb2version'],
+    packages=['pkgdb2client'],
     entry_points={
         'console_scripts': [
-            "pkgdb-cli=pkgdb2_cli:main",
+            "pkgdb-cli=pkgdb2client.cli:main",
         ]
     },
     install_requires=[
