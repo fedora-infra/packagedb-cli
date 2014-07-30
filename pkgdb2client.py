@@ -951,7 +951,7 @@ class PkgDB(object):
                                     data=args)
 
     def update_critpath(self, pkgname, branches, critpath=False):
-        ''' Set / Unset critpath status
+        ''' Set / Remove critpath status of a package
 
         :arg pkgname: The name of the package
         :type pkgname: str
