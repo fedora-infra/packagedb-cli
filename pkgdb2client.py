@@ -401,26 +401,6 @@ class PkgDB(object):
 
         return self.handle_api_call('/collection/new/', data=args)
 
-    def update_critpath(self, pkgname, branches, critpath=False):
-        ''' Set / Unset critpath status
-
-        :arg pkgname: The name of the package
-        :type pkgname: str
-        :arg branches: One or more branch names for the collections in
-            which to update the critpath status of the package
-        :type branches: str or list
-        :arg critpath: A boolean corresponding to the critpath status to
-            set
-        :type critpath: bool
-
-        '''
-        args = {
-            'pkgnames': pkgname,
-            'branches': branches,
-            'critpath': critpath
-        }
-        return self.handle_api_call('/package/critpath/', data=args)
-
     def create_package(
             self, pkgname, summary, description, review_url, status,
             shouldopen, branches, poc, upstream_url, critpath=False):
@@ -969,6 +949,26 @@ class PkgDB(object):
 
         return self.handle_api_call('/collection/{0}/status/'.format(branch),
                                     data=args)
+
+    def update_critpath(self, pkgname, branches, critpath=False):
+        ''' Set / Unset critpath status
+
+        :arg pkgname: The name of the package
+        :type pkgname: str
+        :arg branches: One or more branch names for the collections in
+            which to update the critpath status of the package
+        :type branches: str or list
+        :arg critpath: A boolean corresponding to the critpath status to
+            set
+        :type critpath: bool
+
+        '''
+        args = {
+            'pkgnames': pkgname,
+            'branches': branches,
+            'critpath': critpath
+        }
+        return self.handle_api_call('/package/critpath/', data=args)
 
     def update_package_poc(self, pkgnames, branches, poc):
         ''' Update the point of contact of the specified packages on the
