@@ -82,7 +82,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['output', 'packages'])
         self.assertEqual(out['output'], 'ok')
-        self.assertEqual(len(out['packages']), 4)
+        self.assertEqual(len(out['packages']), 5)
         self.assertEqual(
             out['packages'][0]['collection']['branchname'], 'master')
         self.assertEqual(
@@ -122,7 +122,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
         self.assertEqual(len(out['acls']), 250)
-        self.assertEqual(out['page_total'], 5)
+        self.assertEqual(out['page_total'], 6)
 
         out = self.pkgdb.get_packager_acls('pingou', acls=['approveacls'])
         self.assertEqual(
@@ -136,7 +136,7 @@ class TestPkgdDB(unittest.TestCase):
             sorted(out.keys()),
             ['acls', 'output', 'page', 'page_total'])
         self.assertTrue(len(out['acls']) >= 250)
-        self.assertEqual(out['page_total'], 5)
+        self.assertEqual(out['page_total'], 6)
 
         out = self.pkgdb.get_packager_acls('pingou', count=True)
         self.assertEqual(
@@ -164,7 +164,7 @@ class TestPkgdDB(unittest.TestCase):
         out = self.pkgdb.get_packager_stats('pingou')
         self.assertEqual(
             sorted(out.keys()),
-            ['el5', 'el6', 'epel7', 'f19', 'f20', 'master', 'output'])
+            ['el5', 'el6', 'epel7', 'f19', 'f20', 'f21', 'master', 'output'])
         self.assertEqual(
             sorted(out['master'].keys()),
             ['co-maintainer', 'point of contact'])
