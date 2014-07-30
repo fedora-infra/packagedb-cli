@@ -295,7 +295,7 @@ class TestPkgdDBAuth(unittest.TestCase):
         self.pkgdb.login(USERNAME, PASSWORD)
 
     @auth_only
-    def test_1_create_collection(self):
+    def test_01_create_collection(self):
         ''' Test the create_collection function. '''
         out = self.pkgdb.create_collection(
             clt_name='Test',
@@ -338,7 +338,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['Collection "%s" created' % COL_NAME])
 
     @auth_only
-    def test_2_create_package(self):
+    def test_02_create_package(self):
         ''' Test the create_package function. '''
 
         out = self.pkgdb.create_package(
@@ -363,7 +363,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['Package created'])
 
     @auth_only
-    def test_3_orphan_packages(self):
+    def test_03_orphan_packages(self):
         ''' Test the orphan_packages function. '''
 
         out = self.pkgdb.orphan_packages('guake', ['master', 'el6'])
@@ -381,7 +381,7 @@ class TestPkgdDBAuth(unittest.TestCase):
              'pingou to: orphan on branch: el6'])
 
     @auth_only
-    def test_4_unorphan_packages(self):
+    def test_04_unorphan_packages(self):
         ''' Test the unorphan_packages function. '''
 
         out = self.pkgdb.unorphan_packages(
@@ -398,7 +398,7 @@ class TestPkgdDBAuth(unittest.TestCase):
              'Package guake has been unorphaned on el6 by pingou'])
 
     @auth_only
-    def test_5_retire_packages(self):
+    def test_05_retire_packages(self):
         ''' Test the retire_packages function. '''
 
         out = self.pkgdb.retire_packages('guake', 'master')
@@ -414,7 +414,7 @@ class TestPkgdDBAuth(unittest.TestCase):
              'Retired on branch: master'])
 
     @auth_only
-    def test_6_unretire_packages(self):
+    def test_06_unretire_packages(self):
         ''' Test the unretire_packages function. '''
 
         out = self.pkgdb.unretire_packages('guake', 'master')
@@ -430,7 +430,7 @@ class TestPkgdDBAuth(unittest.TestCase):
              'Approved on branch: master'])
 
     @auth_only
-    def test_7_update_acl(self):
+    def test_07_update_acl(self):
         ''' Test the update_acl function. '''
 
         out = self.pkgdb.update_acl(
@@ -448,7 +448,7 @@ class TestPkgdDBAuth(unittest.TestCase):
              'Nothing to update on branch: el6 for acl: commit'])
 
     @auth_only
-    def test_8_update_collection_status(self):
+    def test_08_update_collection_status(self):
         ''' Test the update_collection_status function. '''
 
         out = self.pkgdb.update_collection_status(COL_NAME, 'EOL')
@@ -463,7 +463,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             ['Collection updated from "Active" to "EOL"'])
 
     @auth_only
-    def test_9_update_package_poc(self):
+    def test_09_update_package_poc(self):
         ''' Test the update_package_poc function. '''
 
         out = self.pkgdb.update_package_poc(
