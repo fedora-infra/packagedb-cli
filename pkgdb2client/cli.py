@@ -554,14 +554,13 @@ def do_orphan(args):
 
     pkgdbclient.username = args.username
 
-    output = pkgdbclient.orphan_packages(pkgs, branches)
-    for msg in output.get('messages', []):
-        print msg
-
     if args.retire is True:
         output = pkgdbclient.retire_packages(pkgs, branches)
-        for msg in output.get('messages', []):
-            print msg
+    else:
+        output = pkgdbclient.orphan_packages(pkgs, branches)
+
+    for msg in output.get('messages', []):
+        print msg
 
 
 def do_unorphan(args):
