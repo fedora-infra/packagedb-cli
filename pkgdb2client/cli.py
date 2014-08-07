@@ -561,8 +561,8 @@ def do_orphan(args):
             dead_url = \
                 'http://pkgs.fedoraproject.org/cgit/{0}.git/plain/'\
                 'dead.package?h={1}'.format(pkg_name, pkg_branch)
-            dead = requests.get(dead_url).text.strip()
-            if not dead:
+            req = requests.get(dead_url)
+            if req.status_code != 200:
                 print 'No `dead.package` for %s on %s, please use '\
                 '`fedpkg retire`' % (pkg_name, pkg_branch)
                 return
