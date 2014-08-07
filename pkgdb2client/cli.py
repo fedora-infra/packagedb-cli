@@ -20,6 +20,7 @@ from bugzilla.rhbugzilla import RHBugzilla
 from pkgdb2client import PkgDB, PkgDBException, __version__
 import pkgdb2client
 import argparse
+import requests
 import logging
 import koji
 
@@ -555,6 +556,16 @@ def do_orphan(args):
     pkgdbclient.username = args.username
 
     if args.retire is True:
+        for pkg_name, pkg_branch in itertools.product(
+                pkgnames, branches):
+            dead_url = \
+                'http://pkgs.fedoraproject.org/cgit/{0}.git/plain/'\
+                'dead.package?h={1}'.format(pkg_name, pkg_branch)
+            dead = requests.get(dead_url).text.strip()
+            if not dead:
+                print 'No `dead.package` for %s on %s, please use '\
+                '`fedpkg retire`' % (pkg_name, pkg_branch)
+                return
         output = pkgdbclient.retire_packages(pkgs, branches)
     else:
         output = pkgdbclient.orphan_packages(pkgs, branches)
