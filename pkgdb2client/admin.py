@@ -150,6 +150,17 @@ def do_list(args):
                     'clt': action['collection']['branchname'],
                 }
             )
+        elif action['action'] == 'request.unretire':
+            print '#%(id)s (%(status)s) - %(user)s requested the ' \
+            'unretirement of "%(pkg)s" on "%(clt)s"' % (
+                {
+                    'id': action['id'],
+                    'status': action['status'],
+                    'user': action['user'],
+                    'pkg': action['package']['name'],
+                    'clt': action['collection']['branchname'],
+                }
+            )
 
     print 'Total: {0} actions'.format(cnt  + 1)
 
