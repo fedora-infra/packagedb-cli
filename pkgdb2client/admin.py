@@ -149,9 +149,9 @@ def do_update(args):
     ''' Update a specific admin action.
 
     '''
-    LOG.info("user    : {0}".format(args.username))
+    LOG.info("user   : {0}".format(args.username))
     LOG.info("action : {0}".format(args.actionid))
-    LOG.info("status  : {0}".format(args.status))
+    LOG.info("status : {0}".format(args.status))
 
     data = pkgdbclient.handle_api_call(
         '/admin/action/status',
