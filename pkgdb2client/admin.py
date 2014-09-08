@@ -94,6 +94,15 @@ def setup_parser():
         'Approved, Awaiting Review, Denied, Obsolete, Removed.')
     parser_update.set_defaults(func=do_update)
 
+    # PROCESS
+    parser_update = subparsers.add_parser(
+        'process',
+        help='Process a pending admin action')
+    parser_update.add_argument(
+        'actionid',
+        help='Identifier of the admin action to process.')
+    parser_update.set_defaults(func=do_process)
+
     return parser
 
 
@@ -160,6 +169,50 @@ def do_update(args):
             'status': args.status
         }
     )
+
+    for msg in data.get('messages', []):
+        print msg
+
+
+def do_process(args):
+    ''' Process a specific admin action.
+
+    '''
+    LOG.info("user   : {0}".format(args.username))
+    LOG.info("action : {0}".format(args.actionid))
+
+    action = pkgdbclient.handle_api_call('/admin/action/%s' % args.actionid)
+
+    if action['status']  != 'Awaiting Review':
+        print 'Action #%s is not Awaiting Review - Current status: %s' % (
+            action['id'], action['status'])
+        return
+
+    if action['action'] == 'request.package':
+        data = pkgdbclient.create_package(
+            pkgname=action['info']['pkg_name'],
+            summary=action['info']['pkg_summary'],
+            description=action['info']['pkg_description'],
+            review_url=action['info']['pkg_review_url'],
+            status=action['info']['pkg_status'],
+            shouldopen=True,
+            branches=action['info']['pkg_collection'],
+            poc=action['info']['pkg_poc'],
+            upstream_url=action['info']['pkg_upstream_url'],
+            critpath=action['info']['pkg_critpath'],
+        )
+
+    elif action['action'] == 'request.branch':
+        data = pkgdbclient.update_acl(
+            pkgname=action['package']['name'],
+            branches=action['collection']['branchname'],
+            acls=['commit', 'watchbugzilla', 'watchcommits', 'approveacls'],
+            status='Approved',
+            user=action['user'],
+        )
+
+    else:
+        print 'Action %s not supported by pkgdb-cli' % action['action']
 
     for msg in data.get('messages', []):
         print msg
