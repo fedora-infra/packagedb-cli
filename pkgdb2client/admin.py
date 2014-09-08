@@ -139,6 +139,7 @@ def do_list(args):
                     'clt': action['info']['pkg_collection'],
                 }
             )
+
         elif action['action'] == 'request.branch':
             print '#%(id)s (%(status)s) - %(user)s requested a new branch '\
             '"%(clt)s" for "%(pkg)s"' % (
@@ -150,6 +151,7 @@ def do_list(args):
                     'clt': action['collection']['branchname'],
                 }
             )
+
         elif action['action'] == 'request.unretire':
             print '#%(id)s (%(status)s) - %(user)s requested the ' \
             'unretirement of "%(pkg)s" on "%(clt)s"' % (
@@ -159,6 +161,17 @@ def do_list(args):
                     'user': action['user'],
                     'pkg': action['package']['name'],
                     'clt': action['collection']['branchname'],
+                }
+            )
+
+        else:
+            print '#%(id)s (%(status)s) - %(action)s by %(user)s is not '\
+            'handled by pkgdb-admin' % (
+                {
+                    'id': action['id'],
+                    'status': action['status'],
+                    'action': action['action'],
+                    'user': action['user'],
                 }
             )
 
