@@ -24,7 +24,9 @@ interface web free interface.
 As of 2014, this project has been ported to
 `pkgdb2 <https://github.com/fedora-infra/pkgdb2>`_. At this occasion, it is
 has been re-written to propose a python module to query pkgdb2 API as well
-as a pkgdb2_cli module in case someone ever wants to re-use it.
+as the pkgdb2client.cli module containing the command line interface and the
+pkgdb2client.admin module containing a command line interface for admins to
+interact with `pkgdb2`_.
 
 ------------
 Installation
