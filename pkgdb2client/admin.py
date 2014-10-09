@@ -16,7 +16,6 @@
 """
 
 from fedora.client import (AccountSystem, AppError, ServerError)
-from bugzilla.rhbugzilla import RHBugzilla
 
 import argparse
 import requests
@@ -27,8 +26,6 @@ from pkgdb2client import PkgDB, PkgDBException, __version__
 from cli import ActionError
 import pkgdb2client
 
-
-RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
