@@ -85,3 +85,36 @@ def get_users_in_bug(bugid):
     users.add(bugbz.creator)
 
     return users
+
+
+def __get_fas_user_by_email(email_address):
+    ''' For a provided email_address returned the associated FAS user.
+    The email_address can be either the FAS email address or the one used
+    in bugzilla.
+
+    :arg email_address: the email address of the user to retrieve in FAS.
+
+    '''
+    if email_address in FASCLIENT._AccountSystem__alternate_email:
+        user = FASCLIENT.person_by_id(
+            FASCLIENT._AccountSystem__alternate_email[email_address])
+    else:
+        user = FASCLIENT.people_by_key('email', email_address)
+
+    return user
+
+
+def is_packager(email_address):
+    ''' For a provided email_address returned whether associated FAS user
+    is a packager or not.
+    The email_address can be either the FAS email address or the one used
+    in bugzilla.
+
+    :arg email_address: the email address of the user to retrieve in FAS.
+
+    '''
+    user = __get_fas_user_by_email(email_address.strip())
+
+    return user \
+        and 'packager' in user['group_roles'] \
+        and user['group_roles']['packager']['role_status'] == 'approved'
