@@ -17,13 +17,15 @@
 
 from fedora.client import (AccountSystem, AppError, ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb2client import PkgDB, PkgDBException, __version__
-import pkgdb2client
+
 import argparse
 import requests
 import logging
 import koji
 import itertools
+
+from pkgdb2client import PkgDB, PkgDBException, __version__
+import pkgdb2client
 
 
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'

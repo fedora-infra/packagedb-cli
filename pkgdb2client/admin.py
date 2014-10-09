@@ -17,13 +17,15 @@
 
 from fedora.client import (AccountSystem, AppError, ServerError)
 from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb2client import PkgDB, PkgDBException, __version__
-from cli import ActionError
-import pkgdb2client
+
 import argparse
 import requests
 import logging
 import koji
+
+from pkgdb2client import PkgDB, PkgDBException, __version__
+from cli import ActionError
+import pkgdb2client
 
 
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
