@@ -16,7 +16,6 @@
 """
 
 from fedora.client import (AccountSystem, AppError, ServerError)
-from bugzilla.rhbugzilla import RHBugzilla
 
 import argparse
 import requests
@@ -26,10 +25,10 @@ import itertools
 
 from pkgdb2client import PkgDB, PkgDBException, __version__
 import pkgdb2client
+import pkgdb2client.utils
 
 
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
-RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
@@ -389,7 +388,6 @@ def do_acl(args):
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
     #LOG.info("approve : {0}".format(args.approve))
-    bzclient = RHBugzilla(url=RH_BZ_API)
 
     if args.branch == 'all':
         args.branch = None
@@ -401,9 +399,7 @@ def do_acl(args):
         if args.extra:
             # print the number of opened bugs
             LOG.debug("Query bugzilla")
-            bugbz = bzclient.query(
-                {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
-                 'component': args.package})
+            bugbz = pkgdb2client.utils.get_bugz(args.package)
             print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
 
     for pkg in sorted(
