@@ -118,3 +118,37 @@ def is_packager(email_address):
     return user \
         and 'packager' in user['group_roles'] \
         and user['group_roles']['packager']['role_status'] == 'approved'
+
+
+def check_package_creation(bugid):
+    ''' Performs a number of checks to see if a package review satisfies the
+    criterias to create the package on pkgdb.
+
+    Checks:
+      - If the users on the review are packagers
+      - If the person that approved the review (set fedora-review to +) is
+        a packager
+      - ...
+    '''
+    messages = []
+
+    if not FASCLIENT.username:
+        username, password = pkgdb2client.ask_password()
+        FASCLIENT.username = username
+        FASCLIENT.password = password
+
+    # Check if the participants are packagers
+    bug = get_bug(bugid, login=True)
+    for user in get_users_in_bug(bugid):
+        if not is_packager(user):
+            messages.append('User %s is not a packager' % user)
+
+    # Check who updated the fedora-review flag to +
+    for flag in bug.flags:
+        if flag['name'] == 'fedora-review' and flag['status'] == '+':
+            if not is_packager(flag['setter']):
+                messages.append(
+                    'User %s is not a packager but set the fedora-review '
+                    'flag to `+`' % flag['setter'])
+
+    return messages
