@@ -65,3 +65,23 @@ def get_bug(bugid, login=False):
         bz_login()
 
     return BZCLIENT.getbug(bugid)
+
+
+def get_users_in_bug(bugid):
+    ''' Return the list of open bugs reported against a package.
+
+    :arg bugid: either the identifier of the bug to retrieve or directly
+        the bug object
+    :returns: the list of the people (their email address) that commented
+        on the specified ticket
+
+    '''
+
+    if isinstance(bugid, (int, basestring)):
+        bugbz = get_bug(bugid, login=True)
+    else:
+        bugbz = bugid
+    users = set([com['author'] for com in bugbz.comments])
+    users.add(bugbz.creator)
+
+    return users
