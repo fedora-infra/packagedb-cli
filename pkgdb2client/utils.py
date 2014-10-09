@@ -150,14 +150,14 @@ def check_package_creation(info, bugid):
     # Check if the participants are packagers
     for user in get_users_in_bug(bugid):
         if not is_packager(user):
-            messages.append('User %s is not a packager' % user)
+            messages.append('User {0} is not a packager'.format(user))
 
     # Check who updated the fedora-review flag to +
     for flag in bug.flags:
         if flag['name'] == 'fedora-review' and flag['status'] == '+':
             if not is_packager(flag['setter']):
                 messages.append(
-                    'User %s is not a packager but set the fedora-review '
-                    'flag to `+`' % flag['setter'])
+                    'User {0} is not a packager but set the fedora-review '
+                    'flag to `+`'.format(flag['setter']))
 
     return messages
