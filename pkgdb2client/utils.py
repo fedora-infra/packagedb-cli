@@ -120,7 +120,7 @@ def is_packager(email_address):
         and user['group_roles']['packager']['role_status'] == 'approved'
 
 
-def check_package_creation(bugid):
+def check_package_creation(info, bugid):
     ''' Performs a number of checks to see if a package review satisfies the
     criterias to create the package on pkgdb.
 
@@ -137,8 +137,17 @@ def check_package_creation(bugid):
         FASCLIENT.username = username
         FASCLIENT.password = password
 
-    # Check if the participants are packagers
     bug = get_bug(bugid, login=True)
+
+    # Check if the title of the bug fits the expectations
+    expected = 'Review Request: {0} - {1}'.format(
+        info['pkg_name'], info['pkg_summary'])
+    if bug.summary != expected:
+        messages.append(
+            'The bug title does not fit the expected one\n'
+            '   exp: "{0}" vs obs: "{1}"'.format(expected, bug.summary))
+
+    # Check if the participants are packagers
     for user in get_users_in_bug(bugid):
         if not is_packager(user):
             messages.append('User %s is not a packager' % user)
