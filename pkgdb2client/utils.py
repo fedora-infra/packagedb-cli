@@ -48,3 +48,20 @@ def get_bugz(pkg_name):
                  'component': pkg_name})
 
     return bugbz
+
+
+def get_bug(bugid, login=False):
+    ''' Return the bug with the specified identifier.
+
+    :arg bugid: the identifier of the bug to retrieve
+    :kwarg login: a boolean specifying whether to retrieve the information
+        about this bug with a user logged in or not.
+    :returns: the list of the people (their email address) that commented
+        on the specified ticket
+
+    '''
+
+    if login and not BZCLIENT.logged_in:
+        bz_login()
+
+    return BZCLIENT.getbug(bugid)
