@@ -17,7 +17,9 @@
 
 from bugzilla.rhbugzilla import RHBugzilla
 
+
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
+BZCLIENT = RHBugzilla(url=RH_BZ_API)
 
 
 def get_bugz(pkg_name):
@@ -26,9 +28,8 @@ def get_bugz(pkg_name):
     :arg pkg_name: the name of the package to look-up in bugzilla
 
     '''
-    bzclient = RHBugzilla(url=RH_BZ_API)
 
-    bugbz = bzclient.query(
+    bugbz = BZCLIENT.query(
                 {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
                  'component': pkg_name})
 
