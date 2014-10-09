@@ -15,11 +15,25 @@
 # license.
 """
 
-from bugzilla.rhbugzilla import RHBugzilla
+import getpass
 
+from bugzilla import Bugzilla
+from fedora.client import AccountSystem, AuthError
+
+import pkgdb2client
 
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
-BZCLIENT = RHBugzilla(url=RH_BZ_API)
+BZCLIENT = Bugzilla(url=RH_BZ_API)
+FASCLIENT = AccountSystem('https://admin.fedoraproject.org/accounts')
+
+
+def bz_login():
+    ''' Login on bugzilla. '''
+    print 'To keep going, we need to authenticate against bugzilla' \
+        ' at {0}'.format(RH_BZ_API)
+    username = raw_input("Bugzilla user: ")
+    password = getpass.getpass("Bugzilla password: ")
+    BZCLIENT.login(username, password)
 
 
 def get_bugz(pkg_name):
