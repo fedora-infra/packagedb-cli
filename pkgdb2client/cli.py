@@ -15,7 +15,7 @@
 # license.
 """
 
-from fedora.client import (AccountSystem, AppError, ServerError)
+from fedora.client import (AppError, ServerError)
 
 import argparse
 import requests
@@ -32,7 +32,6 @@ KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
-fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 BOLD = "\033[1m"
 RED = "\033[0;31m"
 RESET = "\033[0;0m"
@@ -779,11 +778,8 @@ def main():
         LOG.setLevel(logging.INFO)
 
     if arg.test:
-        global fasclient, pkgdbclient
+        global pkgdbclient
         print "Testing environment"
-        fasclient = AccountSystem(
-            'https://admin.stg.fedoraproject.org/accounts',
-            insecure=True)
         pkgdbclient = PkgDB(
             'https://admin.stg.fedoraproject.org/pkgdb',
             login_callback=pkgdb2client.ask_password,
