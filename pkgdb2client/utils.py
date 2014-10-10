@@ -96,10 +96,15 @@ def __get_fas_user_by_email(email_address):
 
     '''
     if email_address in FASCLIENT._AccountSystem__alternate_email:
-        user = FASCLIENT.person_by_id(
-            FASCLIENT._AccountSystem__alternate_email[email_address])
+        userid = FASCLIENT._AccountSystem__alternate_email[email_address]
+
     else:
-        user = FASCLIENT.people_by_key('email', email_address)
+        userid = FASCLIENT.people_query(
+            constraints={'email': email_address},
+            columns=['id']
+        )[0].id
+
+    user = FASCLIENT.person_by_id(userid)
 
     return user
 
