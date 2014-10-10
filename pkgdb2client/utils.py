@@ -109,20 +109,24 @@ def __get_fas_user_by_email(email_address):
     return user
 
 
-def is_packager(email_address):
-    ''' For a provided email_address returned whether associated FAS user
+def is_packager(user):
+    ''' For a provided user returned whether associated FAS user
     is a packager or not.
-    The email_address can be either the FAS email address or the one used
-    in bugzilla.
+    The user can be either the username or an email.
+    If the user is an email address, it can be either the FAS email address
+    or the one used in bugzilla.
 
     :arg email_address: the email address of the user to retrieve in FAS.
 
     '''
-    user = __get_fas_user_by_email(email_address.strip())
+    if '@' in user:
+        fas_user = __get_fas_user_by_email(user.strip())
+    else:
+        fas_user = FASCLIENT.person_by_username(user)
 
-    return user \
-        and 'packager' in user['group_roles'] \
-        and user['group_roles']['packager']['role_status'] == 'approved'
+    return fas_user \
+        and 'packager' in fas_user['group_roles'] \
+        and fas_user['group_roles']['packager']['role_status'] == 'approved'
 
 
 def check_package_creation(info, bugid):
