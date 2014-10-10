@@ -206,7 +206,7 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
 
     if clt_name in branches:
         messages.append(
-            'Packages {0} already has the branch {1} requested'.format(
+            'Packages {0} already has the requested branch `{1}`'.format(
                 pkg_name, clt_name)
         )
 
