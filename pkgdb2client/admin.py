@@ -25,6 +25,7 @@ import koji
 from pkgdb2client import PkgDB, PkgDBException, __version__
 from cli import ActionError
 import pkgdb2client
+import utils
 
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
@@ -197,6 +198,22 @@ def do_update(args):
         print msg
 
 
+def _ask_what_to_do(messages):
+    ''' Print the given list of information messages and ask the user
+    what to do, ie: approve, deny, pass
+    '''
+    for message in messages:
+        print message
+
+    print 'What should we do about this requests?'
+    action = raw_input('approve, deny, pass: ')
+    if action.lower() not in ['approve', 'deny', 'pass']:
+        print 'No valid action specified, just ignoring for now'
+        action = 'pass'
+
+    return action.lower()
+
+
 def do_process(args):
     ''' Process a specific admin action.
 
@@ -212,18 +229,49 @@ def do_process(args):
         return
 
     if action['action'] == 'request.package':
-        data = pkgdbclient.create_package(
-            pkgname=action['info']['pkg_name'],
-            summary=action['info']['pkg_summary'],
-            description=action['info']['pkg_description'],
-            review_url=action['info']['pkg_review_url'],
-            status=action['info']['pkg_status'],
-            shouldopen=True,
-            branches=action['info']['pkg_collection'],
-            poc=action['info']['pkg_poc'],
-            upstream_url=action['info']['pkg_upstream_url'],
-            critpath=action['info']['pkg_critpath'],
-        )
+        bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
+        if '=' in bugid:
+            bugid = bugid.split('=', 1)[1]
+
+        msgs = utils.check_package_creation(
+            action['info'], bugid)
+
+        decision = _ask_what_to_do(msgs)
+        if decision == 'pass':
+            data = {
+                'messages': ['Action {0} un-touched'.format(args.actionid)]
+            }
+
+        elif decision == 'deny':
+            data = pkgdbclient.handle_api_call(
+                '/admin/action/status',
+                data={
+                    'id': args.actionid,
+                    'status': 'Denied'
+                }
+            )
+
+        else:
+            data = pkgdbclient.create_package(
+                pkgname=action['info']['pkg_name'],
+                summary=action['info']['pkg_summary'],
+                description=action['info']['pkg_description'],
+                review_url=action['info']['pkg_review_url'],
+                status=action['info']['pkg_status'],
+                shouldopen=True,
+                branches=action['info']['pkg_collection'],
+                poc=action['info']['pkg_poc'],
+                upstream_url=action['info']['pkg_upstream_url'],
+                critpath=action['info']['pkg_critpath'],
+            )
+
+            pkgdbclient.handle_api_call(
+                '/admin/action/status',
+                data={
+                    'id': args.actionid,
+                    'status': 'Approved'
+                }
+            )
 
     elif action['action'] == 'request.branch':
         data = pkgdbclient.update_acl(
