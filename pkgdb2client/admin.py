@@ -229,6 +229,20 @@ def do_process(args):
         return
 
     if action['action'] == 'request.package':
+        try:
+            pkgdbclient.get_package(action['info']['pkg_name'])
+            print 'Package {0} found, requalifying request.package ' \
+            'in request.branch'.format(action['info']['pkg_name'])
+            # Adjusting the input format
+            action['action'] = 'request.branch'
+            action['package'] = {'name': action['info']['pkg_name']}
+            action['collection'] = {
+                'branchname': action['info']['pkg_collection']}
+
+        except pkgdb2client.PkgDBException:
+            pass
+
+    if action['action'] == 'request.package':
         bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
         if '=' in bugid:
             bugid = bugid.split('=', 1)[1]
