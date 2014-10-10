@@ -171,3 +171,53 @@ def check_package_creation(info, bugid):
                 bugid, info['pkg_name']))
 
     return messages
+
+
+def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
+    ''' Performs a number of checks to see if a package should be allowed
+    on a certain branch.
+
+    Checks:
+      - If the package exists in pkgdb
+      - If the branch already exists
+      - If the person asking for the branch is a packager
+      - ...
+    '''
+    messages = []
+
+    # check if the package already exists
+    try:
+        pkginfo = pkgdbclient.get_package(pkg_name)
+    except pkgdb2client.PkgDBException:
+        messages.append(
+            'Packages {0} not found in pkgdb'.format(pkg_name)
+        )
+        return messages
+
+    # Check if package already has this branch
+    branches = [
+        pkg['collection']['branchname']
+        for pkg in pkginfo['packages']
+    ]
+
+    if clt_name in branches:
+        messages.append(
+            'Packages {0} already has the branch {1} requested'.format(
+                pkg_name, clt_name)
+        )
+
+    # Check if user is a packager
+    if not is_packager(user):
+        messages.append('User {0} is not a packager'.format(user))
+
+    # EPEL checks
+    if clt_name.startswith(('el', 'epel')):
+        messages.append(
+            'Nothing checked automatically, but requests is for an '
+            'EPEL branch')
+
+    if not messages:
+        messages.append(
+            'All checks cleared for package {0}'.format(pkg_name))
+
+    return messages
