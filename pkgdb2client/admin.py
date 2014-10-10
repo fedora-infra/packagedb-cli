@@ -82,7 +82,8 @@ def setup_parser():
     # UPDATE
     parser_update = subparsers.add_parser(
         'update',
-        help='Update a pending admin action')
+        help='Update the status of an admin action (just its status, '
+        'nothing else)')
     parser_update.add_argument(
         'actionid',
         help='Identifier of the admin action to update.')
