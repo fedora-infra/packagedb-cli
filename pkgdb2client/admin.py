@@ -288,13 +288,47 @@ def do_process(args):
             )
 
     elif action['action'] == 'request.branch':
-        data = pkgdbclient.update_acl(
-            pkgname=action['package']['name'],
-            branches=action['collection']['branchname'],
-            acls=['commit', 'watchbugzilla', 'watchcommits', 'approveacls'],
-            status='Approved',
-            user=action['user'],
+        msgs = utils.check_branch_creation(
+            pkgdbclient,
+            action['package']['name'],
+            action['collection']['branchname'],
+            action['user']
         )
+
+        decision = _ask_what_to_do(msgs)
+        if decision == 'pass':
+            data = {
+                'messages': ['Action {0} un-touched'.format(args.actionid)]
+            }
+
+        elif decision == 'deny':
+            data = pkgdbclient.handle_api_call(
+                '/admin/action/status',
+                data={
+                    'id': args.actionid,
+                    'status': 'Denied'
+                }
+            )
+
+        else:
+            data = pkgdbclient.update_acl(
+                pkgname=action['package']['name'],
+                branches=action['collection']['branchname'],
+                acls=[
+                    'commit', 'watchbugzilla',
+                    'watchcommits', 'approveacls'
+                ],
+                status='Approved',
+                user=action['user'],
+            )
+
+            pkgdbclient.handle_api_call(
+                '/admin/action/status',
+                data={
+                    'id': args.actionid,
+                    'status': 'Approved'
+                }
+            )
 
     else:
         print 'Action %s not supported by pkgdb-cli' % action['action']
