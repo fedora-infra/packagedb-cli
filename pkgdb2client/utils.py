@@ -211,6 +211,11 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
         )
 
     # Check if user is a packager
+    if not FASCLIENT.username:
+        username, password = pkgdb2client.ask_password()
+        FASCLIENT.username = username
+        FASCLIENT.password = password
+
     if not is_packager(user):
         messages.append('User {0} is not a packager'.format(user))
 
