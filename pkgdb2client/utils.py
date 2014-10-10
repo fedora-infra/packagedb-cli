@@ -153,25 +153,25 @@ def check_package_creation(info, bugid):
         info['pkg_name'], info['pkg_summary'])
     if bug.summary != expected:
         messages.append(
-            'The bug title does not fit the expected one\n'
+            ' ! The bug title does not fit the expected one\n'
             '   exp: "{0}" vs obs: "{1}"'.format(expected, bug.summary))
 
     # Check if the participants are packagers
     for user in get_users_in_bug(bugid):
         if not is_packager(user):
-            messages.append('User {0} is not a packager'.format(user))
+            messages.append(' ! User {0} is not a packager'.format(user))
 
     # Check who updated the fedora-review flag to +
     for flag in bug.flags:
         if flag['name'] == 'fedora-review' and flag['status'] == '+':
             if not is_packager(flag['setter']):
                 messages.append(
-                    'User {0} is not a packager but set the fedora-review '
-                    'flag to `+`'.format(flag['setter']))
+                    ' ! User {0} is not a packager but set the '
+                    'fedora-review flag to `+`'.format(flag['setter']))
 
     if not messages:
         messages.append(
-            'All checks cleared for review {0}: {1}'.format(
+            ' + All checks cleared for review {0}: {1}'.format(
                 bugid, info['pkg_name']))
 
     return messages
@@ -194,7 +194,7 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
         pkginfo = pkgdbclient.get_package(pkg_name)
     except pkgdb2client.PkgDBException:
         messages.append(
-            'Packages {0} not found in pkgdb'.format(pkg_name)
+            ' ! Packages {0} not found in pkgdb'.format(pkg_name)
         )
         return messages
 
@@ -206,7 +206,7 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
 
     if clt_name in branches:
         messages.append(
-            'Packages {0} already has the requested branch `{1}`'.format(
+            ' ! Packages {0} already has the requested branch `{1}`'.format(
                 pkg_name, clt_name)
         )
 
@@ -217,16 +217,16 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
         FASCLIENT.password = password
 
     if not is_packager(user):
-        messages.append('User {0} is not a packager'.format(user))
+        messages.append(' ! User {0} is not a packager'.format(user))
 
     # EPEL checks
     if clt_name.startswith(('el', 'epel')):
         messages.append(
-            'Nothing checked automatically, but requests is for an '
+            ' ! Nothing checked automatically, but requests is for an '
             'EPEL branch')
 
     if not messages:
         messages.append(
-            'All checks cleared for package {0}'.format(pkg_name))
+            ' + All checks cleared for package {0}'.format(pkg_name))
 
     return messages
