@@ -232,6 +232,8 @@ def do_process(args):
 
     action = pkgdbclient.handle_api_call('/admin/action/%s' % args.actionid)
 
+    print _action2msg(action)
+
     if action['status']  != 'Awaiting Review':
         print 'Action #%s is not Awaiting Review - Current status: %s' % (
             action['id'], action['status'])
