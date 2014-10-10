@@ -165,4 +165,9 @@ def check_package_creation(info, bugid):
                     'User {0} is not a packager but set the fedora-review '
                     'flag to `+`'.format(flag['setter']))
 
+    if not messages:
+        messages.append(
+            'All checks cleared for review {0}: {1}'.format(
+                bugid, info['pkg_name']))
+
     return messages
