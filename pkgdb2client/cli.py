@@ -346,6 +346,9 @@ def setup_parser():
     parser_update.add_argument(
         '--deny', action="store_true", default=False,
         help="Deny the requested ACL")
+    parser_update.add_argument(
+        '--obsolete', action="store_true", default=False,
+        help="Obsolete the requested ACL")
     parser_update.set_defaults(func=do_update)
 
     ## Collections
@@ -650,6 +653,7 @@ def do_update(args):
     LOG.info("branch    : {0}".format(args.branch))
     LOG.info("approve   : {0}".format(args.approve))
     LOG.info("deny      : {0}".format(args.deny))
+    LOG.info("obsolete  : {0}".format(args.obsolete))
 
     action = args.action
     if action == 'all':
@@ -666,6 +670,8 @@ def do_update(args):
     status = "Denied"
     if args.approve:
         status = "Approved"
+    elif args.obsolete:
+        status = "Obsolete"
 
     pkgdbclient.username = args.username
 
