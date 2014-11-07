@@ -786,7 +786,7 @@ class PkgDB(object):
 
         return output
 
-    def orphan_packages(self, pkgnames, branches):
+    def orphan_packages(self, pkgnames, branches, former_poc=None):
         ''' Orphans the provided list of packages on the provided list of
         branches.
 
@@ -795,6 +795,10 @@ class PkgDB(object):
         :arg branches: One or more branch names for the collections in
             which to orphan the packages
         :type branches: str or list
+        :kwarg former_poc: Use this argument to ensure you are only
+            orphaning the branches where the specified user is POC, even
+            if the branches you specified are broader than reality.
+        :type former_poc: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -807,6 +811,9 @@ class PkgDB(object):
             'pkgnames': pkgnames,
             'branches': branches,
         }
+
+        if former_poc:
+            args['former_poc'] = former_poc
 
         return self.handle_api_call('/package/orphan/', data=args)
 
