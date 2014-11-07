@@ -297,9 +297,7 @@ def setup_parser():
     parser_unorphan.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
-        "This allows to give your package or an orphaned "
-        "package to someone else. "
-        "(default: current FAS user)")
+        "Can be skipped if --user is specified, otherwise is mandatory.")
     parser_unorphan.set_defaults(func=do_unorphan)
 
     ## Request
@@ -598,6 +596,11 @@ def do_unorphan(args):
     pkgdbclient.username = args.username
 
     username = args.poc or args.username or pkgdbclient.username
+    if username is None:
+        raise argparse.ArgumentError(
+            args.poc,
+            'You must specify either --user or --poc with the username of '
+            'the new point of contact.')
     LOG.info("new poc : {0}".format(username))
 
     output = pkgdbclient.update_package_poc(pkgs, branches, username)
@@ -763,6 +766,10 @@ def main():
         LOG.debug('ActionError')
         print '{0}'.format(err.message)
         return_code = 7
+    except argparse.ArgumentError, err:
+        LOG.debug('ArgparseError')
+        print '{0}'.format(err.message)
+        return_code = 9
     except AppError, err:
         LOG.debug('AppError')
         print '{0}: {1}'.format(err.name, err.message)
