@@ -546,6 +546,7 @@ def do_orphan(args):
     LOG.info("branch  : {0}".format(args.branch))
     LOG.info("retire  : {0}".format(args.retire))
 
+    former_poc = args.poc or args.username
     if args.package == 'all':
         pkgs = _get_user_packages(args.poc or args.username)
     else:
@@ -571,7 +572,8 @@ def do_orphan(args):
                 return
         output = pkgdbclient.retire_packages(pkgs, branches)
     else:
-        output = pkgdbclient.orphan_packages(pkgs, branches)
+        output = pkgdbclient.orphan_packages(
+            pkgs, branches, former_poc=former_poc)
 
     for msg in output.get('messages', []):
         print msg
