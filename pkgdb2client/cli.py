@@ -465,7 +465,12 @@ def do_give(args):
     if args.package == 'all':
         pkgs = _get_user_packages(former_poc)
     else:
-        pkgs = [args.package]
+        if '*' in args.package:
+            pkgs = pkgdbclient.get_packages(
+                args.package, poc=former_poc, page='all')
+            pkgs = [pkg['name'] for pkg in pkgs['packages']]
+        else:
+            pkgs = [args.package]
 
     if args.branch == 'all':
         branches = _get_active_branch()
