@@ -459,10 +459,11 @@ def do_give(args):
 
     pkgdbclient.username = args.username
     username = args.poc or args.username
+    former_poc = args.former_poc
     LOG.info("new poc : {0}".format(username))
 
     if args.package == 'all':
-        pkgs = _get_user_packages(args.former_poc)
+        pkgs = _get_user_packages(former_poc)
     else:
         pkgs = [args.package]
 
@@ -472,7 +473,7 @@ def do_give(args):
         branches = [args.branch]
 
     output = pkgdbclient.update_package_poc(
-        pkgs, branches, username, former_poc=args.former_poc)
+        pkgs, branches, username, former_poc=former_poc)
     for msg in output.get('messages', []):
         print msg
 
