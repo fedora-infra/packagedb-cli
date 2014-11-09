@@ -229,6 +229,11 @@ def setup_parser():
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
         "Can be skipped if --user is specified, otherwise is mandatory.")
+    parser_give.add_argument(
+        '--former-poc', default=None,
+        help="FAS username of the former point of contact of the package "
+        "This allows to specify more branches than the former_poc has while "
+        "still giving away only the branch he/she actually has.")
     parser_give.set_defaults(func=do_give)
 
     ## List
@@ -446,13 +451,18 @@ def do_give(args):
     ''' Give a package to someone in pkgdb.
 
     '''
-    LOG.info("user    : {0}".format(args.username))
-    LOG.info("package : {0}".format(args.package))
-    LOG.info("branch  : {0}".format(args.branch))
-    LOG.info("poc     : {0}".format(args.poc))
+    LOG.info("user       : {0}".format(args.username))
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("branch     : {0}".format(args.branch))
+    LOG.info("poc        : {0}".format(args.poc))
+    LOG.info("former_poc : {0}".format(args.former_poc))
+
+    pkgdbclient.username = args.username
+    username = args.poc or args.username
+    LOG.info("new poc : {0}".format(username))
 
     if args.package == 'all':
-        pkgs = _get_user_packages(args.username)
+        pkgs = _get_user_packages(args.former_poc)
     else:
         pkgs = [args.package]
 
@@ -461,12 +471,8 @@ def do_give(args):
     else:
         branches = [args.branch]
 
-    pkgdbclient.username = args.username
-
-    username = args.poc or args.username or pkgdbclient.username
-    LOG.info("new poc : {0}".format(username))
-
-    output = pkgdbclient.update_package_poc(pkgs, branches, username)
+    output = pkgdbclient.update_package_poc(
+        pkgs, branches, username, former_poc=args.former_poc)
     for msg in output.get('messages', []):
         print msg
 
