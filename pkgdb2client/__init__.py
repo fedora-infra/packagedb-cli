@@ -977,7 +977,7 @@ class PkgDB(object):
         }
         return self.handle_api_call('/package/critpath/', data=args)
 
-    def update_package_poc(self, pkgnames, branches, poc):
+    def update_package_poc(self, pkgnames, branches, poc, former_poc=None):
         ''' Update the point of contact of the specified packages on the
         specified branches.
 
@@ -989,6 +989,10 @@ class PkgDB(object):
         :type branches: str or list
         :arg poc:
         :type poc: str
+        :kwarg former_poc: Use this argument to ensure you are only
+            changing branches where the specified former_poc is POC, even
+            if the branches you specified are broader.
+        :type former_poc: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -1002,6 +1006,8 @@ class PkgDB(object):
             'branches': branches,
             'poc': poc,
         }
+        if former_poc:
+            args['former_poc'] = former_poc
         return self.handle_api_call('/package/acl/reassign/', data=args)
 
     def get_version(self):
