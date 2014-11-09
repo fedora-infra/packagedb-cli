@@ -94,9 +94,10 @@ def _get_user_packages(username):
     LOG.debug("Get the packages of user {0}".format(username))
     global pkgdbclient
     pkgs = []
-    output = pkgdbclient.get_packages(poc=username)
-    for pkg in output['packages']:
-        pkgs.append(pkg['name'])
+    if username:
+        output = pkgdbclient.get_packages(poc=username)
+        for pkg in output['packages']:
+            pkgs.append(pkg['name'])
     return pkgs
 
 
