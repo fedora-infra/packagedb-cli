@@ -228,9 +228,7 @@ def setup_parser():
     parser_give.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
-        "This allows to give your package or an orphaned "
-        "package to someone else. "
-        "(default: current FAS user)")
+        "Can be skipped if --user is specified, otherwise is mandatory.")
     parser_give.set_defaults(func=do_give)
 
     ## List
