@@ -621,7 +621,7 @@ def do_unorphan(args):
             'the new point of contact.')
     LOG.info("new poc : {0}".format(username))
 
-    output = pkgdbclient.update_package_poc(pkgs, branches, username)
+    output = pkgdbclient.unorphan_packages(pkgs, branches, username)
     for msg in output.get('messages', []):
         print msg
 
