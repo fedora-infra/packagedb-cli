@@ -67,6 +67,7 @@ def _get_active_branch(packagename=None):
     all the active branches if no package is specified.
     '''
     LOG.debug("Retrieving all the active branches")
+    global pkgdbclient
     branches = []
     if packagename:
         output = pkgdbclient.get_package(packagename)
@@ -91,10 +92,12 @@ def _get_user_packages(username):
 
     '''
     LOG.debug("Get the packages of user {0}".format(username))
+    global pkgdbclient
     pkgs = []
-    output = pkgdbclient.get_packages(poc=username)
-    for pkg in output['packages']:
-        pkgs.append(pkg['name'])
+    if username:
+        output = pkgdbclient.get_packages(poc=username)
+        for pkg in output['packages']:
+            pkgs.append(pkg['name'])
     return pkgs
 
 
@@ -225,9 +228,12 @@ def setup_parser():
     parser_give.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
-        "This allows to give your package or an orphaned "
-        "package to someone else. "
-        "(default: current FAS user)")
+        "Can be skipped if --user is specified, otherwise is mandatory.")
+    parser_give.add_argument(
+        '--former-poc', default=None,
+        help="FAS username of the former point of contact of the package "
+        "This allows to specify more branches than the former_poc has while "
+        "still giving away only the branch he/she actually has.")
     parser_give.set_defaults(func=do_give)
 
     ## List
@@ -445,27 +451,34 @@ def do_give(args):
     ''' Give a package to someone in pkgdb.
 
     '''
-    LOG.info("user    : {0}".format(args.username))
-    LOG.info("package : {0}".format(args.package))
-    LOG.info("branch  : {0}".format(args.branch))
-    LOG.info("poc     : {0}".format(args.poc))
+    LOG.info("user       : {0}".format(args.username))
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("branch     : {0}".format(args.branch))
+    LOG.info("poc        : {0}".format(args.poc))
+    LOG.info("former_poc : {0}".format(args.former_poc))
+
+    pkgdbclient.username = args.username
+    username = args.poc or args.username
+    former_poc = args.former_poc
+    LOG.info("new poc : {0}".format(username))
 
     if args.package == 'all':
-        pkgs = _get_user_packages(args.username)
+        pkgs = _get_user_packages(former_poc)
     else:
-        pkgs = [args.package]
+        if '*' in args.package:
+            pkgs = pkgdbclient.get_packages(
+                args.package, poc=former_poc, page='all')
+            pkgs = [pkg['name'] for pkg in pkgs['packages']]
+        else:
+            pkgs = [args.package]
 
     if args.branch == 'all':
         branches = _get_active_branch()
     else:
         branches = [args.branch]
 
-    pkgdbclient.username = args.username
-
-    username = args.poc or args.username or pkgdbclient.username
-    LOG.info("new poc : {0}".format(username))
-
-    output = pkgdbclient.update_package_poc(pkgs, branches, username)
+    output = pkgdbclient.update_package_poc(
+        pkgs, branches, username, former_poc=former_poc)
     for msg in output.get('messages', []):
         print msg
 
@@ -546,9 +559,14 @@ def do_orphan(args):
 
     former_poc = args.poc or args.username
     if args.package == 'all':
-        pkgs = _get_user_packages(args.poc or args.username)
+        pkgs = _get_user_packages(former_poc)
     else:
-        pkgs = [args.package]
+        if '*' in args.package and former_poc:
+            pkgs = pkgdbclient.get_packages(
+                args.package, poc=former_poc, page='all')
+            pkgs = [pkg['name'] for pkg in pkgs['packages']]
+        else:
+            pkgs = [args.package]
 
     if args.branch == 'all':
         branches = _get_active_branch()
