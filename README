@@ -4,8 +4,8 @@ Fedora PackageDB-cli
 
 :Author: Pierre-Yves Chibon
 :Contact: pingou@fedoraproject.org
-:Date: Wed July 30, 2014
-:Version: 2.5
+:Date: Fri Nov 21, 2014
+:Version: 2.6
 
 The `PackageDB-cli` is a commande line interface to the PackageDB of Fedora.
 
