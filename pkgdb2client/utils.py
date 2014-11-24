@@ -136,7 +136,13 @@ def is_packager(user):
     if '@' in user:
         fas_user = __get_fas_user_by_email(user.strip())
     else:
-        fas_user = FASCLIENT.person_by_username(user)
+        try:
+            fas_user = FASCLIENT.person_by_username(user)
+        except AuthError:
+            username, password = pkgdb2client.ask_password()
+            FASCLIENT.username = username
+            FASCLIENT.password = password
+            fas_user = FASCLIENT.person_by_username(user)
 
     return fas_user \
         and 'packager' in fas_user['group_roles'] \
@@ -154,11 +160,6 @@ def check_package_creation(info, bugid):
       - ...
     '''
     messages = []
-
-    if not FASCLIENT.username:
-        username, password = pkgdb2client.ask_password()
-        FASCLIENT.username = username
-        FASCLIENT.password = password
 
     bug = get_bug(bugid)
 
@@ -225,11 +226,6 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
         )
 
     # Check if user is a packager
-    if not FASCLIENT.username:
-        username, password = pkgdb2client.ask_password()
-        FASCLIENT.username = username
-        FASCLIENT.password = password
-
     if not is_packager(user):
         messages.append(' ! User {0} is not a packager'.format(user))
 
