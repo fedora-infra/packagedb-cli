@@ -216,7 +216,7 @@ def _ask_what_to_do(messages):
 
     print 'What should we do about this requests?'
     action = raw_input('approve, deny, pass: ')
-    if action.lower() not in ['approve', 'deny', 'pass']:
+    if action.lower() not in ['a', 'd', 'p', 'approve', 'deny', 'pass']:
         print 'No valid action specified, just ignoring for now'
         action = 'pass'
 
