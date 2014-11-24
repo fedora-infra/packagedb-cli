@@ -59,21 +59,20 @@ def get_bugz(pkg_name):
     return bugbz
 
 
-def get_bug(bugid, login=False):
+def get_bug(bugid):
     ''' Return the bug with the specified identifier.
 
     :arg bugid: the identifier of the bug to retrieve
-    :kwarg login: a boolean specifying whether to retrieve the information
-        about this bug with a user logged in or not.
     :returns: the list of the people (their email address) that commented
         on the specified ticket
 
     '''
 
-    if login and not BZCLIENT.logged_in:
+    bug = BZCLIENT.getbug(bugid)
+    if not '@' in bug.creator:
         bz_login()
-
-    return BZCLIENT.getbug(bugid)
+        bug = BZCLIENT.getbug(bugid)
+    return bug
 
 
 def get_users_in_bug(bugid):
@@ -86,9 +85,9 @@ def get_users_in_bug(bugid):
 
     '''
 
-    if isinstance(bugid, (int, basestring)):
-        bugbz = get_bug(bugid, login=True)
-    else:
+    try:
+        bugbz = get_bug(int(bugid))
+    except ValueError:
         bugbz = bugid
     users = set([com['author'] for com in bugbz.comments])
     users.add(bugbz.creator)
@@ -155,7 +154,7 @@ def check_package_creation(info, bugid):
         FASCLIENT.username = username
         FASCLIENT.password = password
 
-    bug = get_bug(bugid, login=True)
+    bug = get_bug(bugid)
 
     # Check if the title of the bug fits the expectations
     expected = 'Review Request: {0} - {1}'.format(
