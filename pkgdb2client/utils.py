@@ -107,18 +107,31 @@ def __get_fas_user_by_email(email_address):
         userid = FASCLIENT._AccountSystem__alternate_email[email_address]
 
     else:
-        userid = FASCLIENT.people_query(
-            constraints={'email': email_address},
-            columns=['id']
-        )
+        try:
+            userid = FASCLIENT.people_query(
+                constraints={'email': email_address},
+                columns=['id']
+            )
+        except AuthError:
+            username, password = pkgdb2client.ask_password()
+            FASCLIENT.username = username
+            FASCLIENT.password = password
+            userid = FASCLIENT.people_query(
+                constraints={'email': email_address},
+                columns=['id']
+            )
         if userid:
             userid = userid[0].id
 
     user = None
     if userid:
-        user = FASCLIENT.person_by_id(userid)
-    else:
-        LOG.info('No user id found in FAS for email %s', email_address)
+        try:
+            user = FASCLIENT.person_by_id(userid)
+        except AuthError:
+            username, password = pkgdb2client.ask_password()
+            FASCLIENT.username = username
+            FASCLIENT.password = password
+            user = FASCLIENT.person_by_id(userid)
 
     return user
 
