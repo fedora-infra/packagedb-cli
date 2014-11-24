@@ -110,9 +110,13 @@ def __get_fas_user_by_email(email_address):
         userid = FASCLIENT.people_query(
             constraints={'email': email_address},
             columns=['id']
-        )[0].id
+        )
+        if userid:
+            userid = userid[0].id
 
-    user = FASCLIENT.person_by_id(userid)
+    user = None
+    if userid:
+        user = FASCLIENT.person_by_id(userid)
 
     return user
 
