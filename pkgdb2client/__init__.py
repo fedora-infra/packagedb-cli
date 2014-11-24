@@ -229,6 +229,7 @@ class PkgDB(object):
         if not response:
             response = self.session.get(self.url + '/login/')
 
+        openid_url = ''
         if '<title>OpenID transaction in progress</title>' \
                 in response.text:
             # requests.session should hold onto this for us....
