@@ -536,9 +536,8 @@ def do_list(args):
 
     cnt = 0
     pkgs = sorted(output['packages'], key=lambda pkg: (pkg['name']))
-    max_len = max([len(pkg['name']) for pkg in pkgs]) + 2
-    if max_len < 33:
-        max_len = 33
+    min_len = 31
+    max_len = max([len(pkg['name']) for pkg in pkgs] + [min_len]) + 2
     for pkg in pkgs:
         out = "   " + pkg['name'] + ' ' * (max_len - len(pkg['name'])) + \
             pkg['summary']
