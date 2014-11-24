@@ -18,13 +18,22 @@
 import getpass
 
 from bugzilla import Bugzilla
+import fedora_cert
 from fedora.client import AccountSystem, AuthError
 
 import pkgdb2client
 
+try:
+    USERNAME = fedora_cert.read_user_cert()
+except fedora_cert.fedora_cert_error:
+    LOG.debug('Could not read Fedora cert, asking for username')
+    USERNAME = None
+
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 BZCLIENT = Bugzilla(url=RH_BZ_API)
-FASCLIENT = AccountSystem('https://admin.fedoraproject.org/accounts')
+FASCLIENT = AccountSystem(
+    'https://admin.fedoraproject.org/accounts',
+    username=USERNAME)
 
 
 def bz_login():
