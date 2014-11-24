@@ -25,7 +25,7 @@ import koji
 from pkgdb2client import PkgDB, PkgDBException, __version__
 from cli import ActionError
 import pkgdb2client
-import utils
+import pkgdb2client.utils as utils
 
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
@@ -307,12 +307,12 @@ def do_process(args):
         )
 
         decision = _ask_what_to_do(msgs)
-        if decision == 'pass':
+        if decision in ('pass', 'p'):
             data = {
                 'messages': ['Action {0} un-touched'.format(args.actionid)]
             }
 
-        elif decision == 'deny':
+        elif decision in ('deny', 'd'):
             data = pkgdbclient.handle_api_call(
                 '/admin/action/status',
                 data={
