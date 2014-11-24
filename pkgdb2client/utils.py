@@ -117,6 +117,8 @@ def __get_fas_user_by_email(email_address):
     user = None
     if userid:
         user = FASCLIENT.person_by_id(userid)
+    else:
+        LOG.info('No user id found in FAS for email %s', email_address)
 
     return user
 
