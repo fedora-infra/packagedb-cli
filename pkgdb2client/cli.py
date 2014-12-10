@@ -23,6 +23,7 @@ import argparse
 import requests
 import logging
 import koji
+import itertools
 
 
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
@@ -580,7 +581,7 @@ def do_orphan(args):
 
     if args.retire is True:
         for pkg_name, pkg_branch in itertools.product(
-                pkgnames, branches):
+                pkgs, branches):
             dead_url = \
                 'http://pkgs.fedoraproject.org/cgit/{0}.git/plain/'\
                 'dead.package?h={1}'.format(pkg_name, pkg_branch)
