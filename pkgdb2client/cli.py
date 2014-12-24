@@ -365,6 +365,16 @@ def setup_parser():
         help="Return all the branches instead of just the active ones")
     parser_branch.set_defaults(func=do_branch)
 
+    ## Pending ACLS
+    parser_pending = subparsers.add_parser(
+        'pending',
+        help='List the pending ACLs requests')
+    parser_pending.add_argument(
+        'user', default=None, nargs="?",
+        help='Restrict the pending ACLs requests to those requiring action '
+            'from the specified user.')
+    parser_pending.set_defaults(func=do_pending)
+
     return parser
 
 
@@ -597,6 +607,17 @@ def do_orphan(args):
 
     for msg in output.get('messages', []):
         print msg
+
+
+def do_pending(args):
+    ''' List pending ACLs requests.
+
+    '''
+    LOG.info("user    : {0}".format(args.user or args.username))
+    output = pkgdbclient.get_pending_acls(args.user or args.username)
+    for msg in output.get('pending_acls'):
+        print '%(user)s requested `%(acl)s` on %(package)s ' \
+            '(%(collection)s)' % msg
 
 
 def do_unorphan(args):
