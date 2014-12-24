@@ -1040,3 +1040,43 @@ class PkgDB(object):
             output.append(el)
 
         return tuple(output)
+
+    def get_pending_acls(self, username=None):
+        ''' Return the list of pending ACLs, eventually restricted to the
+        pending ACLs requiring action from the specified user.
+
+        :return: a list of dictionnary describing the pending ACLs
+        :rtype: list
+        :raise PkgDBException: if the API call does not return a http code
+            200.
+
+        Example of data returned
+
+        ::
+            {
+                "pending_acls": [
+                    {
+                        "acl": "approveacls",
+                        "collection": "f21",
+                        "package": "zbar",
+                        "status": "Awaiting Review",
+                        "user": "firemanxbr"
+                    },
+                    {
+                        "acl": "approveacls",
+                        "collection": "master",
+                        "package": "zbar",
+                        "status": "Awaiting Review",
+                        "user": "firemanxbr"
+                    }
+                ],
+                "total_requests_pending": 4255
+            }
+
+        '''
+
+        args = {'format': 'json'}
+        if username is not None:
+            args['username'] = username
+        return self.handle_api_call('/pendingacls', params=args)
+
