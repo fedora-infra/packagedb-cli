@@ -353,7 +353,11 @@ class PkgDB(object):
 
         if response.status_code != 200:
             LOG.debug('full output: {0}'.format(output))
-            raise PkgDBException(output['error'])
+            if output and 'error' in output:
+                raise PkgDBException(output['error'])
+            elif output is None:
+                raise PkgDBException(
+                    'No output returned by %s' % response.url)
 
         return output
 
