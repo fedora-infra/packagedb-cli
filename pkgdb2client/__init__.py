@@ -1049,7 +1049,7 @@ class PkgDB(object):
         ''' Return the list of pending ACLs, eventually restricted to the
         pending ACLs requiring action from the specified user.
 
-        :return: a list of dictionnary describing the pending ACLs
+        :return: a list of dictionaries describing the pending ACLs
         :rtype: list
         :raise PkgDBException: if the API call does not return a http code
             200.
