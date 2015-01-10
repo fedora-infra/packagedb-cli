@@ -255,7 +255,8 @@ def setup_parser():
         help="List all orphaned and eol'd packages")
     parser_list.add_argument(
         '--user', dest='user', default=None,
-        help="List all the packages of that user <user> has ACLs on")
+        help="List all the packages of that user <user> has ACLs on (should be "
+        "provided after the `list` action)")
     parser_list.add_argument(
         '--poc', action="store_true",
         default=False, dest='poc',
@@ -340,7 +341,7 @@ def setup_parser():
     parser_update.add_argument(
         'user',
         help="FAS username of the person who requested ACL "
-        "on this package")
+        "on this package (should be provided after the `update` action)")
     parser_update.add_argument(
         'branch', default='master', nargs="?",
         help="Branch of the package for which the ACL is "
@@ -372,7 +373,8 @@ def setup_parser():
     parser_pending.add_argument(
         'user', default=None, nargs="?",
         help='Restrict the pending ACLs requests to those requiring action '
-            'from the specified user.')
+            'from the specified user (should be provided after the `pending` '
+            'action)')
     parser_pending.set_defaults(func=do_pending)
 
     return parser
