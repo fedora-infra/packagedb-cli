@@ -205,7 +205,8 @@ def check_package_creation(info, bugid):
     return messages
 
 
-def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
+def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
+                          new_pkg=False):
     ''' Performs a number of checks to see if a package should be allowed
     on a certain branch.
 
@@ -218,25 +219,26 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user):
     messages = []
 
     # check if the package already exists
-    try:
-        pkginfo = pkgdbclient.get_package(pkg_name)
-    except pkgdb2client.PkgDBException:
-        messages.append(
-            ' ! Packages {0} not found in pkgdb'.format(pkg_name)
-        )
-        return messages
+    if not new_pkg:
+        try:
+            pkginfo = pkgdbclient.get_package(pkg_name)
+        except pkgdb2client.PkgDBException:
+            messages.append(
+                ' ! Packages {0} not found in pkgdb'.format(pkg_name)
+            )
+            return messages
 
-    # Check if package already has this branch
-    branches = [
-        pkg['collection']['branchname']
-        for pkg in pkginfo['packages']
-    ]
+        # Check if package already has this branch
+        branches = [
+            pkg['collection']['branchname']
+            for pkg in pkginfo['packages']
+        ]
 
-    if clt_name in branches:
-        messages.append(
-            ' ! Packages {0} already has the requested branch `{1}`'.format(
-                pkg_name, clt_name)
-        )
+        if clt_name in branches:
+            messages.append(
+                ' ! Packages {0} already has the requested branch '
+                '`{1}`'.format(pkg_name, clt_name)
+            )
 
     # Check if user is a packager
     if not is_packager(user):
