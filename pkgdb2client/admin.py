@@ -270,6 +270,8 @@ def __handle_request_package(actionid, action):
             }
         )
 
+    return data
+
 
 def __handle_request_branche(actionid, action):
     ''' Handle ne branch requests. '''
@@ -315,6 +317,8 @@ def __handle_request_branche(actionid, action):
             }
         )
 
+    return data
+
 
 def do_process(args):
     ''' Process a specific admin action.
@@ -348,9 +352,9 @@ def do_process(args):
                 pass
 
         if action['action'] == 'request.package':
-            __handle_request_package(actionid, action)
+            data = __handle_request_package(actionid, action)
         elif action['action'] == 'request.branch':
-            __handle_request_branche(actionid, action)
+            data = __handle_request_branche(actionid, action)
         else:
             print 'Action %s not supported by pkgdb-cli' % action['action']
 
