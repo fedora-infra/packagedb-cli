@@ -112,50 +112,50 @@ def _action2msg(action):
     '''
     if action['action'] == 'request.package':
         msg = '#%(id)s (%(status)s) - %(user)s requested the new package '\
-        '"%(pkg)s" on "%(clt)s"' % (
-            {
-                'id': action['id'],
-                'status': action['status'],
-                'user': action['user'],
-                'pkg': action['info']['pkg_name'],
-                'clt': action['info']['pkg_collection'],
-            }
-        )
+            '"%(pkg)s" on "%(clt)s"' % (
+                {
+                    'id': action['id'],
+                    'status': action['status'],
+                    'user': action['user'],
+                    'pkg': action['info']['pkg_name'],
+                    'clt': action['info']['pkg_collection'],
+                }
+            )
 
     elif action['action'] == 'request.branch':
         msg = '#%(id)s (%(status)s) - %(user)s requested a new branch '\
-        '"%(clt)s" for "%(pkg)s"' % (
-            {
-                'id': action['id'],
-                'status': action['status'],
-                'user': action['user'],
-                'pkg': action['package']['name'],
-                'clt': action['collection']['branchname'],
-            }
-        )
+            '"%(clt)s" for "%(pkg)s"' % (
+                {
+                    'id': action['id'],
+                    'status': action['status'],
+                    'user': action['user'],
+                    'pkg': action['package']['name'],
+                    'clt': action['collection']['branchname'],
+                }
+            )
 
     elif action['action'] == 'request.unretire':
         msg = '#%(id)s (%(status)s) - %(user)s requested the ' \
-        'unretirement of "%(pkg)s" on "%(clt)s"' % (
-            {
-                'id': action['id'],
-                'status': action['status'],
-                'user': action['user'],
-                'pkg': action['package']['name'],
-                'clt': action['collection']['branchname'],
-            }
-        )
+            'unretirement of "%(pkg)s" on "%(clt)s"' % (
+                {
+                    'id': action['id'],
+                    'status': action['status'],
+                    'user': action['user'],
+                    'pkg': action['package']['name'],
+                    'clt': action['collection']['branchname'],
+                }
+            )
 
     else:
         msg = '#%(id)s (%(status)s) - %(action)s by %(user)s is not '\
-        'handled by pkgdb-admin' % (
-            {
-                'id': action['id'],
-                'status': action['status'],
-                'action': action['action'],
-                'user': action['user'],
-            }
-        )
+            'handled by pkgdb-admin' % (
+                {
+                    'id': action['id'],
+                    'status': action['status'],
+                    'action': action['action'],
+                    'user': action['user'],
+                }
+            )
 
     return msg
 
@@ -184,7 +184,7 @@ def do_list(args):
     for cnt, action in enumerate(data['actions']):
         print _action2msg(action)
 
-    print 'Total: {0} actions'.format(cnt  + 1)
+    print 'Total: {0} actions'.format(cnt + 1)
 
 
 def do_update(args):
@@ -234,7 +234,7 @@ def do_process(args):
 
     print _action2msg(action)
 
-    if action['status']  != 'Awaiting Review':
+    if action['status'] != 'Awaiting Review':
         print 'Action #%s is not Awaiting Review - Current status: %s' % (
             action['id'], action['status'])
         return
@@ -243,7 +243,7 @@ def do_process(args):
         try:
             pkgdbclient.get_package(action['info']['pkg_name'])
             print 'Package {0} found, requalifying request.package ' \
-            'in request.branch'.format(action['info']['pkg_name'])
+                'in request.branch'.format(action['info']['pkg_name'])
             # Adjusting the input format
             action['action'] = 'request.branch'
             action['package'] = {'name': action['info']['pkg_name']}
