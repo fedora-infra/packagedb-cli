@@ -170,7 +170,7 @@ def is_packager(user):
         and fas_user['group_roles']['packager']['role_status'] == 'approved'
 
 
-def check_package_creation(info, bugid):
+def check_package_creation(info, bugid, pkgdbclient):
     ''' Performs a number of checks to see if a package review satisfies the
     criterias to create the package on pkgdb.
 
@@ -205,7 +205,16 @@ def check_package_creation(info, bugid):
                     ' ! User {0} is not a packager but set the '
                     'fedora-review flag to `+`'.format(flag['setter']))
 
-    if not messages:
+    msgs2 = check_branch_creation(
+        pkgdbclient,
+        info['pkg_name'],
+        info['pkg_collection'],
+        info['pkg_poc'],
+        new_pkg=True,
+    )
+
+    if not messages and msgs2[0].startswith(' + All checks cleared'):
+        message2 = msgs2
         messages.append(
             ' + All checks cleared for review {0}: {1}'.format(
                 bugid, info['pkg_name']))
