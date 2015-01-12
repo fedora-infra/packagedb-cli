@@ -253,9 +253,15 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
 
     # EPEL checks
     if clt_name.lower().startswith(('el', 'epel')):
-        messages.append(
-            ' ! Nothing checked automatically, but requests is for an '
-            'EPEL branch')
+        rhel_data = get_rhel_cache(clt_name[-1])
+        if pkg_name in rhel_data:
+            messages.append(
+                ' ! `%s` is present in RHEL %s with version: %s on arch: %s'
+                % (
+                    pkg_name, clt_name[-1], rhel_data[pkg_name]['version'],
+                    ', '.join(rhel_data[pkg_name]['arch'])
+                )
+            )
 
     if not messages:
         messages.append(
