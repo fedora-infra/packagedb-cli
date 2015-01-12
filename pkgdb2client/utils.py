@@ -245,7 +245,7 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
         messages.append(' ! User {0} is not a packager'.format(user))
 
     # EPEL checks
-    if clt_name.startswith(('el', 'epel')):
+    if clt_name.lower().startswith(('el', 'epel')):
         messages.append(
             ' ! Nothing checked automatically, but requests is for an '
             'EPEL branch')
