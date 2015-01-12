@@ -260,6 +260,15 @@ def do_process(args):
 
         msgs = utils.check_package_creation(
             action['info'], bugid)
+        msgs.extend(
+            utils.check_branch_creation(
+                pkgdbclient,
+                action['info']['pkg_name'],
+                action['info']['pkg_collection'],
+                action['info']['pkg_poc'],
+                new_pkg=True,
+            )
+        )
 
         decision = _ask_what_to_do(msgs)
         if decision == 'pass':
