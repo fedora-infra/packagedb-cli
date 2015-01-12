@@ -39,8 +39,8 @@ class NullHandler(logging.Handler):
 LOG = logging.getLogger("pkgdb2client")
 
 # Add the null handler to top-level logger used by the library
-h = NullHandler()
-LOG.addHandler(h)
+hand = NullHandler()
+LOG.addHandler(hand)
 
 __version__ = pkg_resources.get_distribution('packagedb-cli').version
 PKGDB_URL = r'https://admin.fedoraproject.org/pkgdb/'
@@ -1038,12 +1038,12 @@ class PkgDB(object):
                 'No version information could be retrieved')
         version = version['version']
         output = []
-        for el in version.split('.'):
+        for el_ver in version.split('.'):
             try:
-                el = int(el)
+                el_ver = int(el_ver)
             except ValueError:
                 pass
-            output.append(el)
+            output.append(el_ver)
 
         return tuple(output)
 
