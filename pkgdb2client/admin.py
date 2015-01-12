@@ -271,6 +271,51 @@ def __handle_request_package(actionid, action):
         )
 
 
+def __handle_request_branche(actionid, action):
+    ''' Handle ne branch requests. '''
+    msgs = utils.check_branch_creation(
+        PKGDBCLIENT,
+        action['package']['name'],
+        action['collection']['branchname'],
+        action['user']
+    )
+
+    decision = _ask_what_to_do(msgs)
+    if decision in ('pass', 'p'):
+        data = {
+            'messages': ['Action {0} un-touched'.format(actionid)]
+        }
+
+    elif decision in ('deny', 'd'):
+        data = PKGDBCLIENT.handle_api_call(
+            '/admin/action/status',
+            data={
+                'id': actionid,
+                'status': 'Denied'
+            }
+        )
+
+    else:
+        data = PKGDBCLIENT.update_acl(
+            pkgname=action['package']['name'],
+            branches=action['collection']['branchname'],
+            acls=[
+                'commit', 'watchbugzilla',
+                'watchcommits', 'approveacls'
+            ],
+            status='Approved',
+            user=action['user'],
+        )
+
+        PKGDBCLIENT.handle_api_call(
+            '/admin/action/status',
+            data={
+                'id': actionid,
+                'status': 'Approved'
+            }
+        )
+
+
 def do_process(args):
     ''' Process a specific admin action.
 
@@ -304,50 +349,8 @@ def do_process(args):
 
         if action['action'] == 'request.package':
             __handle_request_package(actionid, action)
-
         elif action['action'] == 'request.branch':
-            msgs = utils.check_branch_creation(
-                PKGDBCLIENT,
-                action['package']['name'],
-                action['collection']['branchname'],
-                action['user']
-            )
-
-            decision = _ask_what_to_do(msgs)
-            if decision in ('pass', 'p'):
-                data = {
-                    'messages': ['Action {0} un-touched'.format(actionid)]
-                }
-
-            elif decision in ('deny', 'd'):
-                data = PKGDBCLIENT.handle_api_call(
-                    '/admin/action/status',
-                    data={
-                        'id': actionid,
-                        'status': 'Denied'
-                    }
-                )
-
-            else:
-                data = PKGDBCLIENT.update_acl(
-                    pkgname=action['package']['name'],
-                    branches=action['collection']['branchname'],
-                    acls=[
-                        'commit', 'watchbugzilla',
-                        'watchcommits', 'approveacls'
-                    ],
-                    status='Approved',
-                    user=action['user'],
-                )
-
-                PKGDBCLIENT.handle_api_call(
-                    '/admin/action/status',
-                    data={
-                        'id': actionid,
-                        'status': 'Approved'
-                    }
-                )
-
+            __handle_request_branche(actionid, action)
         else:
             print 'Action %s not supported by pkgdb-cli' % action['action']
 
