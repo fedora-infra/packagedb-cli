@@ -266,7 +266,8 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
 
     if not messages:
         messages.append(
-            ' + All checks cleared for package {0}'.format(pkg_name))
+            ' + All checks cleared for branch {0} for package {1}'.format(
+                clt_name, pkg_name))
 
     return messages
 
