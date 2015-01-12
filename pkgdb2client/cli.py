@@ -597,7 +597,7 @@ def do_orphan(args):
             req = requests.get(dead_url)
             if req.status_code != 200 or not req.text.strip():
                 print 'No `dead.package` for %s on %s, please use '\
-                '`fedpkg retire`' % (pkg_name, pkg_branch)
+                    '`fedpkg retire`' % (pkg_name, pkg_branch)
                 return
         output = pkgdbclient.retire_packages(pkgs, branches)
     else:
