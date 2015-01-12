@@ -33,7 +33,7 @@ import pkgdb2client
 try:
     USERNAME = fedora_cert.read_user_cert()
 except fedora_cert.fedora_cert_error:
-    LOG.debug('Could not read Fedora cert, asking for username')
+    pkgdb2client.LOG.debug('Could not read Fedora cert, asking for username')
     USERNAME = None
 
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
