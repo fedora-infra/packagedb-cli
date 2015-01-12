@@ -224,6 +224,53 @@ def _ask_what_to_do(messages):
     return action.lower()
 
 
+def __handle_request_package(actionid, action):
+    ''' Handle the new package requests. '''
+    bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
+    if '=' in bugid:
+        bugid = bugid.split('=', 1)[1]
+
+    msgs = utils.check_package_creation(
+        action['info'], bugid, PKGDBCLIENT)
+
+    decision = _ask_what_to_do(msgs)
+    if decision == 'pass':
+        data = {
+            'messages': ['Action {0} un-touched'.format(actionid)]
+        }
+
+    elif decision == 'deny':
+        data = PKGDBCLIENT.handle_api_call(
+            '/admin/action/status',
+            data={
+                'id': actionid,
+                'status': 'Denied'
+            }
+        )
+
+    else:
+        data = PKGDBCLIENT.create_package(
+            pkgname=action['info']['pkg_name'],
+            summary=action['info']['pkg_summary'],
+            description=action['info']['pkg_description'],
+            review_url=action['info']['pkg_review_url'],
+            status=action['info']['pkg_status'],
+            shouldopen=True,
+            branches=action['info']['pkg_collection'],
+            poc=action['info']['pkg_poc'],
+            upstream_url=action['info']['pkg_upstream_url'],
+            critpath=action['info']['pkg_critpath'],
+        )
+
+        PKGDBCLIENT.handle_api_call(
+            '/admin/action/status',
+            data={
+                'id': args.actionid,
+                'status': 'Approved'
+            }
+        )
+
+
 def do_process(args):
     ''' Process a specific admin action.
 
@@ -256,49 +303,7 @@ def do_process(args):
                 pass
 
         if action['action'] == 'request.package':
-            bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
-            if '=' in bugid:
-                bugid = bugid.split('=', 1)[1]
-
-            msgs = utils.check_package_creation(
-                action['info'], bugid, PKGDBCLIENT)
-
-            decision = _ask_what_to_do(msgs)
-            if decision == 'pass':
-                data = {
-                    'messages': ['Action {0} un-touched'.format(actionid)]
-                }
-
-            elif decision == 'deny':
-                data = PKGDBCLIENT.handle_api_call(
-                    '/admin/action/status',
-                    data={
-                        'id': actionid,
-                        'status': 'Denied'
-                    }
-                )
-
-            else:
-                data = PKGDBCLIENT.create_package(
-                    pkgname=action['info']['pkg_name'],
-                    summary=action['info']['pkg_summary'],
-                    description=action['info']['pkg_description'],
-                    review_url=action['info']['pkg_review_url'],
-                    status=action['info']['pkg_status'],
-                    shouldopen=True,
-                    branches=action['info']['pkg_collection'],
-                    poc=action['info']['pkg_poc'],
-                    upstream_url=action['info']['pkg_upstream_url'],
-                    critpath=action['info']['pkg_critpath'],
-                )
-
-                PKGDBCLIENT.handle_api_call(
-                    '/admin/action/status',
-                    data={
-                        'id': args.actionid,
-                        'status': 'Approved'
-                    }
-                )
+            __handle_request_package(actionid, action)
 
         elif action['action'] == 'request.branch':
             msgs = utils.check_branch_creation(
