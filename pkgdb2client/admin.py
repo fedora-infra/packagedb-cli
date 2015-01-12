@@ -360,6 +360,7 @@ def do_process(args):
 
         for msg in data.get('messages', []):
             print msg
+        print ''
 
 
 def main():
