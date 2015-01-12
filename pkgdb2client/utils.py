@@ -16,9 +16,16 @@
 """
 
 import getpass
+import json
+import os
+import tempfile
+
+from datetime import datetime
+
+import requests
+import fedora_cert
 
 from bugzilla import Bugzilla
-import fedora_cert
 from fedora.client import AccountSystem, AuthError
 
 import pkgdb2client
@@ -255,3 +262,35 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
             ' + All checks cleared for package {0}'.format(pkg_name))
 
     return messages
+
+
+def get_rhel_cache(rhel_ver):
+    ''' Retrieves the info of packages for the RHEL version specified.
+    If the file is already present on the disk it won't re-download them
+    (expires every 24 hours).
+
+    Returns the json structure containing the info.
+    '''
+    base_url = 'https://infrastructure.fedoraproject.org/repo/json/'\
+        'pkg_el%s.json'
+
+    url = base_url % rhel_ver
+    output_filename = os.path.join(
+        tempfile.gettempdir(), '%s_%s' %(
+            datetime.utcnow().date().strftime('%Y%m%d'),
+            os.path.basename(url))
+    )
+
+    if os.path.isfile(output_filename):
+        with open(output_filename) as stream:
+            data = json.load(stream)
+    else:
+        req = requests.get(url)
+        if req.status_code != 200:
+            raise pkgdb2client.PkgDBException(
+                'Invalid RHEL version provided, json file not found')
+        data = req.json()
+        with open(output_filename, 'w') as stream:
+            json.dump(data, stream)
+
+    return data
