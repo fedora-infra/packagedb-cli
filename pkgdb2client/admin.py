@@ -23,12 +23,12 @@ import logging
 import koji
 
 from pkgdb2client import PkgDB, PkgDBException, __version__
-from cli import ActionError
+from pkgdb2client.cli import ActionError
 import pkgdb2client
 import pkgdb2client.utils as utils
 
 
-pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
+PKGDBCLIENT = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
 BOLD = "\033[1m"
 RED = "\033[0;31m"
@@ -179,8 +179,9 @@ def do_list(args):
     if args.packager:
         data['packager'] = args.packager
 
-    data = pkgdbclient.handle_api_call('/admin/actions/', params=data)
+    data = PKGDBCLIENT.handle_api_call('/admin/actions/', params=data)
 
+    cnt = 0
     for cnt, action in enumerate(data['actions']):
         print _action2msg(action)
 
@@ -195,7 +196,7 @@ def do_update(args):
     LOG.info("action : {0}".format(args.actionid))
     LOG.info("status : {0}".format(args.status))
 
-    data = pkgdbclient.handle_api_call(
+    data = PKGDBCLIENT.handle_api_call(
         '/admin/action/status',
         data={
             'id': args.actionid,
@@ -230,7 +231,7 @@ def do_process(args):
     LOG.info("user   : {0}".format(args.username))
     LOG.info("action : {0}".format(args.actionid))
 
-    action = pkgdbclient.handle_api_call('/admin/action/%s' % args.actionid)
+    action = PKGDBCLIENT.handle_api_call('/admin/action/%s' % args.actionid)
 
     print _action2msg(action)
 
@@ -241,7 +242,7 @@ def do_process(args):
 
     if action['action'] == 'request.package':
         try:
-            pkgdbclient.get_package(action['info']['pkg_name'])
+            PKGDBCLIENT.get_package(action['info']['pkg_name'])
             print 'Package {0} found, requalifying request.package ' \
                 'in request.branch'.format(action['info']['pkg_name'])
             # Adjusting the input format
@@ -262,7 +263,7 @@ def do_process(args):
             action['info'], bugid)
         msgs.extend(
             utils.check_branch_creation(
-                pkgdbclient,
+                PKGDBCLIENT,
                 action['info']['pkg_name'],
                 action['info']['pkg_collection'],
                 action['info']['pkg_poc'],
@@ -277,7 +278,7 @@ def do_process(args):
             }
 
         elif decision == 'deny':
-            data = pkgdbclient.handle_api_call(
+            data = PKGDBCLIENT.handle_api_call(
                 '/admin/action/status',
                 data={
                     'id': args.actionid,
@@ -286,7 +287,7 @@ def do_process(args):
             )
 
         else:
-            data = pkgdbclient.create_package(
+            data = PKGDBCLIENT.create_package(
                 pkgname=action['info']['pkg_name'],
                 summary=action['info']['pkg_summary'],
                 description=action['info']['pkg_description'],
@@ -299,7 +300,7 @@ def do_process(args):
                 critpath=action['info']['pkg_critpath'],
             )
 
-            pkgdbclient.handle_api_call(
+            PKGDBCLIENT.handle_api_call(
                 '/admin/action/status',
                 data={
                     'id': args.actionid,
@@ -309,7 +310,7 @@ def do_process(args):
 
     elif action['action'] == 'request.branch':
         msgs = utils.check_branch_creation(
-            pkgdbclient,
+            PKGDBCLIENT,
             action['package']['name'],
             action['collection']['branchname'],
             action['user']
@@ -322,7 +323,7 @@ def do_process(args):
             }
 
         elif decision in ('deny', 'd'):
-            data = pkgdbclient.handle_api_call(
+            data = PKGDBCLIENT.handle_api_call(
                 '/admin/action/status',
                 data={
                     'id': args.actionid,
@@ -331,7 +332,7 @@ def do_process(args):
             )
 
         else:
-            data = pkgdbclient.update_acl(
+            data = PKGDBCLIENT.update_acl(
                 pkgname=action['package']['name'],
                 branches=action['collection']['branchname'],
                 acls=[
@@ -342,7 +343,7 @@ def do_process(args):
                 user=action['user'],
             )
 
-            pkgdbclient.handle_api_call(
+            PKGDBCLIENT.handle_api_call(
                 '/admin/action/status',
                 data={
                     'id': args.actionid,
@@ -376,9 +377,9 @@ def main():
         LOG.setLevel(logging.INFO)
 
     if arg.test:
-        global pkgdbclient
+        global PKGDBCLIENT
         print "Testing environment"
-        pkgdbclient = PkgDB(
+        PKGDBCLIENT = PkgDB(
             #'https://admin.stg.fedoraproject.org/pkgdb',
             'http://209.132.184.188/',
             login_callback=pkgdb2client.ask_password,
@@ -387,9 +388,9 @@ def main():
     return_code = 0
 
     if arg.password:
-        pkgdbclient.password = arg.password
+        PKGDBCLIENT.password = arg.password
     if arg.username:
-        pkgdbclient.username = arg.username
+        PKGDBCLIENT.username = arg.username
 
     try:
         arg.func(arg)
