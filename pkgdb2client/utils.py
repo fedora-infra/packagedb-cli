@@ -60,8 +60,9 @@ def get_bugz(pkg_name):
     '''
 
     bugbz = BZCLIENT.query(
-                {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
-                 'component': pkg_name})
+        {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
+         'component': pkg_name}
+    )
 
     return bugbz
 
@@ -76,7 +77,7 @@ def get_bug(bugid):
     '''
 
     bug = BZCLIENT.getbug(bugid)
-    if not '@' in bug.creator:
+    if '@' not in bug.creator:
         bz_login()
         bug = BZCLIENT.getbug(bugid)
     return bug
@@ -282,7 +283,7 @@ def get_rhel_cache(rhel_ver):
 
     url = base_url % rhel_ver
     output_filename = os.path.join(
-        tempfile.gettempdir(), '%s_%s' %(
+        tempfile.gettempdir(), '%s_%s' % (
             datetime.utcnow().date().strftime('%Y%m%d'),
             os.path.basename(url))
     )
