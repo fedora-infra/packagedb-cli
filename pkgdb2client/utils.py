@@ -263,6 +263,11 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
                     ', '.join(rhel_data[pkg_name]['arch'])
                 )
             )
+        else:
+            messages.append(
+                ' + `%s` is *not* present in RHEL %s' % (
+                    pkg_name, clt_name[-1])
+            )
 
     if not messages:
         messages.append(
