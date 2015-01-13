@@ -234,21 +234,7 @@ def __handle_request_package(actionid, action):
         action['info'], bugid, PKGDBCLIENT)
 
     decision = _ask_what_to_do(msgs)
-    if decision in ('pass', 'p'):
-        data = {
-            'messages': ['Action {0} un-touched'.format(actionid)]
-        }
-
-    elif decision in ('deny', 'd'):
-        data = PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Denied'
-            }
-        )
-
-    else:
+    if decision in ('a', 'approve'):
         data = PKGDBCLIENT.create_package(
             pkgname=action['info']['pkg_name'],
             summary=action['info']['pkg_summary'],
@@ -270,6 +256,21 @@ def __handle_request_package(actionid, action):
             }
         )
 
+    elif decision in ('deny', 'd'):
+        data = PKGDBCLIENT.handle_api_call(
+            '/admin/action/status',
+            data={
+                'id': actionid,
+                'status': 'Denied'
+            }
+        )
+
+    else:
+        data = {
+            'messages': ['Action {0} un-touched'.format(actionid)]
+        }
+
+
     return data
 
 
@@ -283,21 +284,7 @@ def __handle_request_branche(actionid, action):
     )
 
     decision = _ask_what_to_do(msgs)
-    if decision in ('pass', 'p'):
-        data = {
-            'messages': ['Action {0} un-touched'.format(actionid)]
-        }
-
-    elif decision in ('deny', 'd'):
-        data = PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Denied'
-            }
-        )
-
-    else:
+    if decision in ('a', 'approve'):
         data = PKGDBCLIENT.update_acl(
             pkgname=action['package']['name'],
             branches=action['collection']['branchname'],
@@ -316,6 +303,21 @@ def __handle_request_branche(actionid, action):
                 'status': 'Approved'
             }
         )
+
+    elif decision in ('deny', 'd'):
+        data = PKGDBCLIENT.handle_api_call(
+            '/admin/action/status',
+            data={
+                'id': actionid,
+                'status': 'Denied'
+            }
+        )
+
+    else:
+        data = {
+            'messages': ['Action {0} un-touched'.format(actionid)]
+        }
+
 
     return data
 
@@ -386,7 +388,8 @@ def main():
         print "Testing environment"
         PKGDBCLIENT = PkgDB(
             #'https://admin.stg.fedoraproject.org/pkgdb',
-            'http://209.132.184.188/',
+            #'http://209.132.184.188/',
+            'http://127.0.0.1:5000',
             login_callback=pkgdb2client.ask_password,
             insecure=True)
 
