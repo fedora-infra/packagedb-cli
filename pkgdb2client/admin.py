@@ -265,7 +265,7 @@ def __handle_request_package(actionid, action):
         PKGDBCLIENT.handle_api_call(
             '/admin/action/status',
             data={
-                'id': args.actionid,
+                'id': actionid,
                 'status': 'Approved'
             }
         )
