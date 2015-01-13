@@ -234,12 +234,12 @@ def __handle_request_package(actionid, action):
         action['info'], bugid, PKGDBCLIENT)
 
     decision = _ask_what_to_do(msgs)
-    if decision == 'pass':
+    if decision in ('pass', 'p'):
         data = {
             'messages': ['Action {0} un-touched'.format(actionid)]
         }
 
-    elif decision == 'deny':
+    elif decision in ('deny', 'd'):
         data = PKGDBCLIENT.handle_api_call(
             '/admin/action/status',
             data={
