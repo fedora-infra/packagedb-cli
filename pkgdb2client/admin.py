@@ -257,11 +257,15 @@ def __handle_request_package(actionid, action):
         )
 
     elif decision in ('deny', 'd'):
+        message = raw_input(
+            'Could you explain why you declined this request? (this message '
+            'will be sent to the user)\n=>')
         data = PKGDBCLIENT.handle_api_call(
             '/admin/action/status',
             data={
                 'id': actionid,
-                'status': 'Denied'
+                'status': 'Denied',
+                'message': message,
             }
         )
 
@@ -305,11 +309,15 @@ def __handle_request_branche(actionid, action):
         )
 
     elif decision in ('deny', 'd'):
+        message = raw_input(
+            'Could you explain why you declined this request? (this message '
+            'will be sent to the user)\n=>')
         data = PKGDBCLIENT.handle_api_call(
             '/admin/action/status',
             data={
                 'id': actionid,
-                'status': 'Denied'
+                'status': 'Denied',
+                'message': message,
             }
         )
 
