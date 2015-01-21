@@ -8,7 +8,7 @@ from setuptools import setup
 setup(
     name='packagedb-cli',
     description='A command line tool to access the Fedora Package Database.',
-    version='2.6.1',
+    version='2.7',
     license='GPLv2+',
     download_url='https://fedorahosted.org/releases/p/a/packagedb-cli/',
     url='https://fedorahosted.org/packagedb-cli/',
@@ -24,7 +24,7 @@ setup(
         'requests', 'python-bugzilla', 'python-fedora', 'setuptools',
         'beautifulsoup4'],
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v2 or later '
