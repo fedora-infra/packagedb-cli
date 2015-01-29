@@ -15,23 +15,23 @@
 # license.
 """
 
-from fedora.client import (AccountSystem, AppError, ServerError)
-from bugzilla.rhbugzilla import RHBugzilla
-from pkgdb2client import PkgDB, PkgDBException, __version__
-import pkgdb2client
+from fedora.client import (AppError, ServerError)
+
 import argparse
 import requests
 import logging
 import koji
 import itertools
 
+from pkgdb2client import PkgDB, PkgDBException, __version__
+import pkgdb2client
+import pkgdb2client.utils
+
 
 KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
-RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
-fasclient = AccountSystem('https://admin.fedoraproject.org/accounts')
 BOLD = "\033[1m"
 RED = "\033[0;31m"
 RESET = "\033[0;0m"
@@ -387,7 +387,6 @@ def do_acl(args):
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
     #LOG.info("approve : {0}".format(args.approve))
-    bzclient = RHBugzilla(url=RH_BZ_API)
 
     if args.branch == 'all':
         args.branch = None
@@ -399,9 +398,7 @@ def do_acl(args):
         if args.extra:
             # print the number of opened bugs
             LOG.debug("Query bugzilla")
-            bugbz = bzclient.query(
-                {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
-                 'component': args.package})
+            bugbz = pkgdb2client.utils.get_bugz(args.package)
             print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
 
     for pkg in sorted(
@@ -600,7 +597,7 @@ def do_orphan(args):
             req = requests.get(dead_url)
             if req.status_code != 200 or not req.text.strip():
                 print 'No `dead.package` for %s on %s, please use '\
-                '`fedpkg retire`' % (pkg_name, pkg_branch)
+                    '`fedpkg retire`' % (pkg_name, pkg_branch)
                 return
         output = pkgdbclient.retire_packages(pkgs, branches)
     else:
@@ -781,11 +778,8 @@ def main():
         LOG.setLevel(logging.INFO)
 
     if arg.test:
-        global fasclient, pkgdbclient
+        global pkgdbclient
         print "Testing environment"
-        fasclient = AccountSystem(
-            'https://admin.stg.fedoraproject.org/accounts',
-            insecure=True)
         pkgdbclient = PkgDB(
             'https://admin.stg.fedoraproject.org/pkgdb',
             login_callback=pkgdb2client.ask_password,
