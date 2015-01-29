@@ -278,7 +278,7 @@ def __handle_request_package(actionid, action):
     return data
 
 
-def __handle_request_branche(actionid, action):
+def __handle_request_branch(actionid, action):
     ''' Handle ne branch requests. '''
     msgs = utils.check_branch_creation(
         PKGDBCLIENT,
@@ -364,7 +364,7 @@ def do_process(args):
         if action['action'] == 'request.package':
             data = __handle_request_package(actionid, action)
         elif action['action'] == 'request.branch':
-            data = __handle_request_branche(actionid, action)
+            data = __handle_request_branch(actionid, action)
         else:
             print 'Action %s not supported by pkgdb-cli' % action['action']
 
