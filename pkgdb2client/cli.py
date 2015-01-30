@@ -784,14 +784,14 @@ def main():
     elif arg.verbose:
         LOG.setLevel(logging.INFO)
 
-    global PKGDBCLIENT
+    global pkgdbclient
     if arg.pkgdburl:
         print "Querying pkgdb at: %s" % arg.pkgdburl
-        PKGDBCLIENT = PkgDB(
+        pkgdbclient = PkgDB(
             arg.pkgdburl,
             login_callback=pkgdb2client.ask_password)
 
-    PKGDBCLIENT.insecure = arg.insecure
+    pkgdbclient.insecure = arg.insecure
 
     if arg.bzurl:
         if not arg.bzurl.endswith('xmlrpc.cgi'):
