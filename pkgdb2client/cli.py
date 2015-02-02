@@ -190,10 +190,17 @@ def setup_parser():
                         help="Gives more info about what's going on")
     parser.add_argument('--debug', action='store_true',
                         help="Outputs bunches of debugging info")
-    parser.add_argument('--test', action='store_true',
-                        help="Uses a test instance instead of the real pkgdb.")
     parser.add_argument('--version', action='version',
                         version='pkgdb-cli %s' % (__version__))
+    parser.add_argument('--insecure', action='store_true', default=False,
+                        help="Tells pkgdb-cli to ignore invalid SSL "
+                        "certificates")
+    parser.add_argument('--pkgdburl',
+                        help="Base url of the pkgdb instance to query.")
+    parser.add_argument('--fasurl',
+                        help="Base url of the FAS instance to query.")
+    parser.add_argument('--bzurl',
+                        help="Base url of the bugzilla instance to query.")
 
     subparsers = parser.add_subparsers(title='actions')
 
@@ -777,13 +784,26 @@ def main():
     elif arg.verbose:
         LOG.setLevel(logging.INFO)
 
-    if arg.test:
-        global pkgdbclient
-        print "Testing environment"
+    global pkgdbclient
+    if arg.pkgdburl:
+        print "Querying pkgdb at: %s" % arg.pkgdburl
         pkgdbclient = PkgDB(
-            'https://admin.stg.fedoraproject.org/pkgdb',
-            login_callback=pkgdb2client.ask_password,
-            insecure=True)
+            arg.pkgdburl,
+            login_callback=pkgdb2client.ask_password)
+
+    pkgdbclient.insecure = arg.insecure
+
+    if arg.bzurl:
+        if not arg.bzurl.endswith('xmlrpc.cgi'):
+            arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
+        print "Querying bugzilla at: %s" % arg.pkgdburl
+        utils.BZCLIENT.url = arg.bzurl
+        utils.BZCLIENT._sslverify = not arg.insecure
+
+    if arg.fasurl:
+        print "Querying FAS at: %s" % arg.pkgdburl
+        utils.FASCLIENT.base_url = arg.fasurl
+        utils.FASCLIENT.insecure = arg.insecure
 
     return_code = 0
 
