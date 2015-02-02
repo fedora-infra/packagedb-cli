@@ -400,7 +400,7 @@ def main():
 
     global PKGDBCLIENT
     if arg.pkgdburl:
-        print "Querying pkgdb at: %s" % arg.pkgdburl
+        LOG.info("Querying pkgdb at: %s", arg.pkgdburl)
         PKGDBCLIENT = PkgDB(
             arg.pkgdburl,
             login_callback=pkgdb2client.ask_password)
@@ -410,12 +410,12 @@ def main():
     if arg.bzurl:
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
-        print "Querying bugzilla at: %s" % arg.pkgdburl
+        LOG.info("Querying bugzilla at: %s", arg.pkgdburl)
         utils.BZCLIENT.url = arg.bzurl
         utils.BZCLIENT._sslverify = not arg.insecure
 
     if arg.fasurl:
-        print "Querying FAS at: %s" % arg.pkgdburl
+        LOG.info("Querying FAS at: %s", arg.pkgdburl)
         utils.FASCLIENT.base_url = arg.fasurl
         utils.FASCLIENT.insecure = arg.insecure
 
