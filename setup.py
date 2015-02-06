@@ -18,6 +18,7 @@ setup(
     entry_points={
         'console_scripts': [
             "pkgdb-cli=pkgdb2client.cli:main",
+            "pkgdb-admin=pkgdb2client.admin:main",
         ]
     },
     install_requires=[
