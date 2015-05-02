@@ -102,13 +102,13 @@ def setup_parser():
     parser_update.set_defaults(func=do_update)
 
     # PROCESS
-    parser_update = subparsers.add_parser(
+    parser_process = subparsers.add_parser(
         'process',
         help='Process a pending admin action')
-    parser_update.add_argument(
+    parser_process.add_argument(
         'actionid', nargs='+',
         help='Identifier of the admin action to process.')
-    parser_update.set_defaults(func=do_process)
+    parser_process.set_defaults(func=do_process)
 
     return parser
 
