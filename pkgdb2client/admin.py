@@ -110,6 +110,15 @@ def setup_parser():
         help='Identifier of the admin action to process.')
     parser_process.set_defaults(func=do_process)
 
+    # INFO
+    parser_info = subparsers.add_parser(
+        'info',
+        help='Return a human-friendly description of the action')
+    parser_info.add_argument(
+        'actionid', nargs='+',
+        help='Identifier of the admin action(s) of interest.')
+    parser_info.set_defaults(func=do_info)
+
     return parser
 
 
@@ -165,6 +174,17 @@ def _action2msg(action):
             )
 
     return msg
+
+
+def do_info(args):
+    ''' Returns some information about a specified action.
+
+    '''
+    for actionid in args.actionid:
+        LOG.info("action : {0}".format(actionid))
+        action = PKGDBCLIENT.handle_api_call('/admin/action/%s' % actionid)
+
+        print _action2msg(action)
 
 
 def do_list(args):
