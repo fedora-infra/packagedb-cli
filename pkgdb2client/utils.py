@@ -3,7 +3,7 @@
 """
 # pkgdb2 - a commandline admin frontend for the Fedora package database
 #
-# Copyright (C) 2014 Red Hat Inc
+# Copyright (C) 2014-2015 Red Hat Inc
 # Copyright (C) 2014 Pierre-Yves Chibon
 # Author: Pierre-Yves Chibon <pingou@pingoured.fr>
 #
