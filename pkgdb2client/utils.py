@@ -204,6 +204,10 @@ def check_package_creation(info, bugid, pkgdbclient):
                 messages.append(
                     ' ! User {0} is not a packager but set the '
                     'fedora-review flag to `+`'.format(flag['setter']))
+        elif flag['name'] == 'fedora-review' and flag['status'] != '+':
+            messages.append(
+                ' ! fedora-review flag is no `+` but is still `%s`' %
+                flag['status'])
 
     msgs2 = check_branch_creation(
         pkgdbclient,
