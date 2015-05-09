@@ -348,8 +348,8 @@ class PkgDB(object):
         try:
             output = response.json()
         except Exception, err:
-            LOG.debug('Error while decoding the JSON: {0}'.format(err))
             LOG.debug(response.text)
+            raise PkgDBException('Error while decoding JSON: {0}'.format(err))
 
         if response.status_code != 200:
             LOG.debug('full output: {0}'.format(output))
