@@ -520,7 +520,7 @@ class PkgDB(object):
 
         return self.handle_api_call('/collections/', params=args)
 
-    def get_package(self, pkgname, branches=None, eol=False):
+    def get_package(self, pkgname, branches=None, eol=False, acls=True):
         ''' Return the information of a package matching the provided
         criterias.
 
@@ -534,6 +534,9 @@ class PkgDB(object):
             EOL).
             If False, it will return results only for non-EOL collections.
         :type eol: boolean
+        :kwarg acls: a boolean to specify whether to include ACLs in the
+            data returned. Defaults to ``True``.
+        :type acls: boolean
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -543,6 +546,7 @@ class PkgDB(object):
         args = {
             'pkgname': pkgname,
             'branches': branches,
+            'acls': acls,
         }
         if eol is True:
             args['eol'] = eol
