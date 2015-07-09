@@ -780,6 +780,10 @@ def do_monitoring(args):
     LOG.info("package     : {0}".format(args.package))
     LOG.info("monitoring  : {0}".format(args.monitoring))
 
+    if version < (1, 13):
+        raise PkgDBException(
+            'This version of PkgDB does not support koschei monitoring')
+
     if not args.monitoring:
         pkg = pkgdbclient.get_package(
             args.package, branches='master', acls=False
