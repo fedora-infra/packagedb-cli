@@ -1086,3 +1086,26 @@ class PkgDB(object):
             args['username'] = username
         return self.handle_api_call('/pendingacls', params=args)
 
+    def set_monitoring_status(self, pkgname, monitoring):
+        ''' Set / Remove the monitoring status of a package.
+
+        :arg pkgname: The name of the package
+        :type pkgname: str
+        :arg monitoring: The monitoring status to set the package to. Can
+            be any of: True, 1, False, 0, or 'nobuild'.
+        :type monitoring: str
+
+        '''
+        valid = ['true', '1', 'false', '0', 'nobuild']
+        if str(monitoring).lower() not in valid:
+            raise PkgDBException(
+                'Invalid monitoring status specified, %s is not in: %s' % (
+                    monitoring, ', '.join(valid))
+            )
+        args = {
+            'package': pkgname,
+            'status': monitoring,
+        }
+        return self.handle_api_call(
+            '/package/%s/monitor/%s' % (pkgname, monitoring), data=args)
+
