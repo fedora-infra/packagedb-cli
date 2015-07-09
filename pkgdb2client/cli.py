@@ -782,7 +782,7 @@ def do_monitoring(args):
 
     if version < (1, 13):
         raise PkgDBException(
-            'This version of PkgDB does not support koschei monitoring')
+            'This version of PkgDB does not support monitoring')
 
     if not args.monitoring:
         pkg = pkgdbclient.get_package(
