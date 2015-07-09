@@ -818,6 +818,10 @@ def do_koschei(args):
     LOG.info("package  : {0}".format(args.package))
     LOG.info("koschei  : {0}".format(args.koschei))
 
+    if version < (1, 16):
+        raise PkgDBException(
+            'This version of PkgDB does not support koschei monitoring')
+
     if not args.koschei:
         pkg = pkgdbclient.get_package(
             args.package, branches='master', acls=False
