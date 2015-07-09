@@ -397,6 +397,19 @@ def setup_parser():
         "(can be: 0, 1, nobuild)")
     parser_monitoring.set_defaults(func=do_monitoring)
 
+    ## Koschei Monitoring
+    parser_koschei = subparsers.add_parser(
+        'koschei',
+        help='Get or Set the koschei monitoring of a package')
+    parser_koschei.add_argument(
+        'package', help="Name of the package")
+    parser_koschei.add_argument(
+        'koschei', default=None, nargs="?",
+        help="Koschei monitoring status to set the package to, "
+        "if not specified will show the current koschei monitoring status, "
+        "otherwise will update it. (can be: false, 0, true, 1)")
+    parser_koschei.set_defaults(func=do_koschei)
+
     return parser
 
 
@@ -793,6 +806,26 @@ def do_monitoring(args):
     else:
         output = pkgdbclient.set_monitoring_status(
             args.package, args.monitoring)
+        print output.get(
+            'messages', 'Invalid output returned, please contact an admin')
+
+
+def do_koschei(args):
+    ''' Retrieve or set the koschei monitoring status of a package from
+    pkgdb.
+
+    '''
+    LOG.info("package  : {0}".format(args.package))
+    LOG.info("koschei  : {0}".format(args.koschei))
+
+    if not args.koschei:
+        pkg = pkgdbclient.get_package(
+            args.package, branches='master', acls=False
+        )['packages'][0]['package']
+        print "Current koschei monitoring status of {0} is: {1}".format(
+            pkg['name'], pkg['koschei_monitor'])
+    else:
+        output = pkgdbclient.set_koschei_status(args.package, args.koschei)
         print output.get(
             'messages', 'Invalid output returned, please contact an admin')
 
