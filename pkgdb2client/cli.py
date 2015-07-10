@@ -384,6 +384,19 @@ def setup_parser():
             'action)')
     parser_pending.set_defaults(func=do_pending)
 
+    ## Monitoring
+    parser_monitoring = subparsers.add_parser(
+        'monitoring',
+        help='Get or Set the monitoring of a package')
+    parser_monitoring.add_argument(
+        'package', help="Name of the package")
+    parser_monitoring.add_argument(
+        'monitoring', default=None, nargs="?",
+        help="Monitoring status to set the package to, if not specified "
+        "will show the current status, otherwise will update it. "
+        "(can be: 0, 1, nobuild)")
+    parser_monitoring.set_defaults(func=do_monitoring)
+
     return parser
 
 
@@ -758,6 +771,30 @@ def do_branch(args):
             ' ' * (20 - len(name)) + pkg['status']
         cnt = cnt + 1
     print 'Total: {0} collections'.format(cnt)
+
+
+def do_monitoring(args):
+    ''' Retrieve or set the monitoring status of a package from pkgdb.
+
+    '''
+    LOG.info("package     : {0}".format(args.package))
+    LOG.info("monitoring  : {0}".format(args.monitoring))
+
+    if version < (1, 13):
+        raise PkgDBException(
+            'This version of PkgDB does not support monitoring')
+
+    if not args.monitoring:
+        pkg = pkgdbclient.get_package(
+            args.package, branches='master', acls=False
+        )['packages'][0]['package']
+        print "Current monitoring status of {0} is: {1}".format(
+            pkg['name'], pkg['monitor'])
+    else:
+        output = pkgdbclient.set_monitoring_status(
+            args.package, args.monitoring)
+        print output.get(
+            'messages', 'Invalid output returned, please contact an admin')
 
 
 def main():
