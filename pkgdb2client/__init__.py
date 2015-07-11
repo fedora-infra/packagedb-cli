@@ -1113,3 +1113,25 @@ class PkgDB(object):
         return self.handle_api_call(
             '/package/%s/monitor/%s' % (pkgname, monitoring), data=args)
 
+    def set_koschei_status(self, pkgname, koschei):
+        ''' Set / Remove the koschei status of a package.
+
+        :arg pkgname: The name of the package
+        :type pkgname: str
+        :arg monitoring: The koschei status to set the package to. Can
+            be any of: True, 1, False, 0.
+        :type monitoring: str
+
+        '''
+        valid = ['true', '1', 'false', '0']
+        if str(koschei).lower() not in valid:
+            raise PkgDBException(
+                'Invalid koschei status specified, %s is not in: %s' % (
+                    koschei, ', '.join(valid))
+            )
+        args = {
+            'package': pkgname,
+            'status': monitoring,
+        }
+        return self.handle_api_call(
+            '/package/%s/koschei/%s' % (pkgname, monitoring), data=args)
