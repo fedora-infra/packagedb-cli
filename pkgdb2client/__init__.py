@@ -70,7 +70,7 @@ def _parse_service_form(response):
     """
     import bs4
 
-    parsed = bs4.BeautifulSoup(response.text)
+    parsed = bs4.BeautifulSoup(response.text, "lxml")
     inputs = {}
     for child in parsed.form.find_all(name='input'):
         if child.attrs['type'] == 'submit':
