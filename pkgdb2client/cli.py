@@ -125,13 +125,14 @@ def _get_last_build(packagename, tag):
             build['version'],
             build['release'])
         versions.append(nvr)
-        print "{0}Last build:{1}{2} by {3} for {4} in {5}".rstrip().format(
+        print("{0}Last build:{1}{2} by {3} for {4} in {5}".rstrip().format(
             " " * 8,
             " " * 5,
             build['completion_time'].split(" ")[0],
             build['owner_name'],
             nvr,
             tag)
+        )
 
 
 def get_last_build(packagename, tag):
@@ -425,14 +426,14 @@ def do_acl(args):
         args.branch = None
     output = pkgdbclient.get_package(args.package, branches=args.branch)
 
-    print 'Fedora Package Database -- {0}'.format(args.package)
+    print('Fedora Package Database -- {0}'.format(args.package))
     if output['packages']:
-        print output['packages'][0]['package']['summary']
+        print(output['packages'][0]['package']['summary'])
         if args.extra:
             # print the number of opened bugs
             LOG.debug("Query bugzilla")
             bugbz = pkgdb2client.utils.get_bugz(args.package)
-            print "{0} bugs open (new, assigned, needinfo)".format(len(bugbz))
+            print("{0} bugs open (new, assigned, needinfo)".format(len(bugbz)))
 
     for pkg in sorted(
             output['packages'],
@@ -445,23 +446,24 @@ def do_acl(args):
             owner = RED + owner + RESET
 
         # Retrieve ACL information
-        print "\n{0}{1}{2}{3}Point of Contact:{4}{5}".rstrip().format(
+        print("\n{0}{1}{2}{3}Point of Contact:{4}{5}".rstrip().format(
             RED + BOLD,
             pkg['collection']['branchname'],
             RESET,
             " " * (8 - len(pkg['collection']['branchname'])),
             " " * 5,
             owner)
+        )
 
         # print header of the table
         tmp = " " * 24
         for acl in ["watchbugzilla", "watchcommits",
                     "commit", "approveacls"]:
             tmp = tmp + acl + " " * (16 - len(acl))
-        print tmp.rstrip()
+        print(tmp.rstrip())
 
         # print ACL information
-        print "{0}ACLs:".format(" " * 8)
+        print("{0}ACLs:".format(" " * 8))
         if 'acls' in pkg:
             acls = _get_acls_info(pkg['acls'])
             users = sorted(acls, key=lambda user: user.replace('group::', ''))
@@ -480,9 +482,9 @@ def do_acl(args):
                     else:
                         tmp = tmp + " " * 16
                 if tmp is not None and tmp.strip() != "":
-                    print tmp
+                    print(tmp)
         else:
-            print '           No ACLs found'
+            print('           No ACLs found')
 
         # print the last build
         if args.extra:
@@ -523,7 +525,7 @@ def do_give(args):
     output = pkgdbclient.update_package_poc(
         pkgs, branches, username, former_poc=former_poc)
     for msg in output.get('messages', []):
-        print msg
+        print(msg)
 
 
 def do_list(args):
@@ -587,10 +589,10 @@ def do_list(args):
         if args.name_only:
             out = "   " + pkg['name']
 
-        print out.encode('utf-8')
+        print(out.encode('utf-8'))
         cnt = cnt + 1
     if not args.name_only:
-        print 'Total: {0} packages'.format(cnt)
+        print('Total: {0} packages'.format(cnt))
 
 
 def do_orphan(args):
@@ -629,8 +631,8 @@ def do_orphan(args):
                 'dead.package?h={1}'.format(pkg_name, pkg_branch)
             req = requests.get(dead_url)
             if req.status_code != 200 or not req.text.strip():
-                print 'No `dead.package` for %s on %s, please use '\
-                    '`fedpkg retire`' % (pkg_name, pkg_branch)
+                print('No `dead.package` for %s on %s, please use '\
+                    '`fedpkg retire`' % (pkg_name, pkg_branch))
                 return
         output = pkgdbclient.retire_packages(pkgs, branches)
     else:
@@ -638,7 +640,7 @@ def do_orphan(args):
             pkgs, branches, former_poc=former_poc)
 
     for msg in output.get('messages', []):
-        print msg
+        print(msg)
 
 
 def do_pending(args):
@@ -648,8 +650,8 @@ def do_pending(args):
     LOG.info("user    : {0}".format(args.user or args.username))
     output = pkgdbclient.get_pending_acls(args.user or args.username)
     for msg in output.get('pending_acls'):
-        print '%(user)s requested `%(acl)s` on %(package)s ' \
-            '(%(collection)s)' % msg
+        print('%(user)s requested `%(acl)s` on %(package)s ' \
+            '(%(collection)s)' % msg)
 
 
 def do_unorphan(args):
@@ -680,7 +682,7 @@ def do_unorphan(args):
 
     output = pkgdbclient.unorphan_packages(pkgs, branches, username)
     for msg in output.get('messages', []):
-        print msg
+        print(msg)
 
 
 def do_request(args):
@@ -719,7 +721,7 @@ def do_request(args):
         user=pkgdbclient.username)
 
     for msg in output.get('messages', []):
-        print msg
+        print(msg)
 
 
 def do_update(args):
@@ -762,7 +764,7 @@ def do_update(args):
         status=status,
         user=args.user)
     for msg in output.get('messages', []):
-        print msg
+        print(msg)
 
 
 def do_branch(args):
@@ -779,11 +781,12 @@ def do_branch(args):
     cnt = 0
     for pkg in branches['collections']:
         name = '{0} {1}'.format(pkg['name'], pkg['version'])
-        print "   " + pkg['branchname'] + \
-            ' ' * (20 - len(pkg['branchname'])) + name + \
+        print("   " + pkg['branchname'] +
+            ' ' * (20 - len(pkg['branchname'])) + name +
             ' ' * (20 - len(name)) + pkg['status']
+        )
         cnt = cnt + 1
-    print 'Total: {0} collections'.format(cnt)
+    print('Total: {0} collections'.format(cnt))
 
 
 def do_monitoring(args):
@@ -802,13 +805,13 @@ def do_monitoring(args):
         pkg = pkgdbclient.get_package(
             args.package, branches='master', acls=False
         )['packages'][0]['package']
-        print "Current monitoring status of {0} is: {1}".format(
-            pkg['name'], pkg['monitor'])
+        print("Current monitoring status of {0} is: {1}".format(
+            pkg['name'], pkg['monitor']))
     else:
         output = pkgdbclient.set_monitoring_status(
             args.package, args.monitoring)
-        print output.get(
-            'messages', 'Invalid output returned, please contact an admin')
+        print(output.get(
+            'messages', 'Invalid output returned, please contact an admin'))
 
 
 def do_koschei(args):
@@ -862,7 +865,7 @@ def main():
 
     global pkgdbclient
     if arg.pkgdburl:
-        print "Querying pkgdb at: %s" % arg.pkgdburl
+        print("Querying pkgdb at: %s" % arg.pkgdburl)
         pkgdbclient = PkgDB(
             arg.pkgdburl,
             login_callback=pkgdb2client.ask_password)
@@ -872,12 +875,12 @@ def main():
     if arg.bzurl:
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
-        print "Querying bugzilla at: %s" % arg.pkgdburl
+        print("Querying bugzilla at: %s" % arg.pkgdburl)
         utils.BZCLIENT.url = arg.bzurl
         utils.BZCLIENT._sslverify = not arg.insecure
 
     if arg.fasurl:
-        print "Querying FAS at: %s" % arg.pkgdburl
+        print("Querying FAS at: %s" % arg.pkgdburl)
         utils.FASCLIENT.base_url = arg.fasurl
         utils.FASCLIENT.insecure = arg.insecure
 
@@ -891,27 +894,27 @@ def main():
     try:
         arg.func(arg)
     except KeyboardInterrupt:
-        print "\nInterrupted by user."
+        print("\nInterrupted by user.")
         return_code = 1
     except ServerError, err:
         LOG.debug('ServerError')
-        print '{0}'.format(err)
+        print('{0}'.format(err))
         return_code = 3
     except ActionError, err:
         LOG.debug('ActionError')
-        print '{0}'.format(err.message)
+        print('{0}'.format(err.message))
         return_code = 7
     except argparse.ArgumentError, err:
         LOG.debug('ArgparseError')
-        print '{0}'.format(err.message)
+        print('{0}'.format(err.message))
         return_code = 9
     except AppError, err:
         LOG.debug('AppError')
-        print '{0}: {1}'.format(err.name, err.message)
+        print('{0}: {1}'.format(err.name, err.message))
         return_code = 4
     except PkgDBException, err:
         LOG.debug('PkgDBException')
-        print '{0}'.format(err)
+        print('{0}'.format(err))
         return_code = 8
     except ValueError, err:
         print 'Error: {0}'.format(err)
