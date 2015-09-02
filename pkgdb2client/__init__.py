@@ -1118,9 +1118,9 @@ class PkgDB(object):
 
         :arg pkgname: The name of the package
         :type pkgname: str
-        :arg monitoring: The koschei status to set the package to. Can
+        :arg koschei The koschei status to set the package to. Can
             be any of: True, 1, False, 0.
-        :type monitoring: str
+        :type koschei str
 
         '''
         valid = ['true', '1', 'false', '0']
@@ -1131,7 +1131,7 @@ class PkgDB(object):
             )
         args = {
             'package': pkgname,
-            'status': monitoring,
+            'status': koschei,
         }
         return self.handle_api_call(
-            '/package/%s/koschei/%s' % (pkgname, monitoring), data=args)
+            '/package/%s/koschei/%s' % (pkgname, koschei), data=args)
