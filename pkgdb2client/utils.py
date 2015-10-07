@@ -24,6 +24,7 @@ from datetime import datetime
 
 import requests
 import fedora_cert
+import xmlrpclib
 
 from bugzilla import Bugzilla
 from fedora.client import AccountSystem, AuthError
@@ -37,16 +38,30 @@ except fedora_cert.fedora_cert_error:
     USERNAME = None
 
 RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
-BZCLIENT = Bugzilla(url=RH_BZ_API)
+BZCLIENT = None
 FASCLIENT = AccountSystem(
     'https://admin.fedoraproject.org/accounts',
     username=USERNAME)
+
+
+def _get_bz():
+    ''' Return a bugzilla object. '''
+    if not BZCLIENT:
+        try:
+            global BZCLIENT
+            BZCLIENT= Bugzilla(url=RH_BZ_API)
+            BZCLIENT.logged_in
+        except xmlrpclib.Error, err:
+            bz_login()
+
+    return BZCLIENT
 
 
 def bz_login():
     ''' Login on bugzilla. '''
     print 'To keep going, we need to authenticate against bugzilla' \
         ' at {0}'.format(RH_BZ_API)
+
     username = raw_input("Bugzilla user: ")
     password = getpass.getpass("Bugzilla password: ")
     BZCLIENT.login(username, password)
@@ -58,6 +73,7 @@ def get_bugz(pkg_name):
     :arg pkg_name: the name of the package to look-up in bugzilla
 
     '''
+    BZCLIENT = _get_bz()
 
     bugbz = BZCLIENT.query(
         {'bug_status': ['NEW', 'ASSIGNED', 'NEEDINFO'],
@@ -75,11 +91,9 @@ def get_bug(bugid):
         on the specified ticket
 
     '''
+    BZCLIENT = _get_bz()
 
     bug = BZCLIENT.getbug(bugid)
-    if '@' not in bug.creator:
-        bz_login()
-        bug = BZCLIENT.getbug(bugid)
     return bug
 
 
