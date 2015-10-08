@@ -128,13 +128,15 @@ def _action2msg(action):
     '''
     if action['action'] == 'request.package':
         msg = '#%(id)s (%(status)s) - %(user)s requested the new package '\
-            '"%(pkg)s" on "%(clt)s"' % (
+            '"%(pkg)s" on "%(clt)s"\n  %(spaces)s review: %(review_url)s' % (
                 {
                     'id': action['id'],
                     'status': action['status'],
                     'user': action['user'],
                     'pkg': action['info']['pkg_name'],
                     'clt': action['info']['pkg_collection'],
+                    'spaces': ' '*len(str(action['id'])),
+                    'review_url': action['info']['pkg_review_url'],
                 }
             )
 
