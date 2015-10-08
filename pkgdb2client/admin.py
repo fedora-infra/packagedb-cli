@@ -262,6 +262,8 @@ def __handle_request_package(actionid, action):
     msgs = utils.check_package_creation(
         action['info'], bugid, PKGDBCLIENT)
 
+    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
+
     decision = _ask_what_to_do(msgs)
     if decision in ('a', 'approve'):
         data = PKGDBCLIENT.create_package(
@@ -285,6 +287,12 @@ def __handle_request_package(actionid, action):
             }
         )
 
+        url = PKGDBCLIENT.url + '/package/' + action['info']['pkg_name']
+        utils.comment_on_bug(
+            bugid,
+            'Package request has been approved: %s' % url
+        )
+
     elif decision in ('deny', 'd'):
         message = raw_input(
             'Could you explain why you declined this request? (this message '
@@ -296,6 +304,11 @@ def __handle_request_package(actionid, action):
                 'status': 'Denied',
                 'message': message,
             }
+        )
+
+        utils.comment_on_bug(
+            bugid,
+            'Package request has been denied with the reason: %s' % message
         )
 
     else:
