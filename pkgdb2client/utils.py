@@ -83,6 +83,35 @@ def get_bugz(pkg_name):
     return bugbz
 
 
+def comment_on_bug(bugid, comment):
+    ''' Comment on a bugzilla ticket.
+
+    :arg bugid: the identifier of the bug in bugzilla
+    :arg comment: the comment to post on that ticket
+
+    '''
+    bug = get_bug(bugid)
+
+    bug.addcomment(comment)
+
+    return bug
+
+
+def get_bug_id_from_url(url):
+    ''' Return the bug identifier for a given URL.
+
+    :arg url: the url of the ticket
+
+    '''
+
+    bugid = url.rsplit('/', 1)[1]
+
+    if 'id=' in url:
+        bugid = url.split('id=', 1)[1]
+
+    return bugid
+
+
 def get_bug(bugid):
     ''' Return the bug with the specified identifier.
 
