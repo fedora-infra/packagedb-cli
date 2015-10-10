@@ -40,13 +40,17 @@ Installation
 
 Install Prerequisites
 ~~~~~~~~~~~~~~~~~~~~~
+
 ::
+
   yum install python-fedora
 
 
 Get and Run the Source
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
 ::
+
   git clone http://git.fedorahosted.org/git/packagedb-cli.git
   cd packagedb-cli
   python pkgdb2client/cli.py
