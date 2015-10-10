@@ -28,6 +28,11 @@ as the pkgdb2client.cli module containing the command line interface and the
 pkgdb2client.admin module containing a command line interface for admins to
 interact with `pkgdb2`_.
 
+
+The tarball of the releases can be found at:
+`https://fedorahosted.org/released/packagedb-cli/
+<https://fedorahosted.org/released/packagedb-cli/>`_
+
 ------------
 Installation
 ------------
