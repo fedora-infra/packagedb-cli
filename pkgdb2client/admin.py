@@ -409,6 +409,7 @@ def do_process(args):
             data = __handle_request_branch(actionid, action)
         else:
             print 'Action %s not supported by pkgdb-cli' % action['action']
+            continue
 
         for msg in data.get('messages', []):
             print msg
