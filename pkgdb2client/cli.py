@@ -45,6 +45,7 @@ ACTIONLIST = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
 
 
 class ActionError(Exception):
+
     ''' This class is raised when an ACL action is requested but not in
     the list of allowed action. '''
     pass
@@ -205,7 +206,7 @@ def setup_parser():
 
     subparsers = parser.add_subparsers(title='actions')
 
-    ## ACL
+    # ACL
     parser_acl = subparsers.add_parser(
         'acl',
         help='Request acl for a given package')
@@ -223,7 +224,7 @@ def setup_parser():
         "last build)")
     parser_acl.set_defaults(func=do_acl)
 
-    ## Give
+    # Give
     parser_give = subparsers.add_parser(
         'give',
         help='Give package(s) according to the specified criteria')
@@ -245,7 +246,7 @@ def setup_parser():
         "still giving away only the branch he/she actually has.")
     parser_give.set_defaults(func=do_give)
 
-    ## List
+    # List
     parser_list = subparsers.add_parser(
         'list',
         help='List package according to the specified criteria')
@@ -263,8 +264,8 @@ def setup_parser():
         help="List all orphaned and eol'd packages")
     parser_list.add_argument(
         '--user', dest='user', default=None,
-        help="List all the packages of that user <user> has ACLs on (should be "
-        "provided after the `list` action)")
+        help="List all the packages of that user <user> has ACLs on (should "
+        "be provided after the `list` action)")
     parser_list.add_argument(
         '--poc', action="store_true",
         default=False, dest='poc',
@@ -278,7 +279,7 @@ def setup_parser():
         help="Pattern to query")
     parser_list.set_defaults(func=do_list)
 
-    ## Orphan
+    # Orphan
     parser_orphan = subparsers.add_parser(
         'orphan',
         help='Orphan package(s) according to the specified criteria')
@@ -299,7 +300,7 @@ def setup_parser():
         "(Admin only)")
     parser_orphan.set_defaults(func=do_orphan)
 
-    ## Unorphan
+    # Unorphan
     parser_unorphan = subparsers.add_parser(
         'unorphan',
         help='Unorphan package(s) according to the specified criteria')
@@ -316,7 +317,7 @@ def setup_parser():
         "Can be skipped if --user is specified, otherwise is mandatory.")
     parser_unorphan.set_defaults(func=do_unorphan)
 
-    ## Request
+    # Request
     parser_request = subparsers.add_parser(
         'request',
         help='Request ACLs on package(s) according to the specified criteria')
@@ -336,7 +337,7 @@ def setup_parser():
         "requested (default: 'master', can be: 'all')")
     parser_request.set_defaults(func=do_request)
 
-    ## Update
+    # Update
     parser_update = subparsers.add_parser(
         'update',
         help='Update ACLs on package(s) as desired')
@@ -365,7 +366,7 @@ def setup_parser():
         help="Obsolete the requested ACL")
     parser_update.set_defaults(func=do_update)
 
-    ## Collections
+    # Collections
     parser_branch = subparsers.add_parser(
         'branches',
         help='List the active branches')
@@ -374,18 +375,18 @@ def setup_parser():
         help="Return all the branches instead of just the active ones")
     parser_branch.set_defaults(func=do_branch)
 
-    ## Pending ACLS
+    # Pending ACLS
     parser_pending = subparsers.add_parser(
         'pending',
         help='List the pending ACLs requests')
     parser_pending.add_argument(
         'user', default=None, nargs="?",
         help='Restrict the pending ACLs requests to those requiring action '
-            'from the specified user (should be provided after the `pending` '
-            'action)')
+             'from the specified user (should be provided after the `pending` '
+             'action)')
     parser_pending.set_defaults(func=do_pending)
 
-    ## Monitoring
+    # Monitoring
     parser_monitoring = subparsers.add_parser(
         'monitoring',
         help='Get or Set the monitoring of a package')
@@ -398,7 +399,7 @@ def setup_parser():
         "(can be: 0, 1, nobuild)")
     parser_monitoring.set_defaults(func=do_monitoring)
 
-    ## Koschei Monitoring
+    # Koschei Monitoring
     parser_koschei = subparsers.add_parser(
         'koschei',
         help='Get or Set the koschei monitoring of a package')
@@ -420,7 +421,7 @@ def do_acl(args):
     '''
     LOG.info("package : {0}".format(args.package))
     LOG.info("branch  : {0}".format(args.branch))
-    #LOG.info("approve : {0}".format(args.approve))
+    # LOG.info("approve : {0}".format(args.approve))
 
     if args.branch == 'all':
         args.branch = None
@@ -475,7 +476,7 @@ def do_acl(args):
                 tmp = tmp + " " * (24 - len(tmp))
                 for acl_title in ["watchbugzilla", "watchcommits",
                                   "commit", "approveacls"]:
-                    #print '\n', acl_title
+                    # print '\n', acl_title
                     if acl_title in acls[user]:
                         aclout = acls[user][acl_title]
                         tmp = tmp + aclout + " " * (16 - len(aclout))
@@ -631,8 +632,8 @@ def do_orphan(args):
                 'dead.package?h={1}'.format(pkg_name, pkg_branch)
             req = requests.get(dead_url)
             if req.status_code != 200 or not req.text.strip():
-                print('No `dead.package` for %s on %s, please use '\
-                    '`fedpkg retire`' % (pkg_name, pkg_branch))
+                print('No `dead.package` for %s on %s, please use '
+                      '`fedpkg retire`' % (pkg_name, pkg_branch))
                 return
         output = pkgdbclient.retire_packages(pkgs, branches)
     else:
@@ -650,8 +651,8 @@ def do_pending(args):
     LOG.info("user    : {0}".format(args.user or args.username))
     output = pkgdbclient.get_pending_acls(args.user or args.username)
     for msg in output.get('pending_acls'):
-        print('%(user)s requested `%(acl)s` on %(package)s ' \
-            '(%(collection)s)' % msg)
+        print('%(user)s requested `%(acl)s` on %(package)s '
+              '(%(collection)s)' % msg)
 
 
 def do_unorphan(args):
@@ -782,9 +783,9 @@ def do_branch(args):
     for pkg in branches['collections']:
         name = '{0} {1}'.format(pkg['name'], pkg['version'])
         print("   " + pkg['branchname'] +
-            ' ' * (20 - len(pkg['branchname'])) + name +
-            ' ' * (20 - len(name)) + pkg['status']
-        )
+              ' ' * (20 - len(pkg['branchname'])) + name +
+              ' ' * (20 - len(name)) + pkg['status']
+              )
         cnt = cnt + 1
     print('Total: {0} collections'.format(cnt))
 
@@ -876,13 +877,13 @@ def main():
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
         print("Querying bugzilla at: %s" % arg.pkgdburl)
-        utils.BZCLIENT.url = arg.bzurl
-        utils.BZCLIENT._sslverify = not arg.insecure
+        pkgdb2client.utils.BZCLIENT.url = arg.bzurl
+        pkgdb2client.utils.BZCLIENT._sslverify = not arg.insecure
 
     if arg.fasurl:
         print("Querying FAS at: %s" % arg.pkgdburl)
-        utils.FASCLIENT.base_url = arg.fasurl
-        utils.FASCLIENT.insecure = arg.insecure
+        pkgdb2client.utils.FASCLIENT.base_url = arg.fasurl
+        pkgdb2client.utils.FASCLIENT.insecure = arg.insecure
 
     return_code = 0
 

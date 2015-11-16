@@ -18,9 +18,7 @@
 from fedora.client import (AppError, ServerError)
 
 import argparse
-import requests
 import logging
-import koji
 
 from pkgdb2client import PkgDB, PkgDBException, __version__
 from pkgdb2client.cli import ActionError
@@ -135,7 +133,7 @@ def _action2msg(action):
                     'user': action['user'],
                     'pkg': action['info']['pkg_name'],
                     'clt': action['info']['pkg_collection'],
-                    'spaces': ' '*len(str(action['id'])),
+                    'spaces': ' ' * len(str(action['id'])),
                     'review_url': action['info']['pkg_review_url'],
                 }
             )
@@ -316,7 +314,6 @@ def __handle_request_package(actionid, action):
             'messages': ['Action {0} un-touched'.format(actionid)]
         }
 
-
     return data
 
 
@@ -367,7 +364,6 @@ def __handle_request_branch(actionid, action):
         data = {
             'messages': ['Action {0} un-touched'.format(actionid)]
         }
-
 
     return data
 

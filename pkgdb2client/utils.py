@@ -49,9 +49,9 @@ def _get_bz():
     if not BZCLIENT:
         try:
             global BZCLIENT
-            BZCLIENT= Bugzilla(url=RH_BZ_API)
+            BZCLIENT = Bugzilla(url=RH_BZ_API)
             BZCLIENT.logged_in
-        except xmlrpclib.Error, err:
+        except xmlrpclib.Error:
             bz_login()
 
     return BZCLIENT
@@ -261,7 +261,6 @@ def check_package_creation(info, bugid, pkgdbclient):
     )
 
     if not messages and msgs2[0].startswith(' + All checks cleared'):
-        message2 = msgs2
         messages.append(
             ' + All checks cleared for review {0}: {1}'.format(
                 bugid, info['pkg_name']))
