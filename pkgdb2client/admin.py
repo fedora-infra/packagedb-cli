@@ -102,10 +102,18 @@ def setup_parser():
     # PROCESS
     parser_process = subparsers.add_parser(
         'process',
-        help='Process a pending admin action')
+        help='Process pending admin actions. All actions are procesed if none '
+             'is specified.')
     parser_process.add_argument(
-        'actionid', nargs='+',
+        'actionid', nargs='*',
         help='Identifier of the admin action to process.')
+    parser_process.add_argument(
+        '--package',
+        help='Restrict the admin actions listed to a certain package. '
+        '(Not supported for `request.package` actions)')
+    parser_process.add_argument(
+        '--packager',
+        help='Restrict the admin actions listed to a certain packager')
     parser_process.set_defaults(func=do_process)
 
     # INFO
@@ -209,10 +217,13 @@ def do_list(args):
     data = PKGDBCLIENT.handle_api_call('/admin/actions/', params=data)
 
     cnt = 0
+    ids = []
     for cnt, action in enumerate(data['actions']):
         print _action2msg(action)
+        ids.append(action["id"])
 
     print 'Total: {0} actions'.format(cnt + 1)
+    return ids
 
 
 def do_update(args):
@@ -374,7 +385,14 @@ def do_process(args):
     '''
     LOG.info("user   : {0}".format(args.username))
 
-    for actionid in args.actionid:
+    if not args.actionid:
+        print 'Processing all requests with status: %s' % args.status
+        args.status = "Awaiting Review"
+        ids = do_list(args)
+    else:
+        ids = args.actionid
+
+    for actionid in ids:
         LOG.info("action : {0}".format(actionid))
         action = PKGDBCLIENT.handle_api_call('/admin/action/%s' % actionid)
 
