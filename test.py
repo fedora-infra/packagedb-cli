@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 import getpass
-import logging
 import time
 import unittest
 import uuid
@@ -597,6 +596,7 @@ class TestPkgdDBAuth(unittest.TestCase):
             branches,
             ['master', 'el6', 'f19', 'f20', 'f21']
         )
+
 
 def suite():
     suite = unittest.TestSuite()
