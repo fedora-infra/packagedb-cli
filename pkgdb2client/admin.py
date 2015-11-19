@@ -216,13 +216,12 @@ def do_list(args):
 
     data = PKGDBCLIENT.handle_api_call('/admin/actions/', params=data)
 
-    cnt = 0
     ids = []
-    for cnt, action in enumerate(data['actions']):
+    for action in data['actions']:
         print _action2msg(action)
         ids.append(action["id"])
 
-    print 'Total: {0} actions'.format(cnt + 1)
+    print 'Total: {0} actions'.format(len(ids))
     return ids
 
 
