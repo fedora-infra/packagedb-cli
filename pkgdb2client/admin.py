@@ -385,8 +385,8 @@ def do_process(args):
     LOG.info("user   : {0}".format(args.username))
 
     if not args.actionid:
-        print 'Processing all requests with status: %s' % args.status
         args.status = "Awaiting Review"
+        print 'Processing all requests with status: %s' % args.status
         ids = do_list(args)
     else:
         ids = args.actionid
