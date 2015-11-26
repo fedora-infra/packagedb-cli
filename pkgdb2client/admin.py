@@ -249,8 +249,12 @@ def _ask_what_to_do(messages):
     ''' Print the given list of information messages and ask the user
     what to do, ie: approve, deny, pass
     '''
-    for message in messages:
-        print(message)
+    for message in messages["good"]:
+        print("[+] " + message)
+    for message in messages["bad"]:
+        print("[-] " + message)
+    if not messages["bad"]:
+        print("==> " + "All checks were good")
 
     print('\nWhat should we do about this requests?')
     action = raw_input('approve, deny, pass: ')
