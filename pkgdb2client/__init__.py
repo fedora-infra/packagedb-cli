@@ -89,7 +89,7 @@ def ask_password(username=None, bad_password=False):
     :rtype: tuple
     """
     if bad_password:
-        print "Bad password, please retry"
+        print("Bad password, please retry")
     if not username:
         try:
             username = fedora_cert.read_user_cert()

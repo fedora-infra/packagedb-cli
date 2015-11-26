@@ -59,8 +59,8 @@ def _get_bz():
 
 def bz_login():
     ''' Login on bugzilla. '''
-    print 'To keep going, we need to authenticate against bugzilla' \
-        ' at {0}'.format(RH_BZ_API)
+    print('To keep going, we need to authenticate against bugzilla' \
+        ' at {0}'.format(RH_BZ_API))
 
     username = raw_input("Bugzilla user: ")
     password = getpass.getpass("Bugzilla password: ")

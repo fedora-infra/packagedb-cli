@@ -192,7 +192,7 @@ def do_info(args):
         LOG.info("action : {0}".format(actionid))
         action = PKGDBCLIENT.handle_api_call('/admin/action/%s' % actionid)
 
-        print _action2msg(action)
+        print(_action2msg(action))
 
 
 def do_list(args):
@@ -218,10 +218,10 @@ def do_list(args):
 
     ids = []
     for action in data['actions']:
-        print _action2msg(action)
+        print(_action2msg(action))
         ids.append(action["id"])
 
-    print 'Total: {0} actions'.format(len(ids))
+    print('Total: {0} actions'.format(len(ids)))
     return ids
 
 
@@ -242,7 +242,7 @@ def do_update(args):
     )
 
     for msg in data.get('messages', []):
-        print msg
+        print(msg)
 
 
 def _ask_what_to_do(messages):
@@ -250,12 +250,12 @@ def _ask_what_to_do(messages):
     what to do, ie: approve, deny, pass
     '''
     for message in messages:
-        print message
+        print(message)
 
-    print '\nWhat should we do about this requests?'
+    print('\nWhat should we do about this requests?')
     action = raw_input('approve, deny, pass: ')
     if action.lower() not in ['a', 'd', 'p', 'approve', 'deny', 'pass']:
-        print 'No valid action specified, just ignoring for now'
+        print('No valid action specified, just ignoring for now')
         action = 'pass'
 
     return action.lower()
@@ -386,7 +386,7 @@ def do_process(args):
 
     if not args.actionid:
         args.status = "Awaiting Review"
-        print 'Processing all requests with status: %s' % args.status
+        print('Processing all requests with status: %s' % args.status)
         ids = do_list(args)
     else:
         ids = args.actionid
@@ -395,18 +395,18 @@ def do_process(args):
         LOG.info("action : {0}".format(actionid))
         action = PKGDBCLIENT.handle_api_call('/admin/action/%s' % actionid)
 
-        print _action2msg(action)
+        print(_action2msg(action))
 
         if action['status'] != 'Awaiting Review':
-            print 'Action #%s is not Awaiting Review - Current status: %s' % (
-                action['id'], action['status'])
+            print('Action #%s is not Awaiting Review - Current status: %s' % (
+                action['id'], action['status']))
             return
 
         if action['action'] == 'request.package':
             try:
                 PKGDBCLIENT.get_package(action['info']['pkg_name'])
-                print 'Package {0} found, requalifying request.package ' \
-                    'in request.branch'.format(action['info']['pkg_name'])
+                print('Package {0} found, requalifying request.package ' \
+                    'in request.branch'.format(action['info']['pkg_name']))
                 # Adjusting the input format
                 action['action'] = 'request.branch'
                 action['package'] = {'name': action['info']['pkg_name']}
@@ -421,12 +421,12 @@ def do_process(args):
         elif action['action'] == 'request.branch':
             data = __handle_request_branch(actionid, action)
         else:
-            print 'Action %s not supported by pkgdb-cli' % action['action']
+            print('Action %s not supported by pkgdb-cli' % action['action'])
             continue
 
         for msg in data.get('messages', []):
-            print msg
-        print ''
+            print(msg)
+        print('')
 
 
 def main():
@@ -437,7 +437,7 @@ def main():
     try:
         arg = parser.parse_args()
     except argparse.ArgumentTypeError, err:
-        print "\nError: {0}".format(err)
+        print("\nError: {0}".format(err))
         return 2
 
     logging.basicConfig()
@@ -478,30 +478,30 @@ def main():
     try:
         arg.func(arg)
     except KeyboardInterrupt:
-        print "\nInterrupted by user."
+        print("\nInterrupted by user.")
         return_code = 1
     except ServerError, err:
         LOG.debug('ServerError')
-        print '{0}'.format(err)
+        print('{0}'.format(err))
         return_code = 3
     except ActionError, err:
         LOG.debug('ActionError')
-        print '{0}'.format(err.message)
+        print('{0}'.format(err.message))
         return_code = 7
     except AppError, err:
         LOG.debug('AppError')
-        print '{0}: {1}'.format(err.name, err.message)
+        print('{0}: {1}'.format(err.name, err.message))
         return_code = 4
     except PkgDBException, err:
         LOG.debug('PkgDBException')
-        print '{0}'.format(err)
+        print('{0}'.format(err))
         return_code = 8
     except ValueError, err:
-        print 'Error: {0}'.format(err)
-        print 'Did you log in?'
+        print('Error: {0}'.format(err))
+        print('Did you log in?')
         return_code = 6
     except Exception, err:
-        print 'Error: {0}'.format(err)
+        print('Error: {0}'.format(err))
         logging.exception("Generic error catched:")
         return_code = 5
 
