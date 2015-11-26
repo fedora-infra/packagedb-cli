@@ -436,7 +436,7 @@ def main():
     # Parse the commandline
     try:
         arg = parser.parse_args()
-    except argparse.ArgumentTypeError, err:
+    except argparse.ArgumentTypeError as err:
         print("\nError: {0}".format(err))
         return 2
 
@@ -480,27 +480,27 @@ def main():
     except KeyboardInterrupt:
         print("\nInterrupted by user.")
         return_code = 1
-    except ServerError, err:
+    except ServerError as err:
         LOG.debug('ServerError')
         print('{0}'.format(err))
         return_code = 3
-    except ActionError, err:
+    except ActionError as err:
         LOG.debug('ActionError')
         print('{0}'.format(err.message))
         return_code = 7
-    except AppError, err:
+    except AppError as err:
         LOG.debug('AppError')
         print('{0}: {1}'.format(err.name, err.message))
         return_code = 4
-    except PkgDBException, err:
+    except PkgDBException as err:
         LOG.debug('PkgDBException')
         print('{0}'.format(err))
         return_code = 8
-    except ValueError, err:
+    except ValueError as err:
         print('Error: {0}'.format(err))
         print('Did you log in?')
         return_code = 6
-    except Exception, err:
+    except Exception as err:
         print('Error: {0}'.format(err))
         logging.exception("Generic error catched:")
         return_code = 5
