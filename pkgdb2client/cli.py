@@ -832,12 +832,12 @@ def do_koschei(args):
         pkg = pkgdbclient.get_package(
             args.package, branches='master', acls=False
         )['packages'][0]['package']
-        print "Current koschei monitoring status of {0} is: {1}".format(
-            pkg['name'], pkg['koschei_monitor'])
+        print("Current koschei monitoring status of {0} is: {1}".format(
+            pkg['name'], pkg['koschei_monitor']))
     else:
         output = pkgdbclient.set_koschei_status(args.package, args.koschei)
-        print output.get(
-            'messages', 'Invalid output returned, please contact an admin')
+        print(output.get(
+            'messages', 'Invalid output returned, please contact an admin'))
 
 
 def main():

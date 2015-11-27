@@ -89,7 +89,7 @@ def ask_password(username=None, bad_password=False):
     :rtype: tuple
     """
     if bad_password:
-        print "Bad password, please retry"
+        print("Bad password, please retry")
     if not username:
         try:
             username = fedora_cert.read_user_cert()
@@ -347,7 +347,7 @@ class PkgDB(object):
         output = None
         try:
             output = response.json()
-        except Exception, err:
+        except Exception as err:
             LOG.debug(response.text)
             raise PkgDBException('Error while decoding JSON: {0}'.format(err))
 
