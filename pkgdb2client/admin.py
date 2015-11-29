@@ -405,8 +405,8 @@ def do_process(args):
         if action['action'] == 'request.package':
             try:
                 PKGDBCLIENT.get_package(action['info']['pkg_name'])
-                print('Package {0} found, requalifying request.package ' \
-                    'in request.branch'.format(action['info']['pkg_name']))
+                print('Package {0} found, requalifying request.package '
+                      'in request.branch'.format(action['info']['pkg_name']))
                 # Adjusting the input format
                 action['action'] = 'request.branch'
                 action['package'] = {'name': action['info']['pkg_name']}
