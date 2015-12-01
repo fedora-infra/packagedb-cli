@@ -223,34 +223,44 @@ def check_package_creation(info, bugid, pkgdbclient):
         a packager
       - ...
     '''
-    messages = []
+    messages = dict(good=[], bad=[])
 
     bug = get_bug(bugid)
 
     # Check if the title of the bug fits the expectations
     expected = 'Review Request: {0} - {1}'.format(
         info['pkg_name'], info['pkg_summary'])
-    if bug.summary != expected:
-        messages.append(
-            ' ! The bug title does not fit the expected one\n'
+
+    if bug.summary == expected:
+        messages["good"].append("Summary of bug {0} is: {1}".format(
+            bugid, bug.summary))
+    else:
+        messages["bad"].append(
+            'The bug title does not fit the expected one\n'
             '   exp: "{0}" vs obs: "{1}"'.format(expected, bug.summary))
 
     # Check if the participants are packagers
     for user in get_users_in_bug(bugid):
         if not is_packager(user):
-            messages.append(' ! User {0} is not a packager'.format(user))
+            messages["bad"].append(
+                'Non-packager {0} commented on review bug'.format(user))
 
     # Check who updated the fedora-review flag to +
     for flag in bug.flags:
-        if flag['name'] == 'fedora-review' and flag['status'] == '+':
-            if not is_packager(flag['setter']):
-                messages.append(
-                    ' ! User {0} is not a packager but set the '
-                    'fedora-review flag to `+`'.format(flag['setter']))
-        elif flag['name'] == 'fedora-review' and flag['status'] != '+':
-            messages.append(
-                ' ! fedora-review flag is no `+` but is still `%s`' %
-                flag['status'])
+        if flag['name'] == 'fedora-review':
+            if flag['status'] == '+':
+                flag_setter = flag['setter']
+                if is_packager(flag_setter):
+                    messages["good"].append(
+                        'Review approved by packager {0}'.format(flag_setter))
+                else:
+                    messages["bad"].append(
+                        'Review approved by non-packager {0}'.format(
+                            flag_setter))
+            else:
+                messages["bad"].append(
+                    'Review not approved, flag set to: {0}'.format(
+                        flag['status']))
 
     msgs2 = check_branch_creation(
         pkgdbclient,
@@ -260,10 +270,8 @@ def check_package_creation(info, bugid, pkgdbclient):
         new_pkg=True,
     )
 
-    if not messages and msgs2[0].startswith(' + All checks cleared'):
-        messages.append(
-            ' + All checks cleared for review {0}: {1}'.format(
-                bugid, info['pkg_name']))
+    messages["bad"].extend(msgs2["bad"])
+    messages["good"].extend(msgs2["good"])
 
     return messages
 
@@ -279,15 +287,16 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
       - If the person asking for the branch is a packager
       - ...
     '''
-    messages = []
+
+    messages = dict(good=[], bad=[])
 
     # check if the package already exists
     if not new_pkg:
         try:
             pkginfo = pkgdbclient.get_package(pkg_name)
         except pkgdb2client.PkgDBException:
-            messages.append(
-                ' ! Packages {0} not found in pkgdb'.format(pkg_name)
+            messages["bad"].append(
+                'Package {0} not found in pkgdb'.format(pkg_name)
             )
             return messages
 
@@ -298,21 +307,23 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
         ]
 
         if clt_name in branches:
-            messages.append(
-                ' ! Packages {0} already has the requested branch '
+            messages["bad"].append(
+                'Packages {0} already has the requested branch '
                 '`{1}`'.format(pkg_name, clt_name)
             )
 
     # Check if user is a packager
-    if not is_packager(user):
-        messages.append(' ! User {0} is not a packager'.format(user))
+    if is_packager(user):
+        messages["good"].append('Requester {0} is a packager'.format(user))
+    else:
+        messages["bad"].append('Requester {0} is not a packager'.format(user))
 
     # EPEL checks
     if clt_name.lower().startswith(('el', 'epel')):
         rhel_data = get_rhel_cache(clt_name[-1])
         if pkg_name in rhel_data['packages']:
-            messages.append(
-                ' ! `%s` is present in RHEL %s with version: %s on arch: %s'
+            messages["bad"].append(
+                '`%s` is present in RHEL %s with version: %s on arch: %s'
                 % (
                     pkg_name, clt_name[-1],
                     rhel_data['packages'][pkg_name]['version'],
@@ -320,15 +331,10 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
                 )
             )
         else:
-            messages.append(
-                ' + `%s` is *not* present in RHEL %s' % (
+            messages["good"].append(
+                '`%s` is *not* present in RHEL %s' % (
                     pkg_name, clt_name[-1])
             )
-
-    if not messages:
-        messages.append(
-            ' + All checks cleared for branch {0} for package {1}'.format(
-                clt_name, pkg_name))
 
     return messages
 
