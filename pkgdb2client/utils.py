@@ -257,6 +257,10 @@ def check_package_creation(info, bugid, pkgdbclient):
                     messages["bad"].append(
                         'Review approved by non-packager {0}'.format(
                             flag_setter))
+                if flag_setter == bug.comments[0].author:
+                    messages["bad"].append(
+                        'Review approved by the person creating '
+                        'the ticket {0}'.format(flag_setter))
             else:
                 messages["bad"].append(
                     'Review not approved, flag set to: {0}'.format(
