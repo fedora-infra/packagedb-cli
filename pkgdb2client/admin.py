@@ -280,8 +280,8 @@ def __handle_request_package(actionid, action):
     if decision in ('a', 'approve'):
         data = PKGDBCLIENT.create_package(
             pkgname=action['info']['pkg_name'],
-            summary=action['info']['pkg_summary'],
-            description=action['info']['pkg_description'],
+            summary=action['info']['pkg_summary'].encode('utf-8'),
+            description=action['info']['pkg_description'].encode('utf-8'),
             review_url=action['info']['pkg_review_url'],
             status=action['info']['pkg_status'],
             shouldopen=True,
