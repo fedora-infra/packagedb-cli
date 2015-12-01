@@ -279,15 +279,15 @@ def __handle_request_package(actionid, action):
     decision = _ask_what_to_do(msgs)
     if decision in ('a', 'approve'):
         data = PKGDBCLIENT.create_package(
-            pkgname=action['info']['pkg_name'],
+            pkgname=action['info']['pkg_name'].encode('utf-8'),
             summary=action['info']['pkg_summary'].encode('utf-8'),
             description=action['info']['pkg_description'].encode('utf-8'),
-            review_url=action['info']['pkg_review_url'],
-            status=action['info']['pkg_status'],
+            review_url=action['info']['pkg_review_url'].encode('utf-8'),
+            status=action['info']['pkg_status'].encode('utf-8'),
             shouldopen=True,
-            branches=action['info']['pkg_collection'],
-            poc=action['info']['pkg_poc'],
-            upstream_url=action['info']['pkg_upstream_url'],
+            branches=action['info']['pkg_collection'].encode('utf-8'),
+            poc=action['info']['pkg_poc'].encode('utf-8'),
+            upstream_url=action['info']['pkg_upstream_url'].encode('utf-8'),
             critpath=action['info']['pkg_critpath'],
         )
 
