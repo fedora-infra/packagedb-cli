@@ -239,6 +239,16 @@ def check_package_creation(info, bugid, pkgdbclient):
             'The bug title does not fit the expected one\n'
             '   exp: "{0}" vs obs: "{1}"'.format(expected, bug.summary))
 
+    if bug.component != 'Package Review':
+        messages["bad"].append(
+            'Wrong bug component \n'
+            '   exp: "Package Review" vs obs: "{0}"'.format(bug.component))
+
+    if bug.product != 'Fedora':
+        messages["bad"].append(
+            'Wrong bug product \n'
+            '   exp: "Fedora" vs obs: "{0}"'.format(bug.product))
+
     # Check if the participants are packagers
     for user in get_users_in_bug(bugid):
         if not is_packager(user):
