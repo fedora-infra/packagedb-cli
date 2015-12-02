@@ -360,6 +360,9 @@ class PkgDB(object):
                     'No output returned by %s' % response.url)
             else:
                 raise PkgDBException(output)
+        elif output is None:
+            raise PkgDBException(
+                'No output returned by %s' % response.url)
 
         return output
 
