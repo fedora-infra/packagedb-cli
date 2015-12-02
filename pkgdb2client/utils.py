@@ -239,6 +239,16 @@ def check_package_creation(info, bugid, pkgdbclient):
             'The bug title does not fit the expected one\n'
             '   exp: "{0}" vs obs: "{1}"'.format(expected, bug.summary))
 
+    if bug.component != 'Package Review':
+        messages["bad"].append(
+            'Wrong bug component \n'
+            '   exp: "Package Review" vs obs: "{0}"'.format(bug.component))
+
+    if bug.product != 'Fedora':
+        messages["bad"].append(
+            'Wrong bug product \n'
+            '   exp: "Fedora" vs obs: "{0}"'.format(bug.product))
+
     # Check if the participants are packagers
     for user in get_users_in_bug(bugid):
         if not is_packager(user):
@@ -257,6 +267,14 @@ def check_package_creation(info, bugid, pkgdbclient):
                     messages["bad"].append(
                         'Review approved by non-packager {0}'.format(
                             flag_setter))
+                if flag_setter == bug.comments[0].author:
+                    messages["bad"].append(
+                        'Review approved by the person creating '
+                        'the ticket {0}'.format(flag_setter))
+                if flag_setter != bug.comments[0].author:
+                    messages["bad"].append(
+                        'Review not approved by the assignee of '
+                        'the ticket {0}'.format(flag_setter))
             else:
                 messages["bad"].append(
                     'Review not approved, flag set to: {0}'.format(
