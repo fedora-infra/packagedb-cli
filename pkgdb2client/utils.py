@@ -229,7 +229,7 @@ def check_package_creation(info, bugid, pkgdbclient):
 
     # Check if the title of the bug fits the expectations
     expected = 'Review Request: {0} - {1}'.format(
-        info['pkg_name'], info['pkg_summary'])
+        info['pkg_name'], info['pkg_summary'].encode('utf-8')))
 
     if bug.summary == expected:
         messages["good"].append("Summary of bug {0} is: {1}".format(
