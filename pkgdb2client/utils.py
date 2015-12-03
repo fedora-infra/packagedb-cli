@@ -275,6 +275,15 @@ def check_package_creation(info, bugid, pkgdbclient):
                     messages["bad"].append(
                         'Review not approved by the assignee of '
                         'the ticket {0}'.format(flag_setter))
+                update_dt = flag.get('modification_date')
+                if update_dt:
+                    dt = datetime.datetime.strptime(
+                        update_dt.value, '%Y%m%dT%H:%M:%S')
+                    delta = datetime.datetime.utcnow().date() - dt.date()
+                    if delta.days > 60:
+                        messages["bad"].append(
+                            'Review was approved more than 60 days ago, '
+                            'on {0}.'.format(dt.strftime('%Y-%m-%d %H:%M:%S')))
             else:
                 messages["bad"].append(
                     'Review not approved, flag set to: {0}'.format(
