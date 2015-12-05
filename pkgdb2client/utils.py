@@ -225,7 +225,7 @@ def is_packager(user):
         and fas_user['group_roles']['packager']['role_status'] == 'approved'
 
 
-def check_package_creation(info, bugid, pkgdbclient):
+def check_package_creation(info, bugid, pkgdbclient, requester):
     ''' Performs a number of checks to see if a package review satisfies the
     criterias to create the package on pkgdb.
 
@@ -266,6 +266,14 @@ def check_package_creation(info, bugid, pkgdbclient):
         if not is_packager(user):
             messages["bad"].append(
                 'Non-packager {0} commented on review bug'.format(user))
+
+    bug_creator, bug_creator_full = get_fasinfo(bug.creator)
+    if bug_creator == requester:
+        messages["good"].append("Review bug created by requester `{0}`".format(
+            bug_creator_full))
+    else:
+        messages["bad"].append("Review bug created by `{0}` but request "
+                               "by {1}".format(bug_creator_full, requester))
 
     # Check who updated the fedora-review flag to +
     for flag in bug.flags:

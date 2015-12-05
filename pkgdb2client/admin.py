@@ -278,7 +278,7 @@ def __handle_request_package(actionid, action):
         bugid = bugid.split('=', 1)[1]
 
     msgs = utils.check_package_creation(
-        action['info'], bugid, PKGDBCLIENT)
+        action['info'], bugid, PKGDBCLIENT, action['user'])
 
     bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
 
