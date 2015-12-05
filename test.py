@@ -7,6 +7,7 @@ import unittest
 import uuid
 
 from functools import wraps
+from six.moves import input
 
 import fedora_cert
 
@@ -20,7 +21,7 @@ if AUTH:
     try:
         USERNAME = fedora_cert.read_user_cert()
     except:
-        USERNAME = raw_input('FAS username: ')
+        USERNAME = input('FAS username: ')
     PASSWORD = getpass.getpass('FAS password: ')
     if not PASSWORD:
         AUTH = False

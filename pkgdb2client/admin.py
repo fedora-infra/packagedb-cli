@@ -20,6 +20,8 @@ from fedora.client import (AppError, ServerError)
 import argparse
 import logging
 
+from six.moves import input
+
 from pkgdb2client import PkgDB, PkgDBException, __version__
 from pkgdb2client.cli import ActionError
 import pkgdb2client
@@ -257,7 +259,7 @@ def _ask_what_to_do(messages):
         print("==> " + "All checks were good")
 
     print('\nWhat should we do about this requests?')
-    action = raw_input('approve, deny, pass: ')
+    action = input('approve, deny, pass: ')
     if action.lower() not in ['a', 'd', 'p', 'approve', 'deny', 'pass']:
         print('No valid action specified, just ignoring for now')
         action = 'pass'
@@ -312,7 +314,7 @@ def __handle_request_package(actionid, action):
         )
 
     elif decision in ('deny', 'd'):
-        message = raw_input(
+        message = input(
             'Could you explain why you declined this request? (this message '
             'will be sent to the user)\n=>')
         data = PKGDBCLIENT.handle_api_call(

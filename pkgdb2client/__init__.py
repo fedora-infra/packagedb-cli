@@ -15,14 +15,12 @@
 # license.
 """
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 import getpass
 import logging
 import os
 import pkg_resources
+
+from six.moves import input, cPickle as pickle, xrange
 
 import fedora_cert
 from fedora.client import AuthError
@@ -95,7 +93,7 @@ def ask_password(username=None, bad_password=False):
             username = fedora_cert.read_user_cert()
         except fedora_cert.fedora_cert_error:
             LOG.debug('Could not read Fedora cert, asking for username')
-            username = raw_input("Username: ")
+            username = input("Username: ")
     password = getpass.getpass("FAS password for user {0}: ".format(username))
     return username, password
 
@@ -176,7 +174,7 @@ class PkgDB(object):
         except:
             data = {}
         try:
-            with open(self.sessionfile, 'wb', 0600) as sessionfo:
+            with open(self.sessionfile, 'wb', 0o600) as sessionfo:
                 sessionfo.seek(0)
                 data["cookies"] = self.session.cookies
                 pickle.dump(data, sessionfo)
@@ -218,7 +216,7 @@ class PkgDB(object):
             raise PkgDBAuthException('Username or password missing')
 
         import re
-        from urlparse import urlparse, parse_qs
+        from six.moves.urllib.parse import urlparse, parse_qs
 
         fedora_openid_api = r'https://id.fedoraproject.org/api/v1/'
         fedora_openid = r'^http(s)?:\/\/id\.(|stg.|dev.)?fedoraproject'\

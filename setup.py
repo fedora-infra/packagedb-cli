@@ -22,7 +22,7 @@ setup(
         ]
     },
     install_requires=[
-        'requests', 'python-bugzilla', 'python-fedora', 'setuptools',
+        'requests', 'python-bugzilla', 'python-fedora', 'setuptools', 'six',
         'beautifulsoup4'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
