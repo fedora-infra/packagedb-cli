@@ -46,9 +46,9 @@ FASCLIENT = AccountSystem(
 
 def _get_bz():
     ''' Return a bugzilla object. '''
+    global BZCLIENT
     if not BZCLIENT:
         try:
-            global BZCLIENT
             BZCLIENT = Bugzilla(url=RH_BZ_API)
             BZCLIENT.logged_in
         except xmlrpclib.Error:
