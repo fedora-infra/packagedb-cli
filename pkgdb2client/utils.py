@@ -20,7 +20,7 @@ import json
 import os
 import tempfile
 
-from datetime import datetime
+import datetime
 
 import requests
 import fedora_cert
@@ -267,11 +267,11 @@ def check_package_creation(info, bugid, pkgdbclient):
                     messages["bad"].append(
                         'Review approved by non-packager {0}'.format(
                             flag_setter))
-                if flag_setter == bug.comments[0].author:
+                if flag_setter == bug.creator:
                     messages["bad"].append(
                         'Review approved by the person creating '
                         'the ticket {0}'.format(flag_setter))
-                if flag_setter != bug.comments[0].author:
+                if flag_setter != bug.assigned_to:
                     messages["bad"].append(
                         'Review not approved by the assignee of '
                         'the ticket {0}'.format(flag_setter))
@@ -379,7 +379,7 @@ def get_rhel_cache(rhel_ver):
     url = base_url % rhel_ver
     output_filename = os.path.join(
         tempfile.gettempdir(), '%s_%s' % (
-            datetime.utcnow().date().strftime('%Y%m%d'),
+            datetime.datetime.utcnow().date().strftime('%Y%m%d'),
             os.path.basename(url))
     )
 
