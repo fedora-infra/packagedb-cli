@@ -187,6 +187,18 @@ def __get_fas_user_by_email(email_address):
     return user
 
 
+def get_fasinfo(email):
+    ''' Get fas username and build a name string for the user like:
+        Human Name (fas_username) <email>
+    '''
+
+    fas_user = __get_fas_user_by_email(email)
+    fas_username = fas_user.get("username", "").encode("utf-8")
+    human_name = fas_user.get("human_name", "").encode("utf-8")
+    full_info = "{0} ({1}) <{2}>".format(human_name, fas_username, email)
+    return fas_username, full_info
+
+
 def is_packager(user):
     ''' For a provided user returned whether associated FAS user
     is a packager or not.
@@ -259,22 +271,25 @@ def check_package_creation(info, bugid, pkgdbclient):
     for flag in bug.flags:
         if flag['name'] == 'fedora-review':
             if flag['status'] == '+':
-                flag_setter = flag['setter']
+                flag_setter_email = flag['setter']
+                flag_setter, flag_setter_full = get_fasinfo(flag_setter_email)
                 if is_packager(flag_setter):
                     messages["good"].append(
-                        'Review approved by packager {0}'.format(flag_setter))
+                        'Review approved by packager `{0}`'.format(
+                            flag_setter_full))
                 else:
                     messages["bad"].append(
-                        'Review approved by non-packager {0}'.format(
-                            flag_setter))
-                if flag_setter == bug.creator:
+                        'Review approved by non-packager `{0}`'.format(
+                            flag_setter_full))
+                if flag_setter_email == bug.creator:
                     messages["bad"].append(
                         'Review approved by the person creating '
-                        'the ticket {0}'.format(flag_setter))
-                if flag_setter != bug.assigned_to:
+                        'the ticket {0}'.format(flag_setter_full))
+                if flag_setter_email != bug.assigned_to:
+                    _, assignee_full = get_fasinfo(bug.assigned_to)
                     messages["bad"].append(
-                        'Review not approved by the assignee of '
-                        'the ticket {0}'.format(flag_setter))
+                        'Review approved by {0} but assignee is '
+                        '{1}'.format(flag_setter_full, assignee_full))
                 update_dt = flag.get('modification_date')
                 if update_dt:
                     dt = datetime.datetime.strptime(
