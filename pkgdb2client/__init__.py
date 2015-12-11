@@ -705,7 +705,7 @@ class PkgDB(object):
     def get_packages(
             self, pattern='*', branches=None, poc=None, status=None,
             orphaned=False, critpath=None, acls=False, eol=False,
-            page=1, count=False):
+            page=1, limit=250, count=False):
         ''' Return the list of packages matching the provided criterias.
 
         To get information about what packages a person has acls on, you
@@ -743,6 +743,9 @@ class PkgDB(object):
         :kwarg page: The page number to retrieve. If page is 0 or lower or
             equal to ``all`` then all pages are returned. Defaults to 1.
         :type page: int or ``all``
+        :kwarg limit: The number of items per page requested behind the scenes.
+            Defaults to 250.
+        :type limit: int
         :kwarg count: A boolean to retrieve the count of ACLs the user has
             instead of the details. If count is True the page argument will
             be ignored
@@ -765,6 +768,7 @@ class PkgDB(object):
                 'poc': poc,
                 'status': status,
                 'page': page,
+                'limit': limit,
             }
             if count is True:
                 args['count'] = count
