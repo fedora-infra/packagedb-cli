@@ -774,6 +774,7 @@ class PkgDB(object):
 
             '''
             args = {
+                'namespace': namespace,
                 'pattern': pattern,
                 'branches': branches,
                 'poc': poc,
@@ -838,6 +839,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgnames': pkgnames,
             'branches': branches,
         }
@@ -867,6 +869,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgnames': pkgnames,
             'branches': branches,
         }
@@ -895,6 +898,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgnames': pkgnames,
             'branches': branches,
             'poc': poc,
@@ -922,6 +926,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgnames': pkgnames,
             'branches': branches,
         }
@@ -1052,6 +1057,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgnames': pkgnames,
             'branches': branches,
             'poc': poc,
