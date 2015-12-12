@@ -410,8 +410,9 @@ class PkgDB(object):
         return self.handle_api_call('/collection/new/', data=args)
 
     def create_package(
-            self, pkgname, summary, description, review_url, status,
-            shouldopen, branches, poc, upstream_url, critpath=False):
+            self, pkgname, summary, description, review_url,
+            status, shouldopen, branches, poc, upstream_url,
+            critpath=False, namespace='rpms'):
         ''' Create a new package.
 
         :arg pkgname: The name of the package
@@ -440,6 +441,8 @@ class PkgDB(object):
         :kwarg critpath: A boolean specifying whether to add this
             package to the critpath
         :type critpath: bool
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -447,6 +450,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgname': pkgname,
             'summary': summary,
             'description': description,
@@ -521,7 +525,9 @@ class PkgDB(object):
 
         return self.handle_api_call('/collections/', params=args)
 
-    def get_package(self, pkgname, branches=None, eol=False, acls=True):
+    def get_package(
+            self, pkgname, branches=None, eol=False, acls=True,
+            namespace='rpms'):
         ''' Return the information of a package matching the provided
         criterias.
 
@@ -538,6 +544,8 @@ class PkgDB(object):
         :kwarg acls: a boolean to specify whether to include ACLs in the
             data returned. Defaults to ``True``.
         :type acls: boolean
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -545,6 +553,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgname': pkgname,
             'branches': branches,
             'acls': acls,
@@ -703,9 +712,9 @@ class PkgDB(object):
         return self.handle_api_call('/packager/package/', params=args)
 
     def get_packages(
-            self, pattern='*', branches=None, poc=None, status=None,
-            orphaned=False, critpath=None, acls=False, eol=False,
-            page=1, limit=250, count=False):
+            self, pattern='*', branches=None, poc=None,
+            status=None, orphaned=False, critpath=None, acls=False,
+            eol=False, page=1, limit=250, count=False, namespace='rpms'):
         ''' Return the list of packages matching the provided criterias.
 
         To get information about what packages a person has acls on, you
@@ -750,6 +759,8 @@ class PkgDB(object):
             instead of the details. If count is True the page argument will
             be ignored
         :type count: bool
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -802,7 +813,8 @@ class PkgDB(object):
 
         return output
 
-    def orphan_packages(self, pkgnames, branches, former_poc=None):
+    def orphan_packages(
+            self, pkgnames, branches, former_poc=None, namespace='rpms'):
         ''' Orphans the provided list of packages on the provided list of
         branches.
 
@@ -815,6 +827,8 @@ class PkgDB(object):
             orphaning the branches where the specified user is POC, even
             if the branches you specified are broader than reality.
         :type former_poc: str
+        :kwarg namespace: The namespace of the package. Defauts to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -833,7 +847,7 @@ class PkgDB(object):
 
         return self.handle_api_call('/package/orphan/', data=args)
 
-    def retire_packages(self, pkgnames, branches):
+    def retire_packages(self, pkgnames, branches, namespace='rpms'):
         ''' Retires the provided list of packages on the provided list of
         branches.
 
@@ -842,6 +856,8 @@ class PkgDB(object):
         :arg branches: One or more branch names for the collections in
             which to retire the packages
         :type branches: str or list
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -857,7 +873,7 @@ class PkgDB(object):
 
         return self.handle_api_call('/package/retire/', data=args)
 
-    def unorphan_packages(self, pkgnames, branches, poc):
+    def unorphan_packages(self, pkgnames, branches, poc, namespace='rpms'):
         ''' Un orphan the provided list of packages on the provided list of
         branches.
 
@@ -868,6 +884,8 @@ class PkgDB(object):
         :type branches: str or list
         :arg poc:
         :type poc: str
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -884,7 +902,7 @@ class PkgDB(object):
 
         return self.handle_api_call('/package/unorphan/', data=args)
 
-    def unretire_packages(self, pkgnames, branches):
+    def unretire_packages(self, pkgnames, branches, namespace='rpms'):
         ''' Un retires the provided list of packages on the provided list of
         branches.
 
@@ -893,6 +911,8 @@ class PkgDB(object):
         :arg branches: One or more branch names for the collections in
             which to unretire the packages
         :type branches: str or list
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -908,7 +928,8 @@ class PkgDB(object):
 
         return self.handle_api_call('/package/unretire/', data=args)
 
-    def update_acl(self, pkgname, branches, acls, status, user):
+    def update_acl(
+            self, pkgname, branches, acls, status, user,  namespace='rpms'):
         ''' Update the specified ACLs, on the specified Branches of the
         specified package.
 
@@ -930,6 +951,8 @@ class PkgDB(object):
         :arg user: The user for which to update the ACL (the person
             requesting new ACLs or for which to approve/deny the ACLs)
         :type user: str
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -939,6 +962,7 @@ class PkgDB(object):
 
         '''
         args = {
+            'namespace': namespace,
             'pkgname': pkgname,
             'branches': branches,
             'acl': acls,
@@ -951,6 +975,8 @@ class PkgDB(object):
     def update_collection_status(self, branch, clt_status):
         ''' Update the status of the specified collection.
 
+        :arg namespace: The namespace of the package
+        :type namespace: str
         :arg branch: The branch name of the collection for which to
             update the status
         :type branch: str
@@ -973,7 +999,8 @@ class PkgDB(object):
         return self.handle_api_call('/collection/{0}/status/'.format(branch),
                                     data=args)
 
-    def update_critpath(self, pkgname, branches, critpath=False):
+    def update_critpath(
+            self, pkgname, branches, critpath=False, namespace='rpms'):
         ''' Set / Remove critpath status of a package
 
         :arg pkgname: The name of the package
@@ -984,16 +1011,21 @@ class PkgDB(object):
         :arg critpath: A boolean corresponding to the critpath status to
             set
         :type critpath: bool
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
 
         '''
         args = {
+            'namespace': namespace,
             'pkgnames': pkgname,
             'branches': branches,
             'critpath': critpath
         }
         return self.handle_api_call('/package/critpath/', data=args)
 
-    def update_package_poc(self, pkgnames, branches, poc, former_poc=None):
+    def update_package_poc(
+            self, pkgnames, branches, poc, former_poc=None,
+            namespace='rpms'):
         ''' Update the point of contact of the specified packages on the
         specified branches.
 
@@ -1009,6 +1041,8 @@ class PkgDB(object):
             changing branches where the specified former_poc is POC, even
             if the branches you specified are broader.
         :type former_poc: str
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBAuthException: if this method is called while the
@@ -1095,7 +1129,7 @@ class PkgDB(object):
             args['username'] = username
         return self.handle_api_call('/pendingacls', params=args)
 
-    def set_monitoring_status(self, pkgname, monitoring):
+    def set_monitoring_status(self, pkgname, monitoring, namespace='rpms'):
         ''' Set / Remove the monitoring status of a package.
 
         :arg pkgname: The name of the package
@@ -1103,6 +1137,8 @@ class PkgDB(object):
         :arg monitoring: The monitoring status to set the package to. Can
             be any of: True, 1, False, 0, or 'nobuild'.
         :type monitoring: str
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
 
         '''
         valid = ['true', '1', 'false', '0', 'nobuild']
@@ -1112,13 +1148,14 @@ class PkgDB(object):
                     monitoring, ', '.join(valid))
             )
         args = {
+            'namespace': namespace,
             'package': pkgname,
             'status': monitoring,
         }
         return self.handle_api_call(
             '/package/%s/monitor/%s' % (pkgname, monitoring), data=args)
 
-    def set_koschei_status(self, pkgname, koschei):
+    def set_koschei_status(self, pkgname, koschei,  namespace='rpms'):
         ''' Set / Remove the koschei status of a package.
 
         :arg pkgname: The name of the package
@@ -1126,6 +1163,8 @@ class PkgDB(object):
         :arg koschei The koschei status to set the package to. Can
             be any of: True, 1, False, 0.
         :type koschei str
+        :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
+        :type namespace: str
 
         '''
         valid = ['true', '1', 'false', '0']
@@ -1135,6 +1174,7 @@ class PkgDB(object):
                     koschei, ', '.join(valid))
             )
         args = {
+            'namespace': namespace,
             'package': pkgname,
             'status': koschei,
         }
