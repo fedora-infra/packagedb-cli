@@ -295,6 +295,7 @@ def check_package_creation(info, bugid, pkgdbclient):
         info['pkg_collection'],
         info['pkg_poc'],
         new_pkg=True,
+        namespace=info.get('pkg_namespace', 'rpms'),
     )
 
     messages["bad"].extend(msgs2["bad"])
@@ -304,7 +305,7 @@ def check_package_creation(info, bugid, pkgdbclient):
 
 
 def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
-                          new_pkg=False):
+                          new_pkg=False, namespace='rpms'):
     ''' Performs a number of checks to see if a package should be allowed
     on a certain branch.
 
@@ -320,7 +321,7 @@ def check_branch_creation(pkgdbclient, pkg_name, clt_name, user,
     # check if the package already exists
     if not new_pkg:
         try:
-            pkginfo = pkgdbclient.get_package(pkg_name)
+            pkginfo = pkgdbclient.get_package(pkg_name, namespace=namespace)
         except pkgdb2client.PkgDBException:
             messages["bad"].append(
                 'Package {0} not found in pkgdb'.format(pkg_name)
