@@ -136,11 +136,13 @@ def _action2msg(action):
     '''
     if action['action'] == 'request.package':
         msg = '#%(id)s (%(status)s) - %(user)s requested the new package '\
-            '"%(pkg)s" on "%(clt)s"\n  %(spaces)s review: %(review_url)s' % (
+            '"%(ns)s/%(pkg)s" on "%(clt)s"\n  %(spaces)s review: '\
+            '%(review_url)s' % (
                 {
                     'id': action['id'],
                     'status': action['status'],
                     'user': action['user'],
+                    'ns': action['info'].get('pkg_namespace', 'rpms'),
                     'pkg': action['info']['pkg_name'],
                     'clt': action['info']['pkg_collection'],
                     'spaces': ' ' * len(str(action['id'])),
@@ -150,11 +152,12 @@ def _action2msg(action):
 
     elif action['action'] == 'request.branch':
         msg = '#%(id)s (%(status)s) - %(user)s requested a new branch '\
-            '"%(clt)s" for "%(pkg)s"' % (
+            '"%(clt)s" for "%(ns)s/%(pkg)s"' % (
                 {
                     'id': action['id'],
                     'status': action['status'],
                     'user': action['user'],
+                    'ns': action['info'].get('pkg_namespace', 'rpms'),
                     'pkg': action['package']['name'],
                     'clt': action['collection']['branchname'],
                 }
@@ -162,11 +165,12 @@ def _action2msg(action):
 
     elif action['action'] == 'request.unretire':
         msg = '#%(id)s (%(status)s) - %(user)s requested the ' \
-            'unretirement of "%(pkg)s" on "%(clt)s"' % (
+            'unretirement of "%(ns)s/%(pkg)s" on "%(clt)s"' % (
                 {
                     'id': action['id'],
                     'status': action['status'],
                     'user': action['user'],
+                    'ns': action['info'].get('pkg_namespace', 'rpms'),
                     'pkg': action['package']['name'],
                     'clt': action['collection']['branchname'],
                 }
@@ -297,6 +301,7 @@ def __handle_request_package(actionid, action):
             poc=action['info']['pkg_poc'].encode('utf-8'),
             upstream_url=upstream,
             critpath=action['info']['pkg_critpath'],
+            namespace=action['info']['pkg_namespace'],
         )
 
         PKGDBCLIENT.handle_api_call(
@@ -307,7 +312,9 @@ def __handle_request_package(actionid, action):
             }
         )
 
-        url = PKGDBCLIENT.url + '/package/' + action['info']['pkg_name']
+        ns = '%s/' % action['info'].get('pkg_namespace', 'rpms')
+
+        url = PKGDBCLIENT.url + '/package/' + ns + action['info']['pkg_name']
         utils.comment_on_bug(
             bugid,
             'Package request has been approved: %s' % url
@@ -345,7 +352,8 @@ def __handle_request_branch(actionid, action):
         PKGDBCLIENT,
         action['package']['name'],
         action['collection']['branchname'],
-        action['user']
+        action['user'],
+        namespace=action['package'].get('namespace', 'rpms'),
     )
 
     decision = _ask_what_to_do(msgs)
@@ -359,6 +367,7 @@ def __handle_request_branch(actionid, action):
             ],
             status='Approved',
             user=action['user'],
+            namespace=action['package'].get('namespace', 'rpms'),
         )
 
         PKGDBCLIENT.handle_api_call(
@@ -416,12 +425,18 @@ def do_process(args):
 
         if action['action'] == 'request.package':
             try:
-                PKGDBCLIENT.get_package(action['info']['pkg_name'])
+                PKGDBCLIENT.get_package(
+                    action['info']['pkg_name']
+                    namespace=action['info'].get('pkg_namespace', 'rpms'),
+                )
                 print('Package {0} found, requalifying request.package '
                       'in request.branch'.format(action['info']['pkg_name']))
                 # Adjusting the input format
                 action['action'] = 'request.branch'
-                action['package'] = {'name': action['info']['pkg_name']}
+                action['package'] = {
+                    'name': action['info']['pkg_name'],
+                    'namespace': action['info'].get('pkg_namespace', 'rpms')
+                }
                 action['collection'] = {
                     'branchname': action['info']['pkg_collection']}
 
