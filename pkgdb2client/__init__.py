@@ -1159,7 +1159,8 @@ class PkgDB(object):
             'status': monitoring,
         }
         return self.handle_api_call(
-            '/package/%s/monitor/%s' % (pkgname, monitoring), data=args)
+            '/package/%s/%s/monitor/%s' % (
+                namespace, pkgname, monitoring), data=args)
 
     def set_koschei_status(self, pkgname, koschei,  namespace='rpms'):
         ''' Set / Remove the koschei status of a package.
@@ -1185,4 +1186,5 @@ class PkgDB(object):
             'status': koschei,
         }
         return self.handle_api_call(
-            '/package/%s/koschei/%s' % (pkgname, koschei), data=args)
+            '/package/%s/%s/koschei/%s' % (
+                namespace, pkgname, koschei), data=args)
