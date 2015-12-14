@@ -57,7 +57,6 @@ def __get_namespace(args):
     '''
     namespace = args.namespace
     if hasattr(args, 'package'):
-        print '***', args.package
         if args.package and '/' in args.package:
             namespace = args.package.split('/', 1)[0]
     return namespace
