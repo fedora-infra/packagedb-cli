@@ -51,6 +51,18 @@ class ActionError(Exception):
     pass
 
 
+def __get_namespace(args):
+    ''' Return the namespace of the package as specified as an argument
+    unless it was specified in the package name.
+    '''
+    namespace = args.namespace
+    if hasattr(args, 'package'):
+        print '***', args.package
+        if args.package and '/' in args.package:
+            namespace = args.package.split('/', 1)[0]
+    return namespace
+
+
 def _get_acls_info(acls):
     ''' Re-order the ACLs as provided by the PkgDB API in a way that can be
     easily printed.
@@ -64,7 +76,7 @@ def _get_acls_info(acls):
     return output
 
 
-def _get_active_branch(packagename=None):
+def _get_active_branch(packagename=None, namespace='rpms'):
     ''' Return a list of the active branch for a specific package or simply
     all the active branches if no package is specified.
     '''
@@ -72,7 +84,7 @@ def _get_active_branch(packagename=None):
     global pkgdbclient
     branches = []
     if packagename:
-        output = pkgdbclient.get_package(packagename)
+        output = pkgdbclient.get_package(packagename, namespace=namespace)
         for pkg in output['packages']:
             if pkg['collection']['status'] != 'EOL':
                 branches.append(pkg['collection']['branchname'])
@@ -216,6 +228,10 @@ def setup_parser():
         help="Branch of the package to query (default: 'master', can be: "
         "'all')")
     parser_acl.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
+    parser_acl.add_argument(
         '--pending', action="store_true", default=False,
         help="Display only ACL awaiting review")
     parser_acl.add_argument(
@@ -236,6 +252,10 @@ def setup_parser():
         help="Branch of the package to give "
         "(default: 'master', can be: 'all')")
     parser_give.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
+    parser_give.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
         "Can be skipped if --user is specified, otherwise is mandatory.")
@@ -250,6 +270,10 @@ def setup_parser():
     parser_list = subparsers.add_parser(
         'list',
         help='List package according to the specified criteria')
+    parser_list.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
     parser_list.add_argument(
         '--nameonly', action="store_true",
         default=False, dest='name_only',
@@ -291,6 +315,10 @@ def setup_parser():
         help="Branch of the package to orphan (default: 'master', can be: "
         "'all')")
     parser_orphan.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
+    parser_orphan.add_argument(
         '--retire', action="store_true", default=False,
         help="Retire the given package")
     parser_orphan.add_argument(
@@ -311,6 +339,10 @@ def setup_parser():
         'branch', default='master', nargs="?",
         help="Branch of the package to unorphan "
         "(default: 'master', can be: 'all')")
+    parser_unorphan.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
     parser_unorphan.add_argument(
         '--poc', default=None,
         help="FAS username of the new point of contact of the package "
@@ -335,6 +367,10 @@ def setup_parser():
         'branch', default='master', nargs="?",
         help="Branch of the package for which the ACL is "
         "requested (default: 'master', can be: 'all')")
+    parser_request.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
     parser_request.set_defaults(func=do_request)
 
     # Update
@@ -355,6 +391,10 @@ def setup_parser():
         'branch', default='master', nargs="?",
         help="Branch of the package for which the ACL is "
         "requested (default: 'master', can be: 'all')")
+    parser_update.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
     parser_update.add_argument(
         '--approve', action="store_true", default=False,
         help="Approve the requested ACL")
@@ -397,6 +437,10 @@ def setup_parser():
         help="Monitoring status to set the package to, if not specified "
         "will show the current status, otherwise will update it. "
         "(can be: 0, 1, nobuild)")
+    parser_monitoring.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
     parser_monitoring.set_defaults(func=do_monitoring)
 
     # Koschei Monitoring
@@ -410,6 +454,10 @@ def setup_parser():
         help="Koschei monitoring status to set the package to, "
         "if not specified will show the current koschei monitoring status, "
         "otherwise will update it. (can be: false, 0, true, 1)")
+    parser_koschei.add_argument(
+        '--ns', dest='namespace', default='rpms',
+        help="Namespace of the package unless specified in the package name "
+        "for example via `docker/foo`, otherwise defaults to `rpms`")
     parser_koschei.set_defaults(func=do_koschei)
 
     return parser
@@ -419,18 +467,24 @@ def do_acl(args):
     ''' Retrieves the ACLs of a package from pkgdb.
 
     '''
-    LOG.info("package : {0}".format(args.package))
-    LOG.info("branch  : {0}".format(args.branch))
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("branch     : {0}".format(args.branch))
+    LOG.info("namespace  : {0}".format(namespace))
     # LOG.info("approve : {0}".format(args.approve))
 
     if args.branch == 'all':
         args.branch = None
-    output = pkgdbclient.get_package(args.package, branches=args.branch)
+    output = pkgdbclient.get_package(
+        args.package, branches=args.branch, namespace=namespace)
 
-    print('Fedora Package Database -- {0}'.format(args.package))
+    print('Fedora Package Database -- {0}/{1}'.format(
+        namespace, args.package))
     if output['packages']:
         print(output['packages'][0]['package']['summary'])
-        if args.extra:
+        if args.extra and namespace == 'rpms':
             # print the number of opened bugs
             LOG.debug("Query bugzilla")
             bugbz = pkgdb2client.utils.get_bugz(args.package)
@@ -497,7 +551,12 @@ def do_give(args):
     ''' Give a package to someone in pkgdb.
 
     '''
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
     LOG.info("user       : {0}".format(args.username))
+    LOG.info("namespace  : {0}".format(namespace))
     LOG.info("package    : {0}".format(args.package))
     LOG.info("branch     : {0}".format(args.branch))
     LOG.info("poc        : {0}".format(args.poc))
@@ -513,7 +572,8 @@ def do_give(args):
     else:
         if '*' in args.package:
             pkgs = pkgdbclient.get_packages(
-                args.package, poc=former_poc, page='all')
+                args.package, poc=former_poc, page='all',
+                namespace=namespace)
             pkgs = [pkg['name'] for pkg in pkgs['packages']]
         else:
             pkgs = [args.package]
@@ -524,7 +584,8 @@ def do_give(args):
         branches = [args.branch]
 
     output = pkgdbclient.update_package_poc(
-        pkgs, branches, username, former_poc=former_poc)
+        pkgs, branches, username, former_poc=former_poc,
+        namespace=namespace)
     for msg in output.get('messages', []):
         print(msg)
 
@@ -533,12 +594,17 @@ def do_list(args):
     ''' Retrieve the list of packages matching a pattern from pkgdb.
 
     '''
+    namespace = __get_namespace(args)
+    if '/' in args.pattern:
+        args.pattern = args.pattern.split('/', 1)[1]
+
     LOG.info("pattern  : {0}".format(args.pattern))
     LOG.info("poc      : {0}".format(args.poc))
     LOG.info("orphaned : {0}".format(args.orphaned))
     LOG.info("user     : {0}".format(args.user))
     LOG.info("name only: {0}".format(args.name_only))
     LOG.info("branch   : {0}".format(args.branch))
+    LOG.info("namespace: {0}".format(namespace))
 
     pattern = args.pattern
     if not pattern:
@@ -578,6 +644,7 @@ def do_list(args):
             poc=args.user,
             orphaned=args.orphaned,
             page='all',
+            namespace=namespace,
         )
 
     cnt = 0
@@ -600,11 +667,16 @@ def do_orphan(args):
     ''' Orphan a package in pkgdb.
 
     '''
-    LOG.info("user    : {0}".format(args.username))
-    LOG.info("poc     : {0}".format(args.poc))
-    LOG.info("package : {0}".format(args.package))
-    LOG.info("branch  : {0}".format(args.branch))
-    LOG.info("retire  : {0}".format(args.retire))
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
+    LOG.info("user       : {0}".format(args.username))
+    LOG.info("poc        : {0}".format(args.poc))
+    LOG.info("namespace  : {0}".format(namespace))
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("branch     : {0}".format(args.branch))
+    LOG.info("retire     : {0}".format(args.retire))
 
     former_poc = args.poc or args.username
     if args.package == 'all':
@@ -612,7 +684,8 @@ def do_orphan(args):
     else:
         if '*' in args.package and former_poc:
             pkgs = pkgdbclient.get_packages(
-                args.package, poc=former_poc, page='all')
+                args.package, poc=former_poc, page='all',
+                namespace=namespace)
             pkgs = [pkg['name'] for pkg in pkgs['packages']]
         else:
             pkgs = [args.package]
@@ -635,10 +708,11 @@ def do_orphan(args):
                 print('No `dead.package` for %s on %s, please use '
                       '`fedpkg retire`' % (pkg_name, pkg_branch))
                 return
-        output = pkgdbclient.retire_packages(pkgs, branches)
+        output = pkgdbclient.retire_packages(
+            pkgs, branches, namespace=namespace)
     else:
         output = pkgdbclient.orphan_packages(
-            pkgs, branches, former_poc=former_poc)
+            pkgs, branches, former_poc=former_poc, namespace=namespace)
 
     for msg in output.get('messages', []):
         print(msg)
@@ -659,10 +733,15 @@ def do_unorphan(args):
     ''' Unorphan a package in pkgdb.
 
     '''
-    LOG.info("user    : {0}".format(args.username))
-    LOG.info("package : {0}".format(args.package))
-    LOG.info("branch  : {0}".format(args.branch))
-    LOG.info("poc     : {0}".format(args.poc))
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
+    LOG.info("user       : {0}".format(args.username))
+    LOG.info("namespace  : {0}".format(namespace))
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("branch     : {0}".format(args.branch))
+    LOG.info("poc        : {0}".format(args.poc))
 
     pkgs = [args.package]
 
@@ -681,7 +760,8 @@ def do_unorphan(args):
             'the new point of contact.')
     LOG.info("new poc : {0}".format(username))
 
-    output = pkgdbclient.unorphan_packages(pkgs, branches, username)
+    output = pkgdbclient.unorphan_packages(
+        pkgs, branches, username, namespace=namespace)
     for msg in output.get('messages', []):
         print(msg)
 
@@ -690,11 +770,16 @@ def do_request(args):
     ''' Request some ACLs in pkgdb.
 
     '''
-    LOG.info("user    : {0}".format(args.username))
-    LOG.info("package : {0}".format(args.package))
-    LOG.info("branch  : {0}".format(args.branch))
-    LOG.info("acl     : {0}".format(args.action))
-    LOG.info("cancel  : {0}".format(args.cancel))
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
+    LOG.info("user       : {0}".format(args.username))
+    LOG.info("namespace  : {0}".format(namespace))
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("branch     : {0}".format(args.branch))
+    LOG.info("acl        : {0}".format(args.action))
+    LOG.info("cancel     : {0}".format(args.cancel))
     action = args.action
     if action == 'all':
         action = ACTIONLIST
@@ -719,7 +804,9 @@ def do_request(args):
         branches=branch,
         acls=action,
         status=status,
-        user=pkgdbclient.username)
+        user=pkgdbclient.username,
+        namespace=namespace,
+    )
 
     for msg in output.get('messages', []):
         print(msg)
@@ -729,7 +816,12 @@ def do_update(args):
     ''' Update (approve/deny) some ACLs request on pkgdb.
 
     '''
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
     LOG.info("user      : {0}".format(args.username))
+    LOG.info("namespace : {0}".format(namespace))
     LOG.info("package   : {0}".format(args.package))
     LOG.info("acl       : {0}".format(args.action))
     LOG.info("requester : {0}".format(args.user))
@@ -763,7 +855,9 @@ def do_update(args):
         branches=branch,
         acls=action,
         status=status,
-        user=args.user)
+        user=args.user,
+        namespace=namespace,
+    )
     for msg in output.get('messages', []):
         print(msg)
 
@@ -794,7 +888,12 @@ def do_monitoring(args):
     ''' Retrieve or set the monitoring status of a package from pkgdb.
 
     '''
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
     LOG.info("package     : {0}".format(args.package))
+    LOG.info("namespace   : {0}".format(namespace))
     LOG.info("monitoring  : {0}".format(args.monitoring))
 
     version = pkgdbclient.get_version()
@@ -804,13 +903,14 @@ def do_monitoring(args):
 
     if not args.monitoring:
         pkg = pkgdbclient.get_package(
-            args.package, branches='master', acls=False
+            args.package, branches='master', acls=False,
+            namespace=namespace,
         )['packages'][0]['package']
         print("Current monitoring status of {0} is: {1}".format(
             pkg['name'], pkg['monitor']))
     else:
         output = pkgdbclient.set_monitoring_status(
-            args.package, args.monitoring)
+            args.package, args.monitoring, namespace=namespace)
         print(output.get(
             'messages', 'Invalid output returned, please contact an admin'))
 
@@ -820,8 +920,13 @@ def do_koschei(args):
     pkgdb.
 
     '''
-    LOG.info("package  : {0}".format(args.package))
-    LOG.info("koschei  : {0}".format(args.koschei))
+    namespace = __get_namespace(args)
+    if '/' in args.package:
+        args.package = args.package.split('/', 1)[1]
+
+    LOG.info("package    : {0}".format(args.package))
+    LOG.info("namespace  : {0}".format(namespace))
+    LOG.info("koschei    : {0}".format(args.koschei))
 
     version = pkgdbclient.get_version()
     if version < (1, 16):
@@ -830,12 +935,14 @@ def do_koschei(args):
 
     if not args.koschei:
         pkg = pkgdbclient.get_package(
-            args.package, branches='master', acls=False
+            args.package, branches='master', acls=False,
+            namespace=namespace,
         )['packages'][0]['package']
         print("Current koschei monitoring status of {0} is: {1}".format(
             pkg['name'], pkg['koschei_monitor']))
     else:
-        output = pkgdbclient.set_koschei_status(args.package, args.koschei)
+        output = pkgdbclient.set_koschei_status(
+            args.package, args.koschei, namespace=namespace)
         print(output.get(
             'messages', 'Invalid output returned, please contact an admin'))
 
