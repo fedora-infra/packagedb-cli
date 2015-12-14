@@ -744,7 +744,7 @@ class PkgDB(object):
             equal to ``all`` then all pages are returned. Defaults to 1.
         :type page: int or ``all``
         :kwarg limit: The number of items per page requested behind the scenes.
-            Defaults to 250.
+            Defaults to 250.  Maximum is 500.
         :type limit: int
         :kwarg count: A boolean to retrieve the count of ACLs the user has
             instead of the details. If count is True the page argument will
