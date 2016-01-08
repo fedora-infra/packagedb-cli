@@ -17,14 +17,13 @@
 
 import getpass
 import logging
-import os
 import pkg_resources
 
-from six.moves import input, cPickle as pickle, xrange
+from six.moves import input, xrange
 
 import fedora_cert
 from fedora.client import AuthError
-import requests
+from fedora.client import OpenIdBaseClient
 
 
 class NullHandler(logging.Handler):
@@ -60,23 +59,6 @@ class PkgDBAuthException(PkgDBException, AuthError):
     pass
 
 
-def _parse_service_form(response):
-    """ Retrieve the attributes from the html login form.
-
-    Basically this extracts all the field of the form so that we can
-    forward them to the OpenID API.
-    """
-    import bs4
-
-    parsed = bs4.BeautifulSoup(response.text, "lxml")
-    inputs = {}
-    for child in parsed.form.find_all(name='input'):
-        if child.attrs['type'] == 'submit':
-            continue
-        inputs[child.attrs['name']] = child.attrs['value']
-    return (parsed.form.attrs['action'], inputs)
-
-
 def ask_password(username=None, bad_password=False):
     """ Example login_callback to ask username/password from user
     :kwarg username: Username
@@ -98,15 +80,14 @@ def ask_password(username=None, bad_password=False):
     return username, password
 
 
-class PkgDB(object):
+class PkgDB(OpenIdBaseClient):
     ''' PkgDB class used to interact with the Package DB instance via its
     API.
 
     '''
 
-    def __init__(self, url=PKGDB_URL, insecure=False, cookies=None,
-                 login_callback=None, login_attempts=3,
-                 sessionfile="~/.cache/pkgdb-session.pickle"):
+    def __init__(self, url=PKGDB_URL, insecure=False,
+                 login_callback=None, login_attempts=3):
         ''' Constructor for the PkgDB object used to query the package
         database.
 
@@ -130,149 +111,28 @@ class PkgDB(object):
         :type login_attempts: int
 
         '''
-        self.url = url
-        self.session = requests.session()
-        self.insecure = insecure
-        self.username = None
-        self.password = None
+
+        super(PkgDB, self).__init__(
+            base_url=url,
+            login_url=url + "/login/",
+            useragent="packagedb-cli/%s" % __version__,
+            debug=False,
+            insecure=insecure,
+            openid_insecure=insecure,
+            username=None,  # We supply this later
+            retries=7,
+            timeout=120,
+            retry_backoff_factor=0.3,
+        )
+
         self.login_callback = login_callback
         self.login_attempts = login_attempts
-        self.sessionfile = os.path.expanduser(sessionfile)
-
-        try:
-            with open(self.sessionfile, "rb") as sessionfo:
-                self.session.cookies = pickle.load(sessionfo)["cookies"]
-        except (IOError, KeyError, TypeError):
-            pass
-
-    def __send_request(self, url, method, params=None, data=None):
-        ''' Send a http request to the provided URL with the provided
-        method.
-
-        :arg url: the url to query
-        :arg method: the http method to use when querying the url
-        :kwarg params: the arguments to use in the query
-        :kwarg data: the data
-
-        '''
-        LOG.debug(
-            'Calling: %s with arg: %s and data: %s', url, params, data)
-        req = self.session.request(
-            method=method,
-            url=url,
-            params=params,
-            data=data,
-            verify=not self.insecure,
-        )
-        self._save_cookies()
-        return req
-
-    def _save_cookies(self):
-        try:
-            with open(self.sessionfile, 'rb') as sessionfo:
-                data = pickle.load(sessionfo)
-        except:
-            data = {}
-        try:
-            with open(self.sessionfile, 'wb', 0o600) as sessionfo:
-                sessionfo.seek(0)
-                data["cookies"] = self.session.cookies
-                pickle.dump(data, sessionfo)
-        except:
-            pass
 
     @property
     def is_logged_in(self):
         ''' Return whether the user if logged in or not. '''
-
-        response = self.session.get(self.url + '/login/')
+        response = self.session.get(self.base_url + '/login/')
         return "logged in as" in response.text
-
-    def login(self, username=None, password=None, openid_insecure=False,
-              response=None):
-        ''' Login the user on pkgdb2.
-
-        :arg username: the FAS username of the user.
-        :type username: str
-        :arg password: the FAS password of the user.
-        :type password: str
-        :kwarg openid_insecure: If True, do not check the openid server
-            certificates against their CA's.  This means that man-in-the
-            middle attacks are possible against the `BaseClient`. You might
-            turn this option on for testing against a local version of a
-            server with a self-signed certificate but it should be off in
-            production.
-        :type openid_insecure: bool
-        '''
-        if not username:
-            username = self.username
-        if not password:
-            password = self.password
-        if self.login_callback and not password:
-            username, password = self.login_callback(username=username,
-                                                     bad_password=False)
-
-        if not username or not password:
-            raise PkgDBAuthException('Username or password missing')
-
-        import re
-        from six.moves.urllib.parse import urlparse, parse_qs
-
-        fedora_openid_api = r'https://id.fedoraproject.org/api/v1/'
-        fedora_openid = r'^http(s)?:\/\/id\.(|stg.|dev.)?fedoraproject'\
-            '\.org(/)?'
-        motif = re.compile(fedora_openid)
-
-        # Log into the service
-        if not response:
-            response = self.session.get(self.url + '/login/')
-
-        openid_url = ''
-        if '<title>OpenID transaction in progress</title>' \
-                in response.text:
-            # requests.session should hold onto this for us....
-            openid_url, data = _parse_service_form(response)
-            if not motif.match(openid_url):
-                raise PkgDBException(
-                    'Un-expected openid provider asked: %s' % openid_url)
-        elif 'logged in as' in response.text:
-            # User already logged in via its cookie file by default:
-            # ~/.cache/pkgdb-session.pickle
-            return
-        else:
-            data = {}
-            for resp in response.history:
-                if motif.match(resp.url):
-                    parsed = parse_qs(urlparse(resp.url).query)
-                    for key, value in parsed.items():
-                        data[key] = value[0]
-                    break
-            else:
-                raise PkgDBException(
-                    'Unable to determine openid parameters from login: %r' %
-                    openid_url)
-
-        # Contact openid provider
-        data['username'] = username
-        data['password'] = password
-        # Let's precise to FedOAuth that we want to authenticate with FAS
-        data['auth_module'] = 'fedoauth.auth.fas.Auth_FAS'
-
-        response = self.__send_request(
-            url=fedora_openid_api,
-            method='POST',
-            data=data)
-        output = response.json()
-
-        if not output['success']:
-            raise PkgDBException(output['message'])
-
-        response = self.__send_request(
-            url=output['response']['openid.return_to'],
-            method='POST',
-            data=output['response'])
-
-        return output
 
     def call_api(self, path, params=None, data=None):
         ''' call the API.
@@ -283,23 +143,25 @@ class PkgDB(object):
         :type params: dict
         :arg data: POST data for the API call
         :type data: dict
-        :return: requests response object
-        :rtype: requests.models.Response
+        :return: json data
+        :rtype: dict
         :raise PkgDBAuthException: If login is required and fails
         '''
         if data:
-            method = "POST"
+            verb = "POST"
         else:
-            method = "GET"
+            verb = "GET"
 
-        url = self.url + "/api" + path
-        response = self.__send_request(url=url, method=method, data=data,
-                                       params=params)
-        if '<title>OpenID transaction in progress</title>' \
-                in response.text:
+        url = self.base_url + "/api" + path
+        kwargs = dict(verb=verb, data=data, params=params)
+        try:
+            data = self.send_request(url, **kwargs)
+        except Exception as e:
+            LOG.debug(str(e))
+
             bad_password = False
-            password = self.password
-            username = self.username
+            password = None
+            username = None
             success = False
             for count in xrange(self.login_attempts):
                 if not username or not password or bad_password:
@@ -311,19 +173,17 @@ class PkgDB(object):
                     else:
                         raise PkgDBAuthException('Authentication required')
                 try:
-                    self.login(username=username, password=password,
-                               response=response)
+                    self.login(username=username, password=password)
                     success = True
                     break
                 except PkgDBException as err:
                     LOG.debug('Exception: {0}'.format(err))
-                    response = None
+                    data = None
                     bad_password = True
             if not success:
                 raise PkgDBAuthException("Too many failed login attempts")
-            response = self.__send_request(url=url, method=method, data=data,
-                                           params=params)
-        return response
+            data = self.send_request(url, **kwargs)
+        return data
 
     def handle_api_call(self, path, params=None, data=None):
         ''' call the API.
@@ -341,26 +201,16 @@ class PkgDB(object):
 
         '''
 
-        response = self.call_api(path, params, data)
-        output = None
-        try:
-            output = response.json()
-        except Exception as err:
-            LOG.debug(response.text)
-            raise PkgDBException('Error while decoding JSON: {0}'.format(err))
+        output = self.call_api(path, params, data)
 
-        if response.status_code != 200:
+        if not output or 'error' in output:
             LOG.debug('full output: {0}'.format(output))
             if output and 'error' in output:
                 raise PkgDBException(output['error'])
             elif output is None:
-                raise PkgDBException(
-                    'No output returned by %s' % response.url)
+                raise PkgDBException('No output returned by %s' % path)
             else:
                 raise PkgDBException(output)
-        elif output is None:
-            raise PkgDBException(
-                'No output returned by %s' % response.url)
 
         return output
 
