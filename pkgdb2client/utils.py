@@ -193,8 +193,17 @@ def get_fasinfo(email):
     '''
 
     fas_user = __get_fas_user_by_email(email)
-    fas_username = fas_user.get("username", "").encode("utf-8")
-    human_name = fas_user.get("human_name", "").encode("utf-8")
+
+    fas_username = fas_user["username"]
+    if fas_username is None:
+        fas_username = ""
+    fas_username = fas_username.encode("utf-8")
+
+    human_name = fas_user["human_name"]
+    if human_name is None:
+        human_name = "[Unknown]"
+    human_name = human_name.encode("utf-8")
+
     full_info = "{0} ({1}) <{2}>".format(human_name, fas_username, email)
     return fas_username, full_info
 
