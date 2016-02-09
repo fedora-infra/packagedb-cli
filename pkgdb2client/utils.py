@@ -190,9 +190,13 @@ def __get_fas_user_by_email(email_address):
 def get_fasinfo(email):
     ''' Get fas username and build a name string for the user like:
         Human Name (fas_username) <email>
+        Returns (fas_username, full_info)
     '''
 
     fas_user = __get_fas_user_by_email(email)
+    if fas_user is None:
+        info = "email {} unknown to FAS".format(email)
+        return info, info
 
     fas_username = fas_user["username"]
     if fas_username is None:
