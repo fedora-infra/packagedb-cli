@@ -187,6 +187,31 @@ def __get_fas_user_by_email(email_address):
     return user
 
 
+def get_fasinfo(email):
+    ''' Get fas username and build a name string for the user like:
+        Human Name (fas_username) <email>
+        Returns (fas_username, full_info)
+    '''
+
+    fas_user = __get_fas_user_by_email(email)
+    if fas_user is None:
+        info = "email {} unknown to FAS".format(email)
+        return info, info
+
+    fas_username = fas_user["username"]
+    if fas_username is None:
+        fas_username = ""
+    fas_username = fas_username.encode("utf-8")
+
+    human_name = fas_user["human_name"]
+    if human_name is None:
+        human_name = "[Unknown]"
+    human_name = human_name.encode("utf-8")
+
+    full_info = "{0} ({1}) <{2}>".format(human_name, fas_username, email)
+    return fas_username, full_info
+
+
 def is_packager(user):
     ''' For a provided user returned whether associated FAS user
     is a packager or not.
@@ -213,7 +238,7 @@ def is_packager(user):
         and fas_user['group_roles']['packager']['role_status'] == 'approved'
 
 
-def check_package_creation(info, bugid, pkgdbclient):
+def check_package_creation(info, bugid, pkgdbclient, requester):
     ''' Performs a number of checks to see if a package review satisfies the
     criterias to create the package on pkgdb.
 
@@ -255,26 +280,37 @@ def check_package_creation(info, bugid, pkgdbclient):
             messages["bad"].append(
                 'Non-packager {0} commented on review bug'.format(user))
 
+    bug_creator, bug_creator_full = get_fasinfo(bug.creator)
+    if bug_creator == requester:
+        messages["good"].append("Review bug created by requester `{0}`".format(
+            bug_creator_full))
+    else:
+        messages["bad"].append("Review bug created by `{0}` but request "
+                               "by {1}".format(bug_creator_full, requester))
+
     # Check who updated the fedora-review flag to +
     for flag in bug.flags:
         if flag['name'] == 'fedora-review':
             if flag['status'] == '+':
-                flag_setter = flag['setter']
+                flag_setter_email = flag['setter']
+                flag_setter, flag_setter_full = get_fasinfo(flag_setter_email)
                 if is_packager(flag_setter):
                     messages["good"].append(
-                        'Review approved by packager {0}'.format(flag_setter))
+                        'Review approved by packager `{0}`'.format(
+                            flag_setter_full))
                 else:
                     messages["bad"].append(
-                        'Review approved by non-packager {0}'.format(
-                            flag_setter))
-                if flag_setter == bug.creator:
+                        'Review approved by non-packager `{0}`'.format(
+                            flag_setter_full))
+                if flag_setter_email == bug.creator:
                     messages["bad"].append(
                         'Review approved by the person creating '
-                        'the ticket {0}'.format(flag_setter))
-                if flag_setter != bug.assigned_to:
+                        'the ticket {0}'.format(flag_setter_full))
+                if flag_setter_email != bug.assigned_to:
+                    _, assignee_full = get_fasinfo(bug.assigned_to)
                     messages["bad"].append(
-                        'Review not approved by the assignee of '
-                        'the ticket {0}'.format(flag_setter))
+                        'Review approved by {0} but assignee is '
+                        '{1}'.format(flag_setter_full, assignee_full))
                 update_dt = flag.get('modification_date')
                 if update_dt:
                     dt = datetime.datetime.strptime(
