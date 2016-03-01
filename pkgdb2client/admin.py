@@ -302,6 +302,8 @@ def __handle_request_package(actionid, action):
             upstream_url=upstream,
             critpath=action['info']['pkg_critpath'],
             namespace=action['info']['pkg_namespace'],
+            monitoring_status=action['info'].get('pkg_namespace', True),
+            koschei=action['info'].get('koschei', False),
         )
 
         PKGDBCLIENT.handle_api_call(
