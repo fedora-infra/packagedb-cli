@@ -306,6 +306,18 @@ def __handle_request_package(actionid, action):
             koschei=action['info'].get('koschei', False),
         )
 
+        comaintainers = action['info'].get('co-maintainers')
+        if comaintainers:
+            for user in comaintainers.split(','):
+                output = pkgdbclient.update_acl(
+                    action['info']['pkg_name'],
+                    branches=action['info']['pkg_collection'],
+                    acls=['commit', 'watchbugzilla', 'watchcommits',
+                    status='Approved',
+                    user=user.strip(),
+                    namespace=action['info']['pkg_namespace'],
+                )
+
         PKGDBCLIENT.handle_api_call(
             '/admin/action/status',
             data={
