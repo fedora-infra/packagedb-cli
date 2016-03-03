@@ -312,7 +312,7 @@ def __handle_request_package(actionid, action):
                 output = pkgdbclient.update_acl(
                     action['info']['pkg_name'],
                     branches=action['info']['pkg_collection'],
-                    acls=['commit', 'watchbugzilla', 'watchcommits',
+                    acls=['commit', 'watchbugzilla', 'watchcommits'],
                     status='Approved',
                     user=user.strip(),
                     namespace=action['info']['pkg_namespace'],
