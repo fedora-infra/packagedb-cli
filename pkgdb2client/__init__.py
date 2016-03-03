@@ -131,8 +131,15 @@ class PkgDB(OpenIdBaseClient):
     @property
     def is_logged_in(self):
         ''' Return whether the user if logged in or not. '''
-        response = self.session.get(self.base_url + '/login/')
+        response = self._session.get(self.base_url + '/login/')
         return "logged in as" in response.text
+
+    def login(self, username, password, otp=None):
+        ''' Calls the login method from OpenIdBaseClient if there is a need
+        for it.
+        '''
+        if not self.is_logged_in:
+            super(PkgDB, self).login(username, password, otp=None)
 
     def call_api(self, path, params=None, data=None):
         ''' call the API.
