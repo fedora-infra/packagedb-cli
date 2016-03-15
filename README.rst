@@ -53,7 +53,7 @@ Get and Run the Source
 
 ::
 
-  dnf install python-virtualenvwrapper
+  dnf install python-virtualenvwrapper fedora-cert
 
 * Create the virtual environment
 
