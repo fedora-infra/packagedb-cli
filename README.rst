@@ -49,8 +49,41 @@ Install Prerequisites
 Get and Run the Source
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
+* Install python-virtualenvwrapper
+
+::
+
+  dnf install python-virtualenvwrapper
+
+* Create the virtual environment
+
+::
+
+  mkvirtualenv pkgdb-cli --system-site-packages
+
+* Activate the virtual environment
+
+::
+
+  workon pkgdb-cli
+
+* Get the project
+
 ::
 
   git clone http://git.fedorahosted.org/git/packagedb-cli.git
   cd packagedb-cli
+
+* Set up the project
+
+::
+
+  python setup.py develop
+
+* Run pkgdb-cli or pkgdb-admin
+
+::
+
   python pkgdb2client/cli.py
+  python pkgdb2client/admin.py
+
