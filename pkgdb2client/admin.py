@@ -302,7 +302,7 @@ def __handle_request_package(actionid, action):
             upstream_url=upstream,
             critpath=action['info']['pkg_critpath'],
             namespace=action['info']['pkg_namespace'],
-            monitoring_status=action['info'].get('pkg_namespace', True),
+            monitoring_status=action['info'].get('monitoring_status', True),
             koschei=action['info'].get('koschei', False),
         )
 

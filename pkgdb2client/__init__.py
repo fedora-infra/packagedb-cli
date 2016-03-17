@@ -269,7 +269,8 @@ class PkgDB(OpenIdBaseClient):
     def create_package(
             self, pkgname, summary, description, review_url,
             status, shouldopen, branches, poc, upstream_url,
-            critpath=False, namespace='rpms'):
+            critpath=False, namespace='rpms',
+            monitoring_status=True, koschei=False):
         ''' Create a new package.
 
         :arg pkgname: The name of the package
@@ -300,6 +301,13 @@ class PkgDB(OpenIdBaseClient):
         :type critpath: bool
         :kwarg namespace: The namespace of the package. Defaults to ``rpms``.
         :type namespace: str
+        :kwarg monitoring_status: the new release monitoring status for this
+            package (defaults to ``True``, can be ``True``, ``False`` or
+            ``nobuild``).
+        :type monitoring_status: str
+        :kwarg koschei: the koschei integration status for this package
+            (defaults to ``False``, can be ``True`` or ``False``).
+        :type koschei: str
         :return: the json object returned by the API
         :rtype: dict
         :raise PkgDBException: if the API call does not return a http code
@@ -317,6 +325,8 @@ class PkgDB(OpenIdBaseClient):
             'branches': branches,
             'poc': poc,
             'upstream_url': upstream_url,
+            'monitoring_status': monitoring_status,
+            'koschei': koschei,
         }
         if critpath:
             args['critpath'] = critpath
