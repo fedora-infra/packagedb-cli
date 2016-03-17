@@ -289,8 +289,10 @@ def check_package_creation(info, bugid, pkgdbclient, requester):
                                "by {1}".format(bug_creator_full, requester))
 
     # Check who updated the fedora-review flag to +
+    fedora_review_checked = False
     for flag in bug.flags:
         if flag['name'] == 'fedora-review':
+            fedora_review_checked = True
             if flag['status'] == '+':
                 flag_setter_email = flag['setter']
                 flag_setter, flag_setter_full = get_fasinfo(flag_setter_email)
@@ -324,6 +326,10 @@ def check_package_creation(info, bugid, pkgdbclient, requester):
                 messages["bad"].append(
                     'Review not approved, flag set to: {0}'.format(
                         flag['status']))
+
+    if not fedora_review_checked:
+        messages["bad"].append('fedora-review flag has not been touched')
+
 
     msgs2 = check_branch_creation(
         pkgdbclient,
