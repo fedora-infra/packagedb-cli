@@ -256,13 +256,16 @@ def check_package_creation(info, bugid, pkgdbclient, requester):
     expected = 'Review Request: {0} - {1}'.format(
         info['pkg_name'], info['pkg_summary'].encode('utf-8'))
 
-    if bug.summary == expected:
+    # bug.summary is a unicode object
+    bug_summary = bug.summary.encode('utf-8')
+
+    if bug_summary == expected:
         messages["good"].append("Summary of bug {0} is: {1}".format(
-            bugid, bug.summary))
+            bugid, bug_summary))
     else:
         messages["bad"].append(
             'The bug title does not fit the expected one\n'
-            '   exp: "{0}" vs obs: "{1}"'.format(expected, bug.summary))
+            '   exp: "{0}" vs obs: "{1}"'.format(expected, bug_summary))
 
     if bug.component != 'Package Review':
         messages["bad"].append(
