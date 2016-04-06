@@ -594,7 +594,7 @@ def do_list(args):
 
     '''
     namespace = __get_namespace(args)
-    if '/' in args.pattern:
+    if args.pattern and '/' in args.pattern:
         args.pattern = args.pattern.split('/', 1)[1]
 
     LOG.info("pattern  : {0}".format(args.pattern))
