@@ -360,7 +360,7 @@ def __handle_request_package(actionid, action):
     return data
 
 
-def __handle_request_branch(actionid, action):
+def __handle_request_branch(actionid, action, package):
     ''' Handle ne branch requests. '''
     msgs = utils.check_branch_creation(
         PKGDBCLIENT,
@@ -370,7 +370,27 @@ def __handle_request_branch(actionid, action):
         namespace=action['package'].get('namespace', 'rpms'),
     )
 
-    decision = _ask_what_to_do(msgs)
+    decision = None
+    if package is not None:
+        branch = action['info']['pkg_collection']
+
+        # Requests for Fedora branches can be automatically approved if they
+        # are from a package admin. Usually package DB approves them directly
+        # only when the package was created at the same time the branches were
+        # requested, it needs to be approved by a pkgdb admin.
+        if branch[0] == "f":
+            for acl in package["acls"]:
+                if acl["fas_name"] == action["user"] and \
+                        acl["acl"] == "approveacls" and \
+                        acl["status"] == "Approved":
+                    if len(msgs["bad"]) == 0:
+                        print("Auto approving Fedora Branch request for "
+                              "package admin {0}".format(action["user"]))
+                        decision = "approve"
+
+    if decision is None:
+        decision = _ask_what_to_do(msgs)
+
     if decision in ('a', 'approve'):
         data = PKGDBCLIENT.update_acl(
             pkgname=action['package']['name'],
@@ -437,12 +457,14 @@ def do_process(args):
                 action['id'], action['status']))
             return
 
+        package = None
         if action['action'] == 'request.package':
             try:
-                PKGDBCLIENT.get_package(
-                    action['info']['pkg_name'],
+                package_name = action['info']['pkg_name']
+                package = PKGDBCLIENT.get_package(
+                    package_name, branches=["master"],
                     namespace=action['info'].get('pkg_namespace', 'rpms'),
-                )
+                )["packages"][0]
                 print('Package {0} found, requalifying request.package '
                       'in request.branch'.format(action['info']['pkg_name']))
                 # Adjusting the input format
@@ -460,7 +482,7 @@ def do_process(args):
         if action['action'] == 'request.package':
             data = __handle_request_package(actionid, action)
         elif action['action'] == 'request.branch':
-            data = __handle_request_branch(actionid, action)
+            data = __handle_request_branch(actionid, action, package)
         else:
             print('Action %s not supported by pkgdb-cli' % action['action'])
             continue
