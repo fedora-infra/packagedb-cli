@@ -271,6 +271,32 @@ def _ask_what_to_do(messages):
     return action.lower()
 
 
+def approve_action(actionid):
+    result = PKGDBCLIENT.handle_api_call(
+        '/admin/action/status',
+        data={
+            'id': actionid,
+            'status': 'Approved'
+        }
+    )
+    return result
+
+
+def deny_action(actionid):
+    message = input(
+        'Could you explain why you declined this request? (this message '
+        'will be sent to the user)\n=>')
+    result = PKGDBCLIENT.handle_api_call(
+        '/admin/action/status',
+        data={
+            'id': actionid,
+            'status': 'Denied',
+            'message': message,
+        }
+    )
+    return result, message
+
+
 def __handle_request_package(actionid, action):
     ''' Handle the new package requests. '''
     bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
@@ -318,13 +344,7 @@ def __handle_request_package(actionid, action):
                     namespace=action['info']['pkg_namespace'],
                 )
 
-        PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Approved'
-            }
-        )
+        approve_action(actionid)
 
         ns = '%s/' % action['info'].get('pkg_namespace', 'rpms')
 
@@ -335,17 +355,7 @@ def __handle_request_package(actionid, action):
         )
 
     elif decision in ('deny', 'd'):
-        message = input(
-            'Could you explain why you declined this request? (this message '
-            'will be sent to the user)\n=>')
-        data = PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Denied',
-                'message': message,
-            }
-        )
+        data, message = deny_action(actionid)
 
         utils.comment_on_bug(
             bugid,
@@ -404,27 +414,10 @@ def __handle_request_branch(actionid, action, package):
             namespace=action['package'].get('namespace', 'rpms'),
         )
 
-        PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Approved'
-            }
-        )
+        approve_action(actionid)
 
     elif decision in ('deny', 'd'):
-        message = raw_input(
-            'Could you explain why you declined this request? (this message '
-            'will be sent to the user)\n=>')
-        data = PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Denied',
-                'message': message,
-            }
-        )
-
+        data, _ = deny_action(actionid)
     else:
         data = {
             'messages': ['Action {0} un-touched'.format(actionid)]
