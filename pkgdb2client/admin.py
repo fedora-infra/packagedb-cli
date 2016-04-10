@@ -524,7 +524,8 @@ def do_process(args):
         elif action['action'] == 'request.unretire':
             data = __handle_request_unretire(actionid, action)
         else:
-            print('Action %s not supported by pkgdb-cli' % action['action'])
+            print('Action {0} not supported by pkgdb-admin'.format(
+                action['action']))
             continue
 
         for msg in data.get('messages', []):
