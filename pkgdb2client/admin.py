@@ -346,9 +346,11 @@ def __handle_request_package(actionid, action):
 
         approve_action(actionid)
 
-        ns = '%s/' % action['info'].get('pkg_namespace', 'rpms')
+        url = "{0}/package/{1}/{2}".format(
+            PKGDBCLIENT.base_url,
+            action['info'].get('pkg_namespace', 'rpms'),
+            action['info']['pkg_name'])
 
-        url = PKGDBCLIENT.base_url + '/package/' + ns + action['info']['pkg_name']
         utils.comment_on_bug(
             bugid,
             'Package request has been approved: %s' % url
