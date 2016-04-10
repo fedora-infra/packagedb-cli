@@ -335,7 +335,7 @@ def __handle_request_package(actionid, action):
         comaintainers = action['info'].get('co-maintainers')
         if comaintainers:
             for user in comaintainers.split(','):
-                output = PKGDBCLIENT.update_acl(
+                PKGDBCLIENT.update_acl(
                     action['info']['pkg_name'],
                     branches=action['info']['pkg_collection'],
                     acls=['commit', 'watchbugzilla', 'watchcommits'],
