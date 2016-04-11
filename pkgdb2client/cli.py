@@ -51,14 +51,18 @@ class ActionError(Exception):
     pass
 
 
-def __get_namespace(args):
+def __get_namespace(args, kw='package'):
     ''' Return the namespace of the package as specified as an argument
     unless it was specified in the package name.
     '''
     namespace = args.namespace
-    if hasattr(args, 'package'):
-        if args.package and '/' in args.package:
-            namespace = args.package.split('/', 1)[0]
+    try:
+        if args.__getattribute__(kw) and '/' in args.__getattribute__(kw):
+            namespace = args.__getattribute__(kw).split('/', 1)[0]
+    except AttributeError:
+        # Raised if args doesn't have the attribute `kw`. According to
+        # https://hynek.me/articles/hasattr/ hasattr is in fact a bad idea
+        pass
     return namespace
 
 
@@ -593,7 +597,7 @@ def do_list(args):
     ''' Retrieve the list of packages matching a pattern from pkgdb.
 
     '''
-    namespace = __get_namespace(args)
+    namespace = __get_namespace(args, kw='pattern')
     if args.pattern and '/' in args.pattern:
         args.pattern = args.pattern.split('/', 1)[1]
 
