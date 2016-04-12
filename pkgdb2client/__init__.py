@@ -120,9 +120,8 @@ class PkgDB(OpenIdBaseClient):
             insecure=insecure,
             openid_insecure=insecure,
             username=None,  # We supply this later
-            retries=7,
+            retries=None,  # Don't retry, because it masks error responses.
             timeout=120,
-            retry_backoff_factor=0.3,
         )
 
         self.login_callback = login_callback
