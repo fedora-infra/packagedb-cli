@@ -523,8 +523,7 @@ def main():
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
         LOG.info("Querying bugzilla at: %s", arg.pkgdburl)
-        utils.BZCLIENT.url = arg.bzurl
-        utils.BZCLIENT._sslverify = not arg.insecure
+        utils._get_bz(arg.bzurl, insecure=arg.insecure)
 
     if arg.fasurl:
         LOG.info("Querying FAS at: %s", arg.pkgdburl)

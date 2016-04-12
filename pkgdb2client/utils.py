@@ -44,15 +44,20 @@ FASCLIENT = AccountSystem(
     username=USERNAME)
 
 
-def _get_bz():
+def _get_bz(url=RH_BZ_API, insecure=False):
     ''' Return a bugzilla object. '''
     global BZCLIENT
     if not BZCLIENT:
-        try:
-            BZCLIENT = Bugzilla(url=RH_BZ_API)
-            BZCLIENT.logged_in
-        except xmlrpclib.Error:
-            bz_login()
+        BZCLIENT = Bugzilla(url=url)
+    elif BZCLIENT.url != url:
+        BZCLIENT.url = url
+
+    BZCLIENT._sslverify = not insecure
+
+    try:
+        BZCLIENT.logged_in
+    except xmlrpclib.Error:
+        bz_login()
 
     return BZCLIENT
 
@@ -60,7 +65,7 @@ def _get_bz():
 def bz_login():
     ''' Login on bugzilla. '''
     print('To keep going, we need to authenticate against bugzilla'
-          ' at {0}'.format(RH_BZ_API))
+          ' at {0}'.format(BZCLIENT.url))
 
     username = raw_input("Bugzilla user: ")
     password = getpass.getpass("Bugzilla password: ")
