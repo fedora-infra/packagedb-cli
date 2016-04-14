@@ -271,6 +271,32 @@ def _ask_what_to_do(messages):
     return action.lower()
 
 
+def approve_action(actionid):
+    result = PKGDBCLIENT.handle_api_call(
+        '/admin/action/status',
+        data={
+            'id': actionid,
+            'status': 'Approved'
+        }
+    )
+    return result
+
+
+def deny_action(actionid):
+    message = input(
+        'Could you explain why you declined this request? (this message '
+        'will be sent to the user)\n=>')
+    result = PKGDBCLIENT.handle_api_call(
+        '/admin/action/status',
+        data={
+            'id': actionid,
+            'status': 'Denied',
+            'message': message,
+        }
+    )
+    return result, message
+
+
 def __handle_request_package(actionid, action):
     ''' Handle the new package requests. '''
     bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
@@ -309,7 +335,7 @@ def __handle_request_package(actionid, action):
         comaintainers = action['info'].get('co-maintainers')
         if comaintainers:
             for user in comaintainers.split(','):
-                output = PKGDBCLIENT.update_acl(
+                PKGDBCLIENT.update_acl(
                     action['info']['pkg_name'],
                     branches=action['info']['pkg_collection'],
                     acls=['commit', 'watchbugzilla', 'watchcommits'],
@@ -318,34 +344,20 @@ def __handle_request_package(actionid, action):
                     namespace=action['info']['pkg_namespace'],
                 )
 
-        PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Approved'
-            }
-        )
+        approve_action(actionid)
 
-        ns = '%s/' % action['info'].get('pkg_namespace', 'rpms')
+        url = "{0}/package/{1}/{2}".format(
+            PKGDBCLIENT.base_url,
+            action['info'].get('pkg_namespace', 'rpms'),
+            action['info']['pkg_name'])
 
-        url = PKGDBCLIENT.base_url + '/package/' + ns + action['info']['pkg_name']
         utils.comment_on_bug(
             bugid,
             'Package request has been approved: %s' % url
         )
 
     elif decision in ('deny', 'd'):
-        message = input(
-            'Could you explain why you declined this request? (this message '
-            'will be sent to the user)\n=>')
-        data = PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Denied',
-                'message': message,
-            }
-        )
+        data, message = deny_action(actionid)
 
         utils.comment_on_bug(
             bugid,
@@ -404,32 +416,60 @@ def __handle_request_branch(actionid, action, package):
             namespace=action['package'].get('namespace', 'rpms'),
         )
 
-        PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Approved'
-            }
-        )
+        approve_action(actionid)
 
     elif decision in ('deny', 'd'):
-        message = raw_input(
-            'Could you explain why you declined this request? (this message '
-            'will be sent to the user)\n=>')
-        data = PKGDBCLIENT.handle_api_call(
-            '/admin/action/status',
-            data={
-                'id': actionid,
-                'status': 'Denied',
-                'message': message,
-            }
-        )
-
+        data, _ = deny_action(actionid)
     else:
         data = {
             'messages': ['Action {0} un-touched'.format(actionid)]
         }
 
+    return data
+
+
+def __handle_request_unretire(actionid, action):
+    ''' Handle unretirement requests. Do the same checks as done for new
+    package requests and ask the admin to do the necessary steps by hand. '''
+
+    bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
+    if '=' in bugid:
+        bugid = bugid.split('=', 1)[1]
+
+    # Add valuees to info that pkgdb adds to new package actions
+    action['info']['pkg_name'] = action['package']['name']
+    action['info']['pkg_summary'] = action['package']['summary']
+    action['info']['pkg_collection'] = action['collection'][
+        'branchname']
+    action['info']['pkg_poc'] = action['user']
+    # FIXME : Does not need to use .get() once
+    # https://github.com/fedora-infra/pkgdb2/pull/333
+    # is deployed.
+    action['info']['pkg_namespace'] = action['package'].get(
+        'namespace', 'rpms')
+
+    msgs = utils.check_package_creation(
+        action['info'], bugid, PKGDBCLIENT, action['user'])
+
+    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
+    decision = _ask_what_to_do(msgs)
+
+    if decision in ('a', 'approve'):
+        cmd = ("pkgdb-cli", "unorphan", "--poc", action['info']['pkg_poc'],
+               action['info']['pkg_name'], action['info']['pkg_collection'])
+        input("Please run the following command (confirm with any key): " +
+              " ".join(cmd))
+        input("Please make sure the package is properly unblocked in koji. "
+              "(Confirm with any key)")
+
+        data = approve_action(actionid)
+
+    elif decision in ('deny', 'd'):
+        data, _ = deny_action(actionid)
+    else:
+        data = {
+            'messages': ['Action {0} un-touched'.format(actionid)]
+        }
     return data
 
 
@@ -483,8 +523,11 @@ def do_process(args):
             data = __handle_request_package(actionid, action)
         elif action['action'] == 'request.branch':
             data = __handle_request_branch(actionid, action, package)
+        elif action['action'] == 'request.unretire':
+            data = __handle_request_unretire(actionid, action)
         else:
-            print('Action %s not supported by pkgdb-cli' % action['action'])
+            print('Action {0} not supported by pkgdb-admin'.format(
+                action['action']))
             continue
 
         for msg in data.get('messages', []):
