@@ -316,6 +316,12 @@ def __handle_request_package(actionid, action):
         upstream = action['info'].get('pkg_upstream_url', None)
         if upstream:
             upstream = upstream.encode('utf-8')
+
+        monitoring_status = action['info'].get('monitoring_status', True)
+        # If we get an invalid monitoring status, use the default
+        if str(monitoring_status) not in ['True', 'False', 'nobuild']:
+            monitoring_status = True
+
         data = PKGDBCLIENT.create_package(
             pkgname=action['info']['pkg_name'].encode('utf-8'),
             summary=action['info']['pkg_summary'].encode('utf-8'),
@@ -328,7 +334,7 @@ def __handle_request_package(actionid, action):
             upstream_url=upstream,
             critpath=action['info']['pkg_critpath'],
             namespace=action['info']['pkg_namespace'],
-            monitoring_status=action['info'].get('monitoring_status', True),
+            monitoring_status=monitoring_status,
             koschei=action['info'].get('koschei', False),
         )
 
