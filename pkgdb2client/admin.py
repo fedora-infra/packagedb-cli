@@ -299,14 +299,9 @@ def deny_action(actionid):
 
 def __handle_request_package(actionid, action):
     ''' Handle the new package requests. '''
-    bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
-    if '=' in bugid:
-        bugid = bugid.split('=', 1)[1]
-
+    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
     msgs = utils.check_package_creation(
         action['info'], bugid, PKGDBCLIENT, action['user'])
-
-    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
 
     decision = _ask_what_to_do(msgs)
     if decision in ('a', 'approve'):
@@ -450,9 +445,7 @@ def __handle_request_unretire(actionid, action):
     ''' Handle unretirement requests. Do the same checks as done for new
     package requests and ask the admin to do the necessary steps by hand. '''
 
-    bugid = action['info']['pkg_review_url'].rsplit('/', 1)[-1]
-    if '=' in bugid:
-        bugid = bugid.split('=', 1)[1]
+    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
 
     # Add valuees to info that pkgdb adds to new package actions
     action['info']['pkg_name'] = action['package']['name']
@@ -475,7 +468,6 @@ def __handle_request_unretire(actionid, action):
             'good': []
         }
 
-    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
     decision = _ask_what_to_do(msgs)
 
     if decision in ('a', 'approve'):
