@@ -18,6 +18,7 @@
 from fedora.client import (AppError, ServerError)
 
 import argparse
+import datetime
 import logging
 
 from six.moves import input
@@ -445,8 +446,6 @@ def __handle_request_unretire(actionid, action):
     ''' Handle unretirement requests. Do the same checks as done for new
     package requests and ask the admin to do the necessary steps by hand. '''
 
-    bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
-
     # Add valuees to info that pkgdb adds to new package actions
     action['info']['pkg_name'] = action['package']['name']
     action['info']['pkg_summary'] = action['package']['summary']
@@ -459,14 +458,39 @@ def __handle_request_unretire(actionid, action):
     action['info']['pkg_namespace'] = action['package'].get(
         'namespace', 'rpms')
 
-    if bugid:
+    if action['info']['pkg_review_url']:
+        bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
         msgs = utils.check_package_creation(
             action['info'], bugid, PKGDBCLIENT, action['user'])
     else:
-        msgs = {
-            "bad": ['No review specified, retirement recent enough?'],
-            'good': []
-        }
+        msgs = utils.check_branch_creation(
+            PKGDBCLIENT, action['package']['name'],
+            action['collection']['branchname'], action['user'], new_pkg=True,
+            namespace=action['info']['pkg_namespace'])
+
+        package = PKGDBCLIENT.get_package(
+            action['package']['name'],
+            branches=[action['info']['pkg_collection']],
+            namespace=action['info']['pkg_namespace'],
+        )["packages"][0]
+        rawhide_package = PKGDBCLIENT.get_package(
+            action['package']['name'], branches=["master"],
+            namespace=action['info']['pkg_namespace'],
+        )["packages"][0]
+
+        last_pkg_change = datetime.datetime.fromtimestamp(
+            package["status_change"])
+        request_date = datetime.datetime.fromtimestamp(
+            action['info']['date_created'])
+        delta = request_date - last_pkg_change
+        if delta.days < 14:
+            msgs["good"].append("Package was retired less than 14 days ago")
+        elif rawhide_package.status != "Retired":
+            msgs["good"].append("Package is not retired in Rawhide")
+        else:
+            msgs["bad"].append(
+                "Package is retired in Rawhide and was retired more than "
+                "14 days ago")
 
     decision = _ask_what_to_do(msgs)
 
