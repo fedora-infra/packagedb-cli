@@ -454,8 +454,14 @@ def __handle_request_unretire(actionid, action):
     action['info']['pkg_namespace'] = action['package'].get(
         'namespace', 'rpms')
 
-    msgs = utils.check_package_creation(
-        action['info'], bugid, PKGDBCLIENT, action['user'])
+    if bugid:
+        msgs = utils.check_package_creation(
+            action['info'], bugid, PKGDBCLIENT, action['user'])
+    else:
+        msgs = {
+            "bad": ['No review specified, retirement recent enough?'],
+            'good': []
+        }
 
     bugid = utils.get_bug_id_from_url(action['info']['pkg_review_url'])
     decision = _ask_what_to_do(msgs)
