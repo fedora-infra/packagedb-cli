@@ -109,7 +109,7 @@ def get_bug_id_from_url(url):
 
     '''
 
-    bugid = url.rsplit('/', 1)[1]
+    bugid = url.rsplit('/', 1)[-1]
 
     if 'id=' in url:
         bugid = url.split('id=', 1)[1]

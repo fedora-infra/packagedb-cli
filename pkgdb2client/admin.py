@@ -438,7 +438,7 @@ def __handle_request_unretire(actionid, action):
     ''' Handle unretirement requests. Do the same checks as done for new
     package requests and ask the admin to do the necessary steps by hand. '''
 
-    bugid = action['info']['pkg_review_url'].rsplit('/', 1)[1]
+    bugid = action['info']['pkg_review_url'].rsplit('/', 1)[-1]
     if '=' in bugid:
         bugid = bugid.split('=', 1)[1]
 
