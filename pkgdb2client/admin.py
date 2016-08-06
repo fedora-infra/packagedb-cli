@@ -422,6 +422,18 @@ def __handle_request_branch(actionid, action, package):
             namespace=action['package'].get('namespace', 'rpms'),
         )
 
+        comaintainers = action.get('info', {}).get('co-maintainers')
+        if comaintainers:
+            for user in comaintainers.split(','):
+                PKGDBCLIENT.update_acl(
+                    action['info']['pkg_name'],
+                    branches=action['info']['pkg_collection'],
+                    acls=['commit', 'watchbugzilla', 'watchcommits'],
+                    status='Approved',
+                    user=user.strip(),
+                    namespace=action['info']['pkg_namespace'],
+                )
+
         approve_action(actionid)
 
     elif decision in ('deny', 'd'):
