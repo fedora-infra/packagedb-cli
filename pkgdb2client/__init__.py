@@ -161,6 +161,7 @@ class PkgDB(OpenIdBaseClient):
         url = self.base_url + "/api" + path
         kwargs = dict(verb=verb, data=data, params=params)
         try:
+            LOG.debug('Querying: {0}: {1}'.format(verb, url))
             data = self.send_request(url, **kwargs)
         except Exception as e:
             LOG.debug(str(e))
