@@ -111,6 +111,7 @@ class PkgDB(OpenIdBaseClient):
         :type login_attempts: int
 
         '''
+        url = url.rstrip('/')
 
         super(PkgDB, self).__init__(
             base_url=url,
