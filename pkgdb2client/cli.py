@@ -224,7 +224,7 @@ def setup_parser():
     # ACL
     parser_acl = subparsers.add_parser(
         'acl',
-        help='Request acl for a given package')
+        help='Display ACLs for a given package')
     parser_acl.add_argument('package', help="Name of the package to query")
     parser_acl.add_argument(
         'branch', default='master', nargs="?",
