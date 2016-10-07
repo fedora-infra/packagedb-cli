@@ -212,7 +212,8 @@ class PkgDB(OpenIdBaseClient):
         if not output or 'error' in output:
             LOG.debug('full output: {0}'.format(output))
             if output and 'error' in output:
-                raise PkgDBException(output['error'])
+                raise PkgDBException("%s: %r" % (
+                    output['error'], output.get('error_detail')))
             elif output is None:
                 raise PkgDBException('No output returned by %s' % path)
             else:
