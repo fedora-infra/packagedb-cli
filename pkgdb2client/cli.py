@@ -986,12 +986,12 @@ def main():
     if arg.bzurl:
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
-        print("Querying bugzilla at: %s" % arg.pkgdburl)
+        print("Querying bugzilla at: %s" % arg.bzurl)
         pkgdb2client.utils.BZCLIENT.url = arg.bzurl
         pkgdb2client.utils.BZCLIENT._sslverify = not arg.insecure
 
     if arg.fasurl:
-        print("Querying FAS at: %s" % arg.pkgdburl)
+        print("Querying FAS at: %s" % arg.fasurl)
         pkgdb2client.utils.FASCLIENT.base_url = arg.fasurl
         pkgdb2client.utils.FASCLIENT.insecure = arg.insecure
 
