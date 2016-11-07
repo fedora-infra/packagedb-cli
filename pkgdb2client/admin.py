@@ -589,11 +589,11 @@ def main():
     if arg.bzurl:
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
-        LOG.info("Querying bugzilla at: %s", arg.pkgdburl)
+        LOG.info("Querying bugzilla at: %s", arg.bzurl)
         utils._get_bz(arg.bzurl, insecure=arg.insecure)
 
     if arg.fasurl:
-        LOG.info("Querying FAS at: %s", arg.pkgdburl)
+        LOG.info("Querying FAS at: %s", arg.fasurl)
         utils.FASCLIENT.base_url = arg.fasurl
         utils.FASCLIENT.insecure = arg.insecure
 
