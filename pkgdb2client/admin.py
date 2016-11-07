@@ -65,7 +65,7 @@ def setup_parser():
                         help="Base url of the pkgdb instance to query.")
     parser.add_argument('--fasurl',
                         help="Base url of the FAS instance to query.")
-    parser.add_argument('--bzurl',
+    parser.add_argument('--bzurl', default='https://bugzilla.redhat.com/xmlrpc.cgi',
                         help="Base url of the bugzilla instance to query.")
 
     subparsers = parser.add_subparsers(title='actions')

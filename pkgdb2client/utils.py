@@ -37,14 +37,13 @@ except fedora_cert.fedora_cert_error:
     pkgdb2client.LOG.debug('Could not read Fedora cert, asking for username')
     USERNAME = None
 
-RH_BZ_API = 'https://bugzilla.redhat.com/xmlrpc.cgi'
 BZCLIENT = None
 FASCLIENT = AccountSystem(
     'https://admin.fedoraproject.org/accounts',
     username=USERNAME)
 
 
-def _get_bz(url=RH_BZ_API, insecure=False):
+def _get_bz(url=arg.bzurl, insecure=False):
     ''' Return a bugzilla object. '''
     global BZCLIENT
     if not BZCLIENT:
