@@ -28,8 +28,6 @@ import pkgdb2client
 import pkgdb2client.utils
 
 
-KOJI_HUB = 'http://koji.fedoraproject.org/kojihub'
-
 pkgdbclient = PkgDB('https://admin.fedoraproject.org/pkgdb',
                     login_callback=pkgdb2client.ask_password)
 BOLD = "\033[1m"
@@ -130,7 +128,7 @@ def _get_last_build(packagename, tag):
 
     '''
     LOG.debug("Search last build for {0} in {1}".format(packagename, tag))
-    kojiclient = koji.ClientSession(KOJI_HUB, {})
+    kojiclient = koji.ClientSession(arg.kojihuburl, {})
 
     data = kojiclient.getLatestBuilds(
         tag, package=packagename)
@@ -218,6 +216,8 @@ def setup_parser():
                         help="Base url of the FAS instance to query.")
     parser.add_argument('--bzurl',
                         help="Base url of the bugzilla instance to query.")
+    parser.add_argument('--kojihuburl', default='http://koji.fedoraproject.org/kojihub' ,
+                        help="Base url of the koji-hub instance to query.")
 
     subparsers = parser.add_subparsers(title='actions')
 
