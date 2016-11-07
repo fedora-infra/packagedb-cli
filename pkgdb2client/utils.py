@@ -39,7 +39,7 @@ except fedora_cert.fedora_cert_error:
 
 BZCLIENT = None
 FASCLIENT = AccountSystem(
-    'https://admin.fedoraproject.org/accounts',
+    arg.fasurl,
     username=USERNAME)
 
 

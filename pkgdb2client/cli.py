@@ -212,7 +212,7 @@ def setup_parser():
                         "certificates")
     parser.add_argument('--pkgdburl',
                         help="Base url of the pkgdb instance to query.")
-    parser.add_argument('--fasurl',
+    parser.add_argument('--fasurl', default='https://admin.fedoraproject.org/accounts',
                         help="Base url of the FAS instance to query.")
     parser.add_argument('--bzurl', default='https://bugzilla.redhat.com/xmlrpc.cgi',
                         help="Base url of the bugzilla instance to query.")
