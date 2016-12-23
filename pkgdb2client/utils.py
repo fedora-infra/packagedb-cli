@@ -38,18 +38,13 @@ except fedora_cert.fedora_cert_error:
     USERNAME = None
 
 BZCLIENT = None
-FASCLIENT = AccountSystem(
-    arg.fasurl,
-    username=USERNAME)
 
 
-def _get_bz(url=arg.bzurl, insecure=False):
+def _get_bz(url=pkgdb2client.BZ_URL, insecure=False):
     ''' Return a bugzilla object. '''
     global BZCLIENT
-    if not BZCLIENT:
+    if not BZCLIENT or BZCLIENT.url != url:
         BZCLIENT = Bugzilla(url=url)
-    elif BZCLIENT.url != url:
-        BZCLIENT.url = url
 
     BZCLIENT._sslverify = not insecure
 
@@ -59,6 +54,18 @@ def _get_bz(url=arg.bzurl, insecure=False):
         bz_login()
 
     return BZCLIENT
+
+
+def _get_fas(url=pkgdb2client.FAS_URL, insecure=False):
+    ''' Return a bugzilla object. '''
+    global FASCLIENT
+    if not FASCLIENT or FASCLIENT.base_url != url:
+        FASCLIENT = AccountSystem(
+            url, username=USERNAME)
+
+    FASCLIENT.insecure = insecure
+
+    return FASCLIENT
 
 
 def bz_login():
@@ -158,6 +165,8 @@ def __get_fas_user_by_email(email_address):
     :arg email_address: the email address of the user to retrieve in FAS.
 
     '''
+    FASCLIENT = _get_fas()
+
     if email_address in FASCLIENT._AccountSystem__alternate_email:
         userid = FASCLIENT._AccountSystem__alternate_email[email_address]
 
@@ -226,6 +235,8 @@ def is_packager(user):
     :arg email_address: the email address of the user to retrieve in FAS.
 
     '''
+    FASCLIENT = _get_fas()
+
     if '@' in user:
         fas_user = __get_fas_user_by_email(user.strip())
     else:
