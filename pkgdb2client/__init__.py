@@ -111,6 +111,7 @@ class PkgDB(OpenIdBaseClient):
         :type login_attempts: int
 
         '''
+        url = url.rstrip('/')
 
         super(PkgDB, self).__init__(
             base_url=url,
@@ -161,6 +162,7 @@ class PkgDB(OpenIdBaseClient):
         url = self.base_url + "/api" + path
         kwargs = dict(verb=verb, data=data, params=params)
         try:
+            LOG.debug('Querying: {0}: {1}'.format(verb, url))
             data = self.send_request(url, **kwargs)
         except Exception as e:
             LOG.debug(str(e))
