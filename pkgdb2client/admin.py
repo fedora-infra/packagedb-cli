@@ -611,7 +611,7 @@ def main():
 
     if arg.fasurl != pkgdb2client.FAS_URL:
         LOG.info("Querying FAS at: %s", arg.fasurl)
-        utils._get_bz(arg.fasurl, insecure=arg.insecure)
+        utils._get_fas(arg.fasurl, insecure=arg.insecure)
 
     return_code = 0
 
