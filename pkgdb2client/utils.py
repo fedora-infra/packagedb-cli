@@ -38,6 +38,7 @@ except fedora_cert.fedora_cert_error:
     USERNAME = None
 
 BZCLIENT = None
+FASCLIENT = None
 
 
 def _get_bz(url=pkgdb2client.BZ_URL, insecure=False):
