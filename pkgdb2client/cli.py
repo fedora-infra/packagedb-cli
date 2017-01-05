@@ -992,7 +992,7 @@ def main():
 
     if arg.fasurl != pkgdb2client.FAS_URL:
         print("Querying FAS at: %s" % arg.fasurl)
-        utils._get_bz(arg.fasurl, insecure=arg.insecure)
+        utils._get_fas(arg.fasurl, insecure=arg.insecure)
 
     if arg.kojihuburl != pkgdb2client.KOJI_HUB:
         print("Querying koji at: %s" % arg.kojihuburl)
