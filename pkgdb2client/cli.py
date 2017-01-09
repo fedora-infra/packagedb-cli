@@ -217,6 +217,8 @@ def setup_parser():
                         help="Base url of the FAS instance to query.")
     parser.add_argument('--bzurl', default=pkgdb2client.BZ_URL,
                         help="Base url of the bugzilla instance to query.")
+    parser.add_argument('--cgiturl', default=pkgdb2client.CGIT_URL,
+                        help="Base url of the cgit instance to query.")
     parser.add_argument('--kojihuburl', default=pkgdb2client.KOJI_HUB,
                         help="Base url of the koji-hub instance to query.")
 
@@ -705,8 +707,8 @@ def do_orphan(args):
         for pkg_name, pkg_branch in itertools.product(
                 pkgs, branches):
             dead_url = \
-                'http://pkgs.fedoraproject.org/cgit/{0}.git/plain/'\
-                'dead.package?h={1}'.format(pkg_name, pkg_branch)
+                '{0}/{1}/{2}.git/plain/'\
+                'dead.package?h={2}'.format(args.cgiturl,namespace,pkg_name, pkg_branch)
             req = requests.get(dead_url)
             if req.status_code != 200 or not req.text.strip():
                 print('No `dead.package` for %s on %s, please use '
