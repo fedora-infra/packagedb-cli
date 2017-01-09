@@ -25,7 +25,7 @@ import itertools
 
 from pkgdb2client import PkgDB, PkgDBException, __version__
 import pkgdb2client
-import pkgdb2client.utils
+import pkgdb2client.utils as utils
 
 
 pkgdbclient = PkgDB(
