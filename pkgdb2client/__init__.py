@@ -165,6 +165,9 @@ class PkgDB(OpenIdBaseClient):
 
         url = self.base_url + "/api" + path
         kwargs = dict(verb=verb, data=data, params=params)
+        LOG.debug('Sending request %s to: %s', verb, url)
+        LOG.debug('Request params: %s', params)
+        LOG.debug('Request arg   : %s', data)
         try:
             LOG.debug('Querying: {0}: {1}'.format(verb, url))
             data = self.send_request(url, **kwargs)
@@ -195,6 +198,7 @@ class PkgDB(OpenIdBaseClient):
             if not success:
                 raise PkgDBAuthException("Too many failed login attempts")
             data = self.send_request(url, **kwargs)
+        LOG.debug('Full output   : %s', data)
         return data
 
     def handle_api_call(self, path, params=None, data=None):
@@ -216,7 +220,6 @@ class PkgDB(OpenIdBaseClient):
         output = self.call_api(path, params, data)
 
         if not output or 'error' in output:
-            LOG.debug('full output: {0}'.format(output))
             if output and 'error' in output:
                 if 'error_detail' in output:
                     raise PkgDBException("%s: %r" % (
