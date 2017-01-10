@@ -29,8 +29,9 @@ import pkgdb2client
 import pkgdb2client.utils as utils
 
 
-PKGDBCLIENT = PkgDB('https://admin.fedoraproject.org/pkgdb',
-                    login_callback=pkgdb2client.ask_password)
+PKGDBCLIENT = PkgDB(
+    pkgdb2client.PKGDB_URL, login_callback=pkgdb2client.ask_password)
+
 BOLD = "\033[1m"
 RED = "\033[0;31m"
 RESET = "\033[0;0m"
@@ -61,11 +62,11 @@ def setup_parser():
     parser.add_argument('--insecure', action='store_true', default=False,
                         help="Tells pkgdb-cli to ignore invalid SSL "
                         "certificates")
-    parser.add_argument('--pkgdburl',
+    parser.add_argument('--pkgdburl', default=pkgdb2client.PKGDB_URL,
                         help="Base url of the pkgdb instance to query.")
-    parser.add_argument('--fasurl',
+    parser.add_argument('--fasurl', default=pkgdb2client.FAS_URL,
                         help="Base url of the FAS instance to query.")
-    parser.add_argument('--bzurl',
+    parser.add_argument('--bzurl', default=pkgdb2client.BZ_URL,
                         help="Base url of the bugzilla instance to query.")
 
     subparsers = parser.add_subparsers(title='actions')
@@ -594,7 +595,7 @@ def main():
         LOG.setLevel(logging.INFO)
 
     global PKGDBCLIENT
-    if arg.pkgdburl:
+    if arg.pkgdburl != pkgdb2client.PKGDB_URL:
         LOG.info("Querying pkgdb at: %s", arg.pkgdburl)
         PKGDBCLIENT = PkgDB(
             arg.pkgdburl,
@@ -602,16 +603,15 @@ def main():
 
     PKGDBCLIENT.insecure = arg.insecure
 
-    if arg.bzurl:
+    if arg.bzurl != pkgdb2client.BZ_URL:
         if not arg.bzurl.endswith('xmlrpc.cgi'):
             arg.bzurl = '%s/xmlrpc.cgi' % arg.bzurl
         LOG.info("Querying bugzilla at: %s", arg.bzurl)
         utils._get_bz(arg.bzurl, insecure=arg.insecure)
 
-    if arg.fasurl:
+    if arg.fasurl != pkgdb2client.FAS_URL:
         LOG.info("Querying FAS at: %s", arg.fasurl)
-        utils.FASCLIENT.base_url = arg.fasurl
-        utils.FASCLIENT.insecure = arg.insecure
+        utils._get_fas(arg.fasurl, insecure=arg.insecure)
 
     return_code = 0
 
