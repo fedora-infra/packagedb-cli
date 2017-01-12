@@ -482,7 +482,7 @@ def __handle_request_unretire(actionid, action):
         last_pkg_change = datetime.datetime.fromtimestamp(
             package["status_change"])
         request_date = datetime.datetime.fromtimestamp(
-            action['info']['date_created'])
+            action['date_created'])
         delta = request_date - last_pkg_change
         if delta.days < 14:
             msgs["good"].append("Package was retired less than 14 days ago")
@@ -492,6 +492,10 @@ def __handle_request_unretire(actionid, action):
             msgs["bad"].append(
                 "Package is retired in Rawhide and was retired more than "
                 "14 days ago")
+    if action['info'].get('pkg_review_url'):
+        print('Review url {}'.format(action['info'].get('pkg_review_url')))
+    else:
+        print('No review url was provided with this request')
 
     decision = _ask_what_to_do(msgs)
 
