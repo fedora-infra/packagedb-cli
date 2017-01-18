@@ -41,6 +41,7 @@ PKGDBLOG = logging.getLogger("pkgdb2client")
 LOG = logging.getLogger("pkgdb-cli")
 
 ACTIONLIST = ['watchbugzilla', 'watchcommits', 'commit', 'approveacls']
+KOJI_HUB = pkgdb2client.KOJI_HUB
 
 
 class ActionError(Exception):
@@ -129,7 +130,8 @@ def _get_last_build(packagename, tag):
 
     '''
     LOG.debug("Search last build for {0} in {1}".format(packagename, tag))
-    kojiclient = koji.ClientSession(arg.kojihuburl, {})
+    LOG.debug("Contacting koji at: {0}".format(KOJI_HUB))
+    kojiclient = koji.ClientSession(KOJI_HUB, {})
 
     data = kojiclient.getLatestBuilds(
         tag, package=packagename)
